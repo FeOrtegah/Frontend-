@@ -1,0 +1,29 @@
+/* Logo del navbar */
+.logo-efa {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* Offcanvas submenu */
+.menu-category {
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.submenu {
+  padding-left: 15px;
+  margin-bottom: 10px;
+}
+
+.submenu a {
+  text-decoration: none;
+  color: #000;
+  display: block;
+  padding: 4px 0;
+}
+
+.submenu a:hover {
+  color: #007bff;
+}
