@@ -61,7 +61,11 @@ const Home = () => {
             src="/img/coño.webp" 
             className="card-img-top" 
             alt="Novedades" 
+<<<<<<< HEAD
             style={{ height: "2000px" }} 
+=======
+            style={{ height: "1500px" }} 
+>>>>>>> 117f769bce0402b3d4c3cc178c29a8febc55edc9
           />
         </div>
       </section>
@@ -106,6 +110,10 @@ const Home = () => {
                           </Card.Text>
                         )}
                       </div>
+<<<<<<< HEAD
+=======
+
+>>>>>>> 117f769bce0402b3d4c3cc178c29a8febc55edc9
                       {product.originalPrice && (
                         <Badge bg="success" className="mt-1">
                           {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF

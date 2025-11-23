@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+<<<<<<< HEAD
 const BASE_URL = 'https://backend-fullstackv1.onrender.com/api/v1/usuarios';
 
 class UserService {
@@ -50,6 +51,29 @@ class UserService {
                 error: error.response?.data || 'Error de conexión al crear cuenta' 
             };
         }
+=======
+const BASE_URL = 'https://backend-fullstackv1.onrender.com/api/usuarios';
+
+class UserService {
+    login(usuario) {
+        return axios.post(`${BASE_URL}/login`, usuario);
+    }
+
+    createUser(usuario) {
+        return axios.post(`${BASE_URL}`, usuario);
+    }
+
+    verifyToken(token) {
+        return axios.get(`${BASE_URL}/verify`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+    }
+
+    logout(token) {
+        return axios.post(`${BASE_URL}/logout`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+>>>>>>> 117f769bce0402b3d4c3cc178c29a8febc55edc9
     }
 }
 
