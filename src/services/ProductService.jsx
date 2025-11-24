@@ -1,19 +1,13 @@
 import axios from 'axios';
-<<<<<<< HEAD
 import localProducts from "../data/Products";
 import API_CONFIG from './apiService';
 
 // Configuración global de axios
 axios.defaults.timeout = API_CONFIG.TIMEOUT;
-=======
-
-const BASE_URL = 'https://backend-fullstackv1.onrender.com/api/v1';
->>>>>>> 117f769bce0402b3d4c3cc178c29a8febc55edc9
 
 class ProductService {
     async getAllProducts() {
         try {
-<<<<<<< HEAD
             const url = API_CONFIG.getUrl('PRODUCTS');
             const response = await axios.get(url);
             
@@ -29,32 +23,11 @@ class ProductService {
         } catch (error) {
             console.error("Error cargando productos desde backend, usando datos locales como fallback:", error);
             return { data: localProducts, success: false, error: error.message };
-=======
-            const response = await axios.get(`${BASE_URL}/productos`);
-            
-            const productsMapped = response.data.map(product => ({
-                id: product.id,
-                name: product.nombre,
-                price: product.precio,
-                descripcion: product.descripcion,
-                categoria: product.categorias?.nombre,
-                image: "/img/placeholder.jpg",
-                stock: product.stock,
-                tipo: "general"
-            }));
-            
-            return { data: productsMapped };
-            
-        } catch (error) {
-            console.error("Error cargando productos:", error);
-            return { data: [] };
->>>>>>> 117f769bce0402b3d4c3cc178c29a8febc55edc9
         }
     }
 
     async getProductById(id) {
         try {
-<<<<<<< HEAD
             const url = API_CONFIG.getUrl('PRODUCT_BY_ID', { id });
             const response = await axios.get(url);
             
@@ -149,27 +122,6 @@ class ProductService {
         } catch (error) {
             console.error("Error filtrando productos por categoría:", error);
             return { data: [], success: false, error: error.message };
-=======
-            const response = await axios.get(`${BASE_URL}/productos/${id}`);
-            const product = response.data;
-            
-
-            return { 
-                data: {
-                    id: product.id,
-                    name: product.nombre,
-                    price: product.precio,
-                    descripcion: product.descripcion,
-                    categoria: product.categorias?.nombre,
-                    image: "/img/placeholder.jpg",
-                    stock: product.stock
-                }
-            };
-            
-        } catch (error) {
-            console.error("Error cargando producto:", error);
-            return { data: null };
->>>>>>> 117f769bce0402b3d4c3cc178c29a8febc55edc9
         }
     }
 }
