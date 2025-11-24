@@ -1,19 +1,55 @@
 import React from "react";
-import { Input } from "../atoms/Input"
-import { Form } from 'react-bootstrap';
+import { Form, Button } from "react-bootstrap";
 
-function DynamicForm({inputs = []}) {
-    return (
-        <Form>
-            {inputs.map((input, index) => (
-                <Form.Group key={input.id || index} controlId={`input-${input.id || index}`}>
-                    {input.label && <Form.Label>{input.label}</Form.Label>}
-                    <Input {...input} />
-                    {input.error && <Form.Text className="text-danger">{input.error}</Form.Text>}
+const Forms = ({ content = [] }) => {
+  return (
+    <>
+      {content.map((item, idx) => {
+        if (item.type === "text") {
+          return item.text.map((t, i) => {
+            const Tag = t.variant || "p";
+            return (
+              <Tag key={i} className={t.className}>
+                {t.content}
+              </Tag>
+            );
+          });
+        }
+
+        if (item.type === "inputs") {
+          return (
+            <div key={idx} className={item.className || "mb-3"}>
+              {item.inputs.map((input, i) => (
+                <Form.Group key={i} className="mb-3">
+                  {input.label && <Form.Label>{input.label}</Form.Label>}
+                  <Form.Control {...input} />
+                  {input.error && (
+                    <Form.Text className="text-danger">{input.error}</Form.Text>
+                  )}
                 </Form.Group>
-            ))}
-        </Form>
-    )
-}
+              ))}
+            </div>
+          );
+        }
 
-export default DynamicForm;
+        if (item.type === "button") {
+          return (
+            <Button
+              key={idx}
+              type={item.typeButton || "button"}
+              onClick={item.onClick}
+              disabled={item.disabled}
+              className={item.className}
+            >
+              {item.text}
+            </Button>
+          );
+        }
+
+        return null;
+      })}
+    </>
+  );
+};
+
+export default Forms;
