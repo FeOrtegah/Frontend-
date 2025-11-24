@@ -27,7 +27,6 @@ const Navbar = ({ carrito }) => {
           >
             <span className="navbar-toggler-icon"></span>
           </button>
-<<<<<<< HEAD
             <Link to="/" className="navbar-brand">
               <img 
                 src="/img/logo.webp" 
@@ -39,17 +38,6 @@ const Navbar = ({ carrito }) => {
                 }}
               />
             </Link>
-=======
-
-          <Link to="/" className="navbar-brand mx-auto">
-            <img 
-              src="/img/logo.webp" 
-              alt="Logo EFA" 
-              className="logo-efa" 
-            />
-          </Link>
-
->>>>>>> 117f769bce0402b3d4c3cc178c29a8febc55edc9
           <div className="iconos-derecha d-flex align-items-center">
             <Link to="/registro" className="btn me-3">
               <span className="material-icons">perm_identity</span>

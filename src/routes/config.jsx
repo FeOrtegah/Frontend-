@@ -6,19 +6,15 @@ const Login = lazy(() => import('../pages/auth/login'));
 const CreateUser = lazy(() => import('../pages/auth/create-user'));
 const HomeAdmin = lazy(() => import('../pages/admin/HomeAdmin'));
 const HomeFacciones = lazy(() => import('../pages/admin/Facciones/HomeFacciones'));
-<<<<<<< HEAD
 const RopaHombre = lazy(() => import('../pages/user/RopaHombre')); // ← Agregar esta línea
 const RopaMujer = lazy(() => import('../pages/user/RopaMujer'));   // ← Agregar esta línea
 const RopaInfantil = lazy(() => import('../pages/user/RopaInfantil')); // ← Agregar esta línea
-=======
->>>>>>> 117f769bce0402b3d4c3cc178c29a8febc55edc9
 
 // Rutas públicas o del usuario, así están mejor organizadas
 const publicRoutes = [
   { path: '/', element: <Home />, showNavbar: true },
   { path: '/login', element: <Login />, showNavbar: false },
   { path: '/create-user', element: <CreateUser />, showNavbar: false },
-<<<<<<< HEAD
   // Agregar rutas de categorías
   { path: '/hombre', element: <RopaHombre />, showNavbar: true },
   { path: '/hombre/:subcategoria', element: <RopaHombre />, showNavbar: true }, // ← Subcategorías
@@ -26,8 +22,6 @@ const publicRoutes = [
   { path: '/mujer/:subcategoria', element: <RopaMujer />, showNavbar: true },
   { path: '/infantil', element: <RopaInfantil />, showNavbar: true },
   { path: '/infantil/:subcategoria', element: <RopaInfantil />, showNavbar: true },
-=======
->>>>>>> 117f769bce0402b3d4c3cc178c29a8febc55edc9
 ];
 
 // Rutas del administrador 
@@ -36,11 +30,7 @@ const adminRoutes = [
   { path: '/admin/facciones', element: <HomeFacciones />, isAdmin: true },
 ];
 
-<<<<<<< HEAD
 // Ruta 404 por ahora no hice una página específica, solo un div simple
-=======
-// Ruta 404 por ahora no hice una página específica, solo un div simple (por ahora (puede cambiar (o eso creo)))
->>>>>>> 117f769bce0402b3d4c3cc178c29a8febc55edc9
 const notFoundRoute = {
   path: '*',
   element: <div className="text-center py-10 text-2xl">404 - Página no encontrada u.u</div>,
