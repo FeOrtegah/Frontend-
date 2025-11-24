@@ -1,19 +1,44 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Badge, Alert, Spinner } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import ProductService from "/src/services/ProductService"; // Ajusta la ruta
+import ProductService from "/src/services/ProductService"; 
 
 const Home = () => {
-  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [products, setProducts] = useState([]); // ✅ AGREGADO
+  const [productosOfertaAleatorios, setProductosOfertaAleatorios] = useState([]);
+
+  // Función para seleccionar 'n' elementos aleatorios de un array
+  const selectRandomOffers = (arr, n) => {
+    const shuffled = [...arr];
+    let i = arr.length;
+    
+    while (i > 0) {
+      i--;
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    
+    return shuffled.slice(0, n);
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
         const response = await ProductService.getAllProducts();
-        setProducts(response.data);
+        const allProducts = response.data;
+        setProducts(allProducts); // ✅ AHORA FUNCIONA
+
+        // 1. Filtrar solo los productos que están en oferta
+        const ofertas = allProducts.filter(product => product.oferta);
+        
+        // 2. Seleccionar hasta 3 ofertas aleatorias
+        const randomOffers = selectRandomOffers(ofertas, 3);
+        
+        setProductosOfertaAleatorios(randomOffers);
+
       } catch (err) {
         setError("Error cargando productos: " + err.message);
         console.error("Error fetching products:", err);
@@ -24,8 +49,6 @@ const Home = () => {
 
     fetchProducts();
   }, []);
-
-  const productosOferta = products.filter(product => product.oferta);
 
   if (loading) {
     return (
@@ -61,11 +84,7 @@ const Home = () => {
             src="/img/coño.webp" 
             className="card-img-top" 
             alt="Novedades" 
-<<<<<<< HEAD
-            style={{ height: "2000px" }} 
-=======
-            style={{ height: "1500px" }} 
->>>>>>> 117f769bce0402b3d4c3cc178c29a8febc55edc9
+            style={{ height: "400px", objectFit: "cover" }} // ✅ CORREGIDO
           />
         </div>
       </section>
@@ -79,14 +98,14 @@ const Home = () => {
             <p>(Shorts exclusivos disponibles por tiempo limitado)</p>
           </div>
           
-          {productosOferta.length === 0 ? (
+          {productosOfertaAleatorios.length === 0 ? (
             <div className="text-center py-4">
               <p>No hay ofertas disponibles en este momento</p>
             </div>
           ) : (
             <Row xs={1} md={3} className="g-4">
-              {productosOferta.map((product) => (
-                <Col key={product.id || product._id}>
+              {productosOfertaAleatorios.map((product) => (
+                <Col key={product.id}> 
                   <Card className="h-100 text-center position-relative">
                     <Badge bg="danger" className="position-absolute top-0 start-0 m-2">
                       OFERTA
@@ -94,34 +113,23 @@ const Home = () => {
                     
                     <Card.Img
                       variant="top"
-                      src={product.image}
+                      src={product.imagenUrl || '/images/placeholder.jpg'} // ✅ MEJORADO
                       style={{ maxHeight: "300px", objectFit: "contain" }}
+                      onError={(e) => {
+                        e.target.src = '/images/placeholder.jpg';
+                      }}
                     />
                     <Card.Body>
-                      <Card.Title>{product.name}</Card.Title>
+                      <Card.Title>{product.nombre}</Card.Title>
                       
                       <div className="d-flex justify-content-center align-items-center gap-2">
                         <Card.Text className="text-danger fw-bold fs-5 mb-0">
-                          ${product.price.toLocaleString()}
+                          ${product.precio ? product.precio.toLocaleString() : 'N/A'}
                         </Card.Text>
-                        {product.originalPrice && (
-                          <Card.Text className="text-muted text-decoration-line-through mb-0">
-                            ${product.originalPrice.toLocaleString()}
-                          </Card.Text>
-                        )}
                       </div>
-<<<<<<< HEAD
-=======
-
->>>>>>> 117f769bce0402b3d4c3cc178c29a8febc55edc9
-                      {product.originalPrice && (
-                        <Badge bg="success" className="mt-1">
-                          {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
-                        </Badge>
-                      )}
 
                       <div className="mt-3">
-                        <Link to={`/producto/${product.id || product._id}`}>
+                        <Link to={`/producto/${product.id}`}>
                           <button className="btn btn-dark btn-sm">Ver detalle</button>
                         </Link>
                       </div>
@@ -174,8 +182,6 @@ const Home = () => {
       </section>
     </main>
   );
-};
-
-{/* para actualizar*/}
+}
 
 export default Home;
