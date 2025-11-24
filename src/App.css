@@ -1,0 +1,125 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+.registro-container {
+  max-width: 500px;
+  margin: 50px auto;
+  background: white;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.registro-container h4 {
+  margin-bottom: 30px;
+  font-weight: 400;
+}
+
+.tabs-container {
+  display: flex;
+  justify-content: center;
+  border-bottom: 1px solid #f5a5a5;
+  margin-bottom: 30px;
+}
+
+.tabs-container button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 10px 20px;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.tabs-container button.active {
+  color: #e63946;
+  border-bottom: 2px solid #e63946;
+}
+
+.input-field {
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.input-field label {
+  display: block;
+  font-size: 14px;
+  color: #777;
+  margin-bottom: 5px;
+}
+
+.input-field input {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-bottom: 1px solid #ccc;
+  outline: none;
+  font-size: 15px;
+  transition: 0.2s;
+}
+
+.input-field input:focus {
+  border-bottom: 1px solid #e63946;
+}
+
+.btn-login {
+  background-color: #1d4ed8;
+  color: white;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 5px;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+.btn-login:hover {
+  background-color: #1e40af;
+}
+
+.logo-efa-top {
+  height: 50px;
+  margin: 20px auto 10px;
+  display: block;
+}
