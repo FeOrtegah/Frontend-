@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useProducts } from '../../context/ProductContext';
@@ -26,7 +25,7 @@ const RopaHombre = () => {
     // Filtrar por subcategoría
     if (subcategoria) {
       filtered = filtered.filter(product => {
-        const textoBusqueda = `${product.name} ${product.descripcion}`.toLowerCase();
+        const textoBusqueda = `${product.nombre} ${product.descripcion}`.toLowerCase(); // ✅ CORREGIDO
         
         if (subcategoria === 'poleras') {
           return textoBusqueda.includes('polera') || 
@@ -52,13 +51,13 @@ const RopaHombre = () => {
     if (filtroPrecio) {
       switch (filtroPrecio) {
         case 'menor-50':
-          filtered = filtered.filter(product => product.price < 50);
+          filtered = filtered.filter(product => product.precio < 50); // ✅ CORREGIDO
           break;
         case '50-100':
-          filtered = filtered.filter(product => product.price >= 50 && product.price <= 100);
+          filtered = filtered.filter(product => product.precio >= 50 && product.precio <= 100); // ✅ CORREGIDO
           break;
         case 'mayor-100':
-          filtered = filtered.filter(product => product.price > 100);
+          filtered = filtered.filter(product => product.precio > 100); // ✅ CORREGIDO
           break;
         default:
           break;
@@ -219,22 +218,22 @@ const RopaHombre = () => {
                   <div key={product.id} className="col-xl-3 col-lg-4 col-md-6 mb-4">
                     <div className="card h-100 product-card">
                       <img 
-                        src={product.image} 
+                        src={product.imagenUrl || '/images/placeholder.jpg'} // ✅ CORREGIDO
                         className="card-img-top" 
-                        alt={product.name}
+                        alt={product.nombre} // ✅ CORREGIDO
                         style={{ height: '250px', objectFit: 'cover' }}
                         onError={(e) => {
-                          e.target.src = 'https://via.placeholder.com/250x250?text=Imagen+No+Disponible';
+                          e.target.src = '/images/placeholder.jpg';
                         }}
                       />
                       <div className="card-body d-flex flex-column">
-                        <h6 className="card-title">{product.name}</h6>
+                        <h6 className="card-title">{product.nombre}</h6> {/* ✅ CORREGIDO */}
                         <p className="card-text small text-muted flex-grow-1">
                           {product.descripcion}
                         </p>
                         <div className="mt-auto">
                           <div className="d-flex justify-content-between align-items-center mb-2">
-                            <span className="h6 text-primary mb-0">${product.price}</span>
+                            <span className="h6 text-primary mb-0">${product.precio}</span> {/* ✅ CORREGIDO */}
                             {product.oferta && (
                               <span className="badge bg-danger">Oferta</span>
                             )}
@@ -261,24 +260,6 @@ const RopaHombre = () => {
         </div>
       </div>
     </div>
-=======
-import React from "react";
-import { useLocation } from "react-router-dom";
-import Products from "./Products"; // Reutilizamos el componente Products
-
-const RopaHombre = ({ carrito, setCarrito }) => {
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const tipo = searchParams.get("categoria");
-
-  return (
-    <Products 
-      categoria="hombre" 
-      tipo={tipo}
-      carrito={carrito} 
-      setCarrito={setCarrito} 
-    />
->>>>>>> 117f769bce0402b3d4c3cc178c29a8febc55edc9
   );
 };
 
