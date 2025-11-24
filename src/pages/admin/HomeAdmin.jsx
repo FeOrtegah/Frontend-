@@ -1,8 +1,6 @@
-// src/pages/admin/HomeAdmin.jsx
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Table, Badge, Button, Modal, Form, Alert, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Badge, Button, Modal, Form, Spinner } from 'react-bootstrap';
 
-// Componente Modal simplificado
 const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -34,7 +32,6 @@ const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
       <Modal.Header closeButton>
         <Modal.Title>Agregar Nuevo Producto</Modal.Title>
       </Modal.Header>
-
       <Form onSubmit={onSubmit}>
         <Modal.Body>
           <div className="row">
@@ -51,7 +48,6 @@ const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
                 />
               </Form.Group>
             </div>
-
             <div className="col-md-6">
               <Form.Group className="mb-3">
                 <Form.Label>Precio *</Form.Label>
@@ -65,7 +61,6 @@ const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
                 />
               </Form.Group>
             </div>
-
             <div className="col-md-6">
               <Form.Group className="mb-3">
                 <Form.Label>Precio original (opcional)</Form.Label>
@@ -78,7 +73,6 @@ const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
                 />
               </Form.Group>
             </div>
-
             <div className="col-md-6">
               <Form.Group className="mb-3">
                 <Form.Label>URL de la imagen *</Form.Label>
@@ -92,7 +86,6 @@ const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
                 />
               </Form.Group>
             </div>
-
             <div className="col-md-6">
               <Form.Group className="mb-3">
                 <Form.Label>Categoría *</Form.Label>
@@ -109,7 +102,6 @@ const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
                 </Form.Select>
               </Form.Group>
             </div>
-
             <div className="col-md-6">
               <Form.Group className="mb-3">
                 <Form.Label>Tipo *</Form.Label>
@@ -127,7 +119,6 @@ const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
                 </Form.Select>
               </Form.Group>
             </div>
-
             <div className="col-md-6">
               <Form.Group className="mb-3">
                 <Form.Label>Tallas *</Form.Label>
@@ -145,7 +136,6 @@ const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
                 </Form.Select>
               </Form.Group>
             </div>
-
             <div className="col-12">
               <Form.Group className="mb-3">
                 <Form.Label>Descripción</Form.Label>
@@ -159,7 +149,6 @@ const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
                 />
               </Form.Group>
             </div>
-
             <div className="col-12">
               <Form.Group className="mb-3">
                 <Form.Check
@@ -173,7 +162,6 @@ const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
             </div>
           </div>
         </Modal.Body>
-
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose} disabled={loading}>
             Cancelar
@@ -201,10 +189,8 @@ const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
   );
 };
 
-// Función simple para mensajes
 const generarMensaje = (mensaje, tipo = 'info') => {
-  console.log(`${tipo}: ${mensaje}`);
-  alert(`${tipo}: ${mensaje}`);
+  alert(`${tipo.toUpperCase()}: ${mensaje}`);
 };
 
 const HomeAdmin = () => {
@@ -213,25 +199,17 @@ const HomeAdmin = () => {
   const [showModal, setShowModal] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  // Cargar productos desde localStorage
   useEffect(() => {
-    const loadProducts = () => {
-      try {
-        setLoading(true);
-        const savedProducts = JSON.parse(localStorage.getItem('adminProducts')) || [];
-        setProducts(savedProducts);
-      } catch (error) {
-        console.error('Error loading products:', error);
-        generarMensaje('Error al cargar productos', 'warning');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProducts();
+    try {
+      const savedProducts = JSON.parse(localStorage.getItem('adminProducts')) || [];
+      setProducts(savedProducts);
+    } catch {
+      generarMensaje('Error al cargar productos', 'warning');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Guardar productos en localStorage
   const saveProducts = (newProducts) => {
     localStorage.setItem('adminProducts', JSON.stringify(newProducts));
     setProducts(newProducts);
@@ -239,8 +217,6 @@ const HomeAdmin = () => {
 
   const handleCreateProduct = (formData) => {
     setSubmitLoading(true);
-    
-    // Simular delay de red
     setTimeout(() => {
       try {
         const newProduct = {
@@ -250,14 +226,11 @@ const HomeAdmin = () => {
           originalPrice: formData.originalPrice ? parseInt(formData.originalPrice) : undefined,
           oferta: formData.oferta || false
         };
-
         const updatedProducts = [...products, newProduct];
         saveProducts(updatedProducts);
-        
         setShowModal(false);
         generarMensaje('¡Producto creado con éxito!', 'success');
-      } catch (error) {
-        console.error('Error creating product:', error);
+      } catch {
         generarMensaje('Error al crear el producto', 'warning');
       } finally {
         setSubmitLoading(false);
@@ -274,17 +247,11 @@ const HomeAdmin = () => {
   };
 
   const getCategoriaBadge = (categoria) => {
-    const variants = {
-      hombre: 'primary',
-      mujer: 'danger',
-      infantil: 'success'
-    };
+    const variants = { hombre: 'primary', mujer: 'danger', infantil: 'success' };
     return <Badge bg={variants[categoria]}>{categoria}</Badge>;
   };
 
-  const getTipoBadge = (tipo) => {
-    return <Badge bg="secondary">{tipo}</Badge>;
-  };
+  const getTipoBadge = (tipo) => <Badge bg="secondary">{tipo}</Badge>;
 
   return (
     <Container fluid className="py-4">
@@ -293,16 +260,11 @@ const HomeAdmin = () => {
           <h1 className="h3 mb-0">Panel de Administración</h1>
           <p className="text-muted mb-0">Gestiona los productos de tu tienda</p>
         </div>
-        <Button
-          variant="primary"
-          onClick={() => setShowModal(true)}
-          className="px-4 py-2"
-        >
+        <Button variant="primary" onClick={() => setShowModal(true)} className="px-4 py-2">
           + Agregar Producto
         </Button>
       </div>
 
-      {/* Estadísticas rápidas */}
       <Row className="mb-4">
         <Col md={3}>
           <Card className="bg-primary text-white">
@@ -338,7 +300,6 @@ const HomeAdmin = () => {
         </Col>
       </Row>
 
-      {/* Tabla de productos */}
       <Card>
         <Card.Header>
           <h5 className="mb-0">Lista de Productos</h5>
@@ -353,10 +314,7 @@ const HomeAdmin = () => {
           ) : products.length === 0 ? (
             <div className="text-center py-4">
               <p className="text-muted">No hay productos registrados</p>
-              <Button 
-                variant="primary"
-                onClick={() => setShowModal(true)}
-              >
+              <Button variant="primary" onClick={() => setShowModal(true)}>
                 Crear Primer Producto
               </Button>
             </div>
@@ -383,9 +341,7 @@ const HomeAdmin = () => {
                           alt={product.name}
                           style={{ width: '50px', height: '50px', objectFit: 'cover' }}
                           className="rounded"
-                          onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/50x50?text=Imagen+no+disponible';
-                          }}
+                          onError={(e) => { e.target.src = 'https://via.placeholder.com/50x50?text=Imagen+no+disponible'; }}
                         />
                       </td>
                       <td>
@@ -407,27 +363,13 @@ const HomeAdmin = () => {
                           </div>
                         )}
                       </td>
-                      <td>
-                        {product.oferta ? (
-                          <Badge bg="success">Sí</Badge>
-                        ) : (
-                          <Badge bg="secondary">No</Badge>
-                        )}
-                      </td>
+                      <td>{product.oferta ? <Badge bg="success">Sí</Badge> : <Badge bg="secondary">No</Badge>}</td>
                       <td>
                         <div className="d-flex gap-2">
-                          <Button
-                            variant="warning"
-                            size="sm"
-                            onClick={() => generarMensaje('Función de editar próximamente', 'info')}
-                          >
+                          <Button variant="warning" size="sm" onClick={() => generarMensaje('Función de editar próximamente', 'info')}>
                             Editar
                           </Button>
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => handleDeleteProduct(product.id)}
-                          >
+                          <Button variant="danger" size="sm" onClick={() => handleDeleteProduct(product.id)}>
                             Eliminar
                           </Button>
                         </div>
@@ -441,7 +383,6 @@ const HomeAdmin = () => {
         </Card.Body>
       </Card>
 
-      {/* Modal para crear producto */}
       <ProductModal
         show={showModal}
         handleClose={() => setShowModal(false)}
