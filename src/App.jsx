@@ -13,9 +13,7 @@ import Pago from "./pages/user/Pago";
 import Confirmacion from "./pages/user/Confirmacion"; // ← IMPORTAR CONFIRMACIÓN
 import Registro from "./pages/user/Registro";
 import Login from "./pages/user/Login";
-=======
 import Registro from "./pages/user/Registro";
->>>>>>> 117f769bce0402b3d4c3cc178c29a8febc55edc9
 import MiCuenta from "./pages/user/MiCuenta";
 import Blogs from "./pages/user/Blogs";
 import Ayuda from './pages/user/Ayuda.jsx';
