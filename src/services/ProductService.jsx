@@ -22,7 +22,10 @@ class ProductService {
             
         } catch (error) {
             console.error("Error cargando productos desde backend, usando datos locales como fallback:", error);
-            return { data: localProducts, success: false, error: error.message };
+            // Mapear los productos locales para que tengan las mismas claves que
+            // el resto de la aplicación espera (name, price, image, descripcion, etc.)
+            const mappedLocal = this.mapProducts(localProducts);
+            return { data: mappedLocal, success: false, error: error.message };
         }
     }
 
@@ -45,7 +48,7 @@ class ProductService {
             console.error("Error cargando producto, intento con datos locales:", error);
             const fallback = localProducts.find(p => String(p.id) === String(id));
             return { 
-                data: fallback || null, 
+                data: fallback ? this.mapSingleProduct(fallback) : null, 
                 success: false, 
                 error: error.message,
                 fallback: !!fallback 

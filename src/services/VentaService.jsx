@@ -38,7 +38,6 @@ class VentaService {
         }
     }
 
-    // ✅ MEJORADO: Calcular total de una venta
     calcularTotalVenta(venta) {
         if (!venta) {
             console.log('❌ Venta es null o undefined');
@@ -53,7 +52,7 @@ class VentaService {
             return Number(venta.total);
         }
         
-        // 2. Calcular desde items (formato más común)
+
         if (venta.items && Array.isArray(venta.items) && venta.items.length > 0) {
             const total = venta.items.reduce((sum, item) => {
                 const precio = item.precio || item.precioUnitario || 0;
@@ -66,7 +65,7 @@ class VentaService {
             return total;
         }
         
-        // 3. Calcular desde productoVenta (formato alternativo)
+
         if (venta.productoVenta && Array.isArray(venta.productoVenta) && venta.productoVenta.length > 0) {
             const total = venta.productoVenta.reduce((sum, item) => {
                 const precio = item.precio || item.precioUnitario || 0;
@@ -92,7 +91,7 @@ class VentaService {
             return total;
         }
         
-        console.log('❌ No se pudo calcular el total - Estructura de venta:', {
+        console.log('No se pudo calcular el total - Estructura de venta:', {
             tieneItems: venta.items && venta.items.length,
             tieneProductoVenta: venta.productoVenta && venta.productoVenta.length,
             tieneProductos: venta.productos && venta.productos.length,
@@ -104,34 +103,34 @@ class VentaService {
     // ✅ MEJORADO: Calcular cantidad total de productos en una venta
     calcularCantidadProductos(venta) {
         if (!venta) {
-            console.log('❌ Venta es null o undefined');
+            console.log('Venta es null o undefined');
             return 0;
         }
         
-        console.log('🔍 Calculando cantidad de productos para venta:', venta);
+        console.log('Calculando cantidad de productos para venta:', venta);
         
         // 1. Desde items
         if (venta.items && Array.isArray(venta.items) && venta.items.length > 0) {
             const cantidad = venta.items.reduce((sum, item) => sum + (Number(item.cantidad) || 0), 0);
-            console.log('📦 Cantidad desde items:', cantidad);
+            console.log('Cantidad desde items:', cantidad);
             return cantidad;
         }
         
         // 2. Desde productoVenta
         if (venta.productoVenta && Array.isArray(venta.productoVenta) && venta.productoVenta.length > 0) {
             const cantidad = venta.productoVenta.reduce((sum, item) => sum + (Number(item.cantidad) || 0), 0);
-            console.log('📋 Cantidad desde productoVenta:', cantidad);
+            console.log('Cantidad desde productoVenta:', cantidad);
             return cantidad;
         }
 
         // 3. Desde productos directos
         if (venta.productos && Array.isArray(venta.productos) && venta.productos.length > 0) {
             const cantidad = venta.productos.reduce((sum, producto) => sum + (Number(producto.cantidad) || 0), 0);
-            console.log('🎁 Cantidad desde productos:', cantidad);
+            console.log('Cantidad desde productos:', cantidad);
             return cantidad;
         }
         
-        console.log('❌ No se encontraron productos - Estructura:', {
+        console.log('❌o se encontraron productos - Estructura:', {
             tieneItems: venta.items && venta.items.length,
             tieneProductoVenta: venta.productoVenta && venta.productoVenta.length,
             tieneProductos: venta.productos && venta.productos.length
@@ -142,18 +141,18 @@ class VentaService {
     // ✅ MEJORADO: Procesar ventas para agregar cálculos automáticamente
     procesarVentas(ventas) {
         if (!ventas || !Array.isArray(ventas)) {
-            console.log('❌ Ventas no es un array válido:', ventas);
+            console.log('Ventas no es un array válido:', ventas);
             return [];
         }
         
-        console.log(`🔄 Procesando ${ventas.length} ventas...`);
+        console.log(`Procesando ${ventas.length} ventas...`);
         
         const ventasProcesadas = ventas.map((venta, index) => {
             console.log(`\n--- Procesando venta ${index + 1} ---`);
             const totalCalculado = this.calcularTotalVenta(venta);
             const cantidadProductos = this.calcularCantidadProductos(venta);
             
-            console.log(`✅ Venta ${index + 1} procesada:`, {
+            console.log(`Venta ${index + 1} procesada:`, {
                 numeroVenta: venta.numeroVenta,
                 totalCalculado: totalCalculado,
                 cantidadProductos: cantidadProductos
@@ -170,14 +169,13 @@ class VentaService {
         return ventasProcesadas;
     }
 
-    // ✅ NUEVO: Función para debuguear la estructura de ventas
     debugVentas(ventas) {
         if (!ventas || !Array.isArray(ventas)) {
-            console.log('❌ No hay ventas para debuguear');
+            console.log('No hay ventas para debuguear');
             return;
         }
         
-        console.log('🐛 DEBUG - Estructura de ventas recibidas:');
+        console.log('DEBUG - Estructura de ventas recibidas:');
         ventas.forEach((venta, index) => {
             console.log(`\n--- Venta ${index + 1} ---`);
             console.log('ID:', venta.id);

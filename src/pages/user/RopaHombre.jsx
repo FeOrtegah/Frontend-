@@ -25,7 +25,7 @@ const RopaHombre = () => {
     // Filtrar por subcategoría
     if (subcategoria) {
       filtered = filtered.filter(product => {
-        const textoBusqueda = `${product.nombre} ${product.descripcion}`.toLowerCase(); // ✅ CORREGIDO
+        const textoBusqueda = `${product.name} ${product.descripcion}`.toLowerCase();
         
         if (subcategoria === 'poleras') {
           return textoBusqueda.includes('polera') || 
@@ -51,13 +51,13 @@ const RopaHombre = () => {
     if (filtroPrecio) {
       switch (filtroPrecio) {
         case 'menor-50':
-          filtered = filtered.filter(product => product.precio < 50); // ✅ CORREGIDO
+          filtered = filtered.filter(product => product.price < 50);
           break;
         case '50-100':
-          filtered = filtered.filter(product => product.precio >= 50 && product.precio <= 100); // ✅ CORREGIDO
+          filtered = filtered.filter(product => product.price >= 50 && product.price <= 100);
           break;
         case 'mayor-100':
-          filtered = filtered.filter(product => product.precio > 100); // ✅ CORREGIDO
+          filtered = filtered.filter(product => product.price > 100);
           break;
         default:
           break;
@@ -218,22 +218,22 @@ const RopaHombre = () => {
                   <div key={product.id} className="col-xl-3 col-lg-4 col-md-6 mb-4">
                     <div className="card h-100 product-card">
                       <img 
-                        src={product.imagenUrl || '/images/placeholder.jpg'} // ✅ CORREGIDO
+                        src={product.image || '/images/placeholder.jpg'}
                         className="card-img-top" 
-                        alt={product.nombre} // ✅ CORREGIDO
+                        alt={product.name}
                         style={{ height: '250px', objectFit: 'cover' }}
                         onError={(e) => {
                           e.target.src = '/images/placeholder.jpg';
                         }}
                       />
                       <div className="card-body d-flex flex-column">
-                        <h6 className="card-title">{product.nombre}</h6> {/* ✅ CORREGIDO */}
+                        <h6 className="card-title">{product.name}</h6>
                         <p className="card-text small text-muted flex-grow-1">
                           {product.descripcion}
                         </p>
                         <div className="mt-auto">
                           <div className="d-flex justify-content-between align-items-center mb-2">
-                            <span className="h6 text-primary mb-0">${product.precio}</span> {/* ✅ CORREGIDO */}
+                            <span className="h6 text-primary mb-0">${product.price}</span>
                             {product.oferta && (
                               <span className="badge bg-danger">Oferta</span>
                             )}
