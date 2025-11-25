@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Container, Row, Col, Button, Form, Alert, Badge, Spinner } from "react-bootstrap";
 import ProductService from "/src/services/ProductService";
-import "../../styles/global.css";
+import "./styles/global.css";
 const ProductDetail = ({ carrito, setCarrito }) => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
