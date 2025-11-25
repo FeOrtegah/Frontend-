@@ -14,11 +14,8 @@ const Ayuda = lazy(() => import("../pages/user/Ayuda"));
 const Noticias = lazy(() => import("../pages/user/Noticias"));
 const HomeAdmin = lazy(() => import("../pages/admin/HomeAdmin"));
 
-
 export const publicRoutes = [
   { path: "/", element: <Home />, showNavbar: true },
-  { path: "/login", element: <Login />, showNavbar: false },
-  { path: "/registro", element: <Registro />, showNavbar: false },
   { path: "/hombre", element: <RopaHombre />, showNavbar: true },
   { path: "/hombre/:subcategoria", element: <RopaHombre />, showNavbar: true },
   { path: "/mujer", element: <RopaMujer />, showNavbar: true },
@@ -48,7 +45,7 @@ export const notFoundRoute = {
   showNavbar: false,
 };
 
-export const Approute = [
+export const appRoutes = [
   ...publicRoutes,
   ...privateRoutes,
   ...adminRoutes,
