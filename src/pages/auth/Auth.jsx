@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     Container,
@@ -15,23 +15,14 @@ import {
 import UserService from '../../services/UserService.jsx';
 
 const Auth = () => {
-
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState("login");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
 
-    // 🚨 🚨 🚨  SI EL USUARIO YA ESTÁ LOGUEADO → REDIRIGIR A /mi-cuenta
-    useEffect(() => {
-        const usuario = sessionStorage.getItem("usuarioActivo");
-        if (usuario) {
-            navigate("/mi-cuenta");
-        }
-    }, []);
-
     const dominiosPermitidos = ["gmail.com", "duocuc.cl", "profesor.duoc.cl"];
-
+    
     const [formData, setFormData] = useState({
         login: { email: "", password: "" },
         registro: {
@@ -58,7 +49,6 @@ const Auth = () => {
         setSuccess(null);
     };
 
-    // ------------------------- LOGIN -------------------------
     const handleLogin = async (e) => {
         e.preventDefault();
         const { email, password } = formData.login;
@@ -74,10 +64,7 @@ const Auth = () => {
 
             if (!result.success) {
                 const errorData = result.error;
-                const mensaje =
-                    errorData?.msg ||
-                    "Correo o contraseña incorrectos. Por favor, verifica tus credenciales.";
-
+                const mensaje = errorData?.msg || "Correo o contrasena incorrectos. Por favor, verifica tus credenciales.";
                 setError(mensaje);
                 return;
             }
@@ -86,22 +73,20 @@ const Auth = () => {
                 ...result.data,
                 token: result.data.token || "mock-token-login"
             };
-
+            
             sessionStorage.setItem("usuarioActivo", JSON.stringify(userData));
             localStorage.setItem("userToken", userData.token);
 
-            setSuccess("Has iniciado sesión correctamente");
+            setSuccess("Has iniciado sesion correctamente");
 
             setTimeout(() => navigate("/"), 1200);
-
         } catch (err) {
-            setError("Ocurrió un error inesperado al intentar iniciar sesión.");
+            setError("Ocurrio un error inesperado al intentar iniciar sesion.");
         } finally {
             setLoading(false);
         }
     };
 
-    // ------------------------- REGISTRO -------------------------
     const handleRegistro = async (e) => {
         e.preventDefault();
 
@@ -113,12 +98,12 @@ const Auth = () => {
         }
 
         if (password !== confirmarPassword) {
-            setError("Las contraseñas no coinciden");
+            setError("Las contrasenas no coinciden");
             return;
         }
 
         if (password.length < 6) {
-            setError("La contraseña debe tener al menos 6 caracteres");
+            setError("La contrasena debe tener al menos 6 caracteres");
             return;
         }
 
@@ -133,35 +118,32 @@ const Auth = () => {
             });
 
             if (!registerResult.success) {
+                
                 const errorData = registerResult.error;
-                let mensajeError = "Ocurrió un error inesperado al contactar al servidor.";
-
-                if (errorData && typeof errorData === "string" && errorData.includes("El correo ya esta registrado")) {
-                    mensajeError = "El correo ya está en uso. Intenta iniciar sesión.";
-                } else if (errorData?.message) {
+                let mensajeError = "Ocurrio un error inesperado al contactar al servidor.";
+                
+                if (errorData && typeof errorData === 'string' && errorData.includes('El correo ya esta registrado')) {
+                    mensajeError = "El correo ya esta en uso. Intenta iniciar sesion.";
+                } else if (errorData && errorData.message) {
                     mensajeError = errorData.message;
-                } else if (errorData?.msg) {
+                } else if (errorData && errorData.msg) {
                     mensajeError = errorData.msg;
                 }
-
+                
                 setError(mensajeError);
                 return;
             }
 
-            setSuccess("Cuenta creada exitosamente. Iniciando sesión...");
-
-            // ---------- AUTO LOGIN DESPUÉS DE REGISTRAR ----------
-            const autoLoginResult = await UserService.login({
-                correo: email,
-                contrasena: password
+            setSuccess("Cuenta creada exitosamente. Iniciando sesion...");
+            
+            const autoLoginResult = await UserService.login({ 
+                correo: email, 
+                contrasena: password 
             });
 
             if (!autoLoginResult.success) {
                 const loginErrorData = autoLoginResult.error;
-                const loginMensaje =
-                    loginErrorData?.msg ||
-                    "Cuenta creada, pero el inicio de sesión automático falló. Inicia sesión manualmente.";
-
+                const loginMensaje = loginErrorData?.msg || "Cuenta creada, pero el inicio de sesion automatico fallo. Por favor, inicia sesion manualmente.";
                 setError(loginMensaje);
                 setSuccess(null);
                 return;
@@ -175,16 +157,27 @@ const Auth = () => {
             sessionStorage.setItem("usuarioActivo", JSON.stringify(userData));
             localStorage.setItem("userToken", userData.token);
 
-            setTimeout(() => navigate("/"), 1200);
+            setFormData((prev) => ({
+                ...prev,
+                registro: { 
+                    nombre: "",
+                    email: "",
+                    password: "",
+                    confirmarPassword: "",
+                    telefono: "",
+                    direccion: ""
+                }
+            }));
 
+            setTimeout(() => navigate("/"), 1200);
+            
         } catch (err) {
-            setError("Ocurrió un error irrecuperable al procesar el registro.");
+            setError("Ocurrio un error irrecuperable al procesar el registro.");
         } finally {
             setLoading(false);
         }
     };
 
-    // ------------------------- RENDER -------------------------
     return (
         <Container className="my-5">
             <Row className="justify-content-center">
@@ -208,34 +201,41 @@ const Auth = () => {
                                 className="mb-4"
                                 justify
                             >
-                                {/* ---------------- LOGIN ---------------- */}
-                                <Tab eventKey="login" title="Iniciar Sesión">
+                                <Tab eventKey="login" title="Iniciar Sesion">
                                     {error && <Alert variant="danger">{error}</Alert>}
                                     {success && <Alert variant="success">{success}</Alert>}
 
                                     <Form onSubmit={handleLogin}>
                                         <Form.Group className="mb-3">
-                                            <Form.Label>Correo electrónico</Form.Label>
+                                            <Form.Label>Correo electronico</Form.Label>
                                             <Form.Control
                                                 type="email"
                                                 value={formData.login.email}
                                                 required
-                                                onChange={(e) => handleInputChange("login", "email", e.target.value)}
+                                                onChange={(e) =>
+                                                    handleInputChange("login", "email", e.target.value)
+                                                }
                                             />
                                         </Form.Group>
 
                                         <Form.Group className="mb-4">
-                                            <Form.Label>Contraseña</Form.Label>
+                                            <Form.Label>Contrasena</Form.Label>
                                             <Form.Control
                                                 type="password"
                                                 value={formData.login.password}
                                                 required
-                                                onChange={(e) => handleInputChange("login", "password", e.target.value)}
+                                                onChange={(e) =>
+                                                    handleInputChange("login", "password", e.target.value)
+                                                }
                                             />
                                         </Form.Group>
 
                                         <Button
-                                            style={{ backgroundColor: "red", border: "none", fontWeight: "bold" }}
+                                            style={{
+                                                backgroundColor: "red",
+                                                border: "none",
+                                                fontWeight: "bold"
+                                            }}
                                             type="submit"
                                             className="w-100 py-2"
                                             disabled={loading}
@@ -246,13 +246,12 @@ const Auth = () => {
                                                     Iniciando...
                                                 </>
                                             ) : (
-                                                "Iniciar Sesión"
+                                                "Iniciar Sesion"
                                             )}
                                         </Button>
                                     </Form>
                                 </Tab>
 
-                                {/* ---------------- REGISTRO ---------------- */}
                                 <Tab eventKey="registro" title="Crear Cuenta">
                                     {error && <Alert variant="danger">{error}</Alert>}
                                     {success && <Alert variant="success">{success}</Alert>}
@@ -264,30 +263,39 @@ const Auth = () => {
                                                 type="text"
                                                 required
                                                 value={formData.registro.nombre}
-                                                onChange={(e) => handleInputChange("registro", "nombre", e.target.value)}
+                                                onChange={(e) =>
+                                                    handleInputChange("registro", "nombre", e.target.value)
+                                                }
                                             />
                                         </Form.Group>
 
                                         <Form.Group className="mb-3">
-                                            <Form.Label>Correo electrónico</Form.Label>
+                                            <Form.Label>Correo electronico</Form.Label>
                                             <Form.Control
                                                 type="email"
                                                 required
                                                 value={formData.registro.email}
-                                                onChange={(e) => handleInputChange("registro", "email", e.target.value)}
+                                                onChange={(e) =>
+                                                    handleInputChange("registro", "email", e.target.value)
+                                                }
                                             />
                                         </Form.Group>
 
                                         <Row>
                                             <Col md={6}>
                                                 <Form.Group className="mb-3">
-                                                    <Form.Label>Contraseña</Form.Label>
+                                                    <Form.Label>Contrasena</Form.Label>
                                                     <Form.Control
                                                         type="password"
                                                         required
+                                                        minLength="6"
                                                         value={formData.registro.password}
                                                         onChange={(e) =>
-                                                            handleInputChange("registro", "password", e.target.value)
+                                                            handleInputChange(
+                                                                "registro",
+                                                                "password",
+                                                                e.target.value
+                                                            )
                                                         }
                                                     />
                                                 </Form.Group>
@@ -313,7 +321,11 @@ const Auth = () => {
                                         </Row>
 
                                         <Button
-                                            style={{ backgroundColor: "red", border: "none", fontWeight: "bold" }}
+                                            style={{
+                                                backgroundColor: "red",
+                                                border: "none",
+                                                fontWeight: "bold"
+                                            }}
                                             type="submit"
                                             className="w-100 py-2"
                                             disabled={loading}
@@ -334,13 +346,12 @@ const Auth = () => {
                             <div className="text-center mt-3">
                                 <small className="text-muted">
                                     Al registrarte aceptas nuestros{" "}
-                                    <a href="/terminos">Términos</a> y{" "}
+                                    <a href="/terminos">Terminos</a> y{" "}
                                     <a href="/privacidad">Privacidad</a>
                                 </small>
                             </div>
                         </Card.Body>
                     </Card>
-
                 </Col>
             </Row>
         </Container>
