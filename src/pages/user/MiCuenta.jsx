@@ -8,28 +8,39 @@ const MiCuenta = ({ user, setUser }) => {
   const [ventas, setVentas] = useState([]);
   const [loadingVentas, setLoadingVentas] = useState(false);
   const [error, setError] = useState("");
+  const [checkingSession, setCheckingSession] = useState(true); // ✅ NUEVO
 
   useEffect(() => {
-    if (!user) {
-      navigate('/registro');
-    } else {
-      cargarVentas();
+    if (checkingSession) {
+      const stored = sessionStorage.getItem("usuarioActivo");
+      if (stored && !user) {
+        setUser(JSON.parse(stored));
+      }
+      setCheckingSession(false);
+      return;
     }
-  }, [user, navigate]);
+
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    cargarVentas();
+  }, [user, checkingSession]);
 
   const cargarVentas = async () => {
     if (!user?.id) return;
-    
+
     setLoadingVentas(true);
     setError("");
     try {
       const resultado = await VentaService.obtenerVentasPorUsuario(user.id);
-      
+
       if (resultado.success) {
         const ventasProcesadas = resultado.data.map((venta) => {
           let totalCalculado = venta.total || 0;
           let cantidadProductos = 0;
-          
+
           if (venta.items?.length > 0) {
             totalCalculado = venta.items.reduce((sum, item) => sum + (item.subtotal || 0), 0);
             cantidadProductos = venta.items.reduce((sum, item) => sum + (item.cantidad || 0), 0);
@@ -40,14 +51,14 @@ const MiCuenta = ({ user, setUser }) => {
             totalCalculado = venta.productos.reduce((sum, p) => sum + (p.subtotal || 0), 0);
             cantidadProductos = venta.productos.reduce((sum, p) => sum + (p.cantidad || 0), 0);
           }
-          
+
           return {
             ...venta,
             totalCalculado,
             cantidadProductos
           };
         });
-        
+
         setVentas(ventasProcesadas);
       } else {
         setError("Error al cargar las ventas");
@@ -68,14 +79,16 @@ const MiCuenta = ({ user, setUser }) => {
     navigate('/');
   };
 
-  if (!user) {
+  if (checkingSession) {
     return (
       <Container className="my-5 text-center">
         <Spinner animation="border" />
-        <p className="mt-2">Redirigiendo...</p>
+        <p className="mt-2">Verificando sesión...</p>
       </Container>
     );
   }
+
+  if (!user) return null;
 
   const esAdmin = user.rol === 'admin' || user.rol?.nombreRol === 'admin';
 
