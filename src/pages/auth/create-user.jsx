@@ -4,7 +4,7 @@ import Forms from '../../components/templates/Forms';
 import { generarMensaje } from '../../utils/GenerarMensaje';
 import UserService from '../../services/UserService';
 
-const CreateUser = ({ setUser }) => { // 🔥 Agregar setUser como prop
+const CreateUser = ({ setUser }) => {
     const [form, setForm] = useState({ nombre: "", correo: "", contrasena: "" });
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -56,7 +56,7 @@ const CreateUser = ({ setUser }) => { // 🔥 Agregar setUser como prop
             console.log('✅ Usuario creado exitosamente:', response.data);
             generarMensaje('¡Usuario creado exitosamente!', 'success');
 
-            // 🔥 NUEVO: Intentar login automático después del registro
+            // 🔥🔥🔥 CORREGIDO: Login automático MEJORADO
             try {
                 console.log('🚀 Intentando login automático...');
                 const loginResponse = await UserService.login({
@@ -67,27 +67,39 @@ const CreateUser = ({ setUser }) => { // 🔥 Agregar setUser como prop
                 if (loginResponse.success) {
                     const usuarioData = loginResponse.data;
                     
-                    // Guardar en sessionStorage y localStorage
-                    sessionStorage.setItem("usuarioActivo", JSON.stringify(usuarioData));
-                    localStorage.setItem("user", JSON.stringify(usuarioData)); // 🔥 IMPORTANTE: Guardar también en localStorage
+                    // 🔥🔥🔥 GUARDAR DE FORMA CORRECTA Y CONSISTENTE
+                    const userDataNormalizado = {
+                        id: usuarioData.id || usuarioData.usuario?.id || usuarioData.data?.id,
+                        nombre: usuarioData.nombre || usuarioData.usuario?.nombre,
+                        correo: usuarioData.correo || usuarioData.email,
+                        email: usuarioData.email || usuarioData.correo,
+                        rol: usuarioData.rol || usuarioData.usuario?.rol,
+                        telefono: usuarioData.telefono || ''
+                    };
+                    
+                    console.log('💾 Guardando usuario normalizado:', userDataNormalizado);
+                    
+                    // Guardar en TODAS las ubicaciones
+                    sessionStorage.setItem("usuarioActivo", JSON.stringify(userDataNormalizado));
+                    localStorage.setItem("user", JSON.stringify(userDataNormalizado));
                     
                     // 🔥 ACTUALIZAR ESTADO GLOBAL
                     if (setUser) {
-                        setUser(usuarioData);
-                        console.log('✅ Estado global actualizado:', usuarioData);
+                        setUser(userDataNormalizado);
+                        console.log('✅ Estado global actualizado:', userDataNormalizado);
                     }
                     
-                    console.log('✅ Login automático exitoso:', usuarioData);
-                    generarMensaje(`¡Bienvenido ${usuarioData.nombre}!`, 'success');
+                    console.log('✅ Login automático exitoso:', userDataNormalizado);
+                    generarMensaje(`¡Bienvenido ${userDataNormalizado.nombre}!`, 'success');
 
                     setTimeout(() => {
                         navigate('/');
                     }, 1500);
                 } else {
-                    throw new Error('Error en login automático');
+                    throw new Error(loginResponse.error || 'Error en login automático');
                 }
             } catch (loginError) {
-                console.log('⚠️ Login automático falló, redirigiendo a login');
+                console.log('⚠️ Login automático falló:', loginError);
                 generarMensaje('Cuenta creada. Por favor inicia sesión manualmente.', 'success');
                 setTimeout(() => {
                     navigate('/auth');
