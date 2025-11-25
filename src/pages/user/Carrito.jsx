@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Container, Row, Col, Card, Button, Table, Alert, Spinner } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import OrderService from "/src/services/OrderService";
-import "../../styles/global.css";
+import "./styles/global.css";
 
 const Carrito = ({ carrito, setCarrito }) => {
   const navigate = useNavigate();
