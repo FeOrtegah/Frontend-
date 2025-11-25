@@ -42,10 +42,10 @@ const PagoRoute = ({ children, carrito, setCarrito }) => {
   return React.cloneElement(children, { carrito, setCarrito, user });
 };
 
-// 🔥 COMPONENTE PRINCIPAL SIN COMPLICACIONES
-function App() {
+// 🔥 COMPONENTE PRINCIPAL - SIN useAuth AQUÍ
+function AppContent() {
   const [carrito, setCarrito] = useState([]);
-  const { user } = useAuth(); // 🔥 MOVER useAuth AQUÍ
+  const { user } = useAuth(); // ✅ Ahora sí está dentro de AuthProvider
 
   // Cargar carrito desde localStorage
   useEffect(() => {
@@ -69,75 +69,82 @@ function App() {
   }, [carrito]);
 
   return (
-    <AuthProvider>
-      <Router>
-        <div className="App d-flex flex-column min-vh-100">
-          <Navbar />
-          <main className="flex-grow-1">
-            <Suspense fallback={<div className="text-center py-5">Cargando...</div>}>
-              <Routes>
-                {appRoutes.map((route, index) => {
-                  // 🔥 MANEJAR TIPOS DE RUTAS
-                  if (route.private) {
-                    return (
-                      <Route
-                        key={index}
-                        path={route.path}
-                        element={
-                          <ProtectedRoute requireAdmin={route.admin}>
-                            {route.path === "/pago" ? (
-                              <PagoRoute carrito={carrito} setCarrito={setCarrito}>
-                                {route.element}
-                              </PagoRoute>
-                            ) : route.path === "/carrito" ? (
-                              <CarritoRoute carrito={carrito} setCarrito={setCarrito}>
-                                {route.element}
-                              </CarritoRoute>
-                            ) : (
-                              route.element
-                            )}
-                          </ProtectedRoute>
-                        }
-                      />
-                    );
-                  }
-
-                  if (route.onlyPublic) {
-                    return (
-                      <Route
-                        key={index}
-                        path={route.path}
-                        element={
-                          <PublicRoute>
+    <div className="App d-flex flex-column min-vh-100">
+      <Navbar />
+      <main className="flex-grow-1">
+        <Suspense fallback={<div className="text-center py-5">Cargando...</div>}>
+          <Routes>
+            {appRoutes.map((route, index) => {
+              // 🔥 MANEJAR TIPOS DE RUTAS
+              if (route.private) {
+                return (
+                  <Route
+                    key={index}
+                    path={route.path}
+                    element={
+                      <ProtectedRoute requireAdmin={route.admin}>
+                        {route.path === "/pago" ? (
+                          <PagoRoute carrito={carrito} setCarrito={setCarrito}>
                             {route.element}
-                          </PublicRoute>
-                        }
-                      />
-                    );
-                  }
-
-                  // Ruta pública normal
-                  return (
-                    <Route
-                      key={index}
-                      path={route.path}
-                      element={
-                        route.path === "/producto/:id" || route.path === "/carrito" ? (
+                          </PagoRoute>
+                        ) : route.path === "/carrito" ? (
                           <CarritoRoute carrito={carrito} setCarrito={setCarrito}>
                             {route.element}
                           </CarritoRoute>
                         ) : (
                           route.element
-                        )
-                      }
-                    />
-                  );
-                })}
-              </Routes>
-            </Suspense>
-          </main>
-          <Footer />
-        </div>
+                        )}
+                      </ProtectedRoute>
+                    }
+                  />
+                );
+              }
+
+              if (route.onlyPublic) {
+                return (
+                  <Route
+                    key={index}
+                    path={route.path}
+                    element={
+                      <PublicRoute>
+                        {route.element}
+                      </PublicRoute>
+                    }
+                  />
+                );
+              }
+
+              // Ruta pública normal
+              return (
+                <Route
+                  key={index}
+                  path={route.path}
+                  element={
+                    route.path === "/producto/:id" || route.path === "/carrito" ? (
+                      <CarritoRoute carrito={carrito} setCarrito={setCarrito}>
+                        {route.element}
+                      </CarritoRoute>
+                    ) : (
+                      route.element
+                    )
+                  }
+                />
+              );
+            })}
+          </Routes>
+        </Suspense>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+// 🔥 COMPONENTE PRINCIPAL QUE ENVUELVE CON AuthProvider
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppContent />
       </Router>
     </AuthProvider>
   );
