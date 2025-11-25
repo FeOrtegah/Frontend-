@@ -57,10 +57,10 @@ const Auth = () => {
       setLoading(true);
       setError(null);
 
-      const response = await axios.post(
-        "https://backend-fullstackv1.onrender.com/auth/login",
-        { email, password }
-      );
+     await axios.post(
+       "https://backend-fullstackv1.onrender.com/api/v1/usuarios",
+       { nombre, email, password }
+     );
 
       const userData = {
         ...response.data.usuario,
