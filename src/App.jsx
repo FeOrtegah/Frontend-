@@ -6,10 +6,13 @@ import { appRoutes } from "./routes/config";
 import { useProducts } from "./context/ProductContext";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import "./styles/global.css";
+import { Container, Spinner } from "react-bootstrap"; // Importado para el loading
 
 function App() {
   const [carrito, setCarrito] = React.useState([]);
   const [user, setUser] = React.useState(null);
+  // Nuevo estado: Indica si ya terminamos de revisar sessionStorage
+  const [isAuthLoaded, setIsAuthLoaded] = React.useState(false); 
 
   const location = useLocation();
   const { products, loading, error } = useProducts();
@@ -20,6 +23,9 @@ function App() {
 
     setCarrito(savedCarrito);
     if (savedUser) setUser(savedUser);
+    
+    // Una vez que hemos revisado sessionStorage, marcamos la carga como completa
+    setIsAuthLoaded(true); 
   }, []);
 
   React.useEffect(() => {
@@ -32,10 +38,20 @@ function App() {
 
   const navbarHidden = ["/admin"].includes(location.pathname);
 
+  // 🔴 AGREGAR ESTE BLOQUE: Mostrar spinner mientras se carga la autenticación inicial
+  if (!isAuthLoaded) {
+    return (
+      <Container className="text-center d-flex flex-column justify-content-center align-items-center min-vh-100">
+        <Spinner animation="border" variant="primary" />
+        <p className="mt-3">Cargando sesión...</p>
+      </Container>
+    );
+  }
+
   return (
     <div className="d-flex flex-column min-vh-100">
 
-      {/* 🔥 SE AGREGA user y setUser AL NAVBAR  */}
+      {/* SE AGREGA user y setUser AL NAVBAR  */}
       {!navbarHidden && <Navbar carrito={carrito} user={user} setUser={setUser} />}
 
       <main className="flex-grow-1">
@@ -63,7 +79,10 @@ function App() {
                           user,
                           setUser,
                         })
-                      : <Navigate to="/" replace state={{ from: location }} />
+                      : <Navigate to="/auth" replace state={{ from: location }} />
+                      /* IMPORTANTE: Redirigimos a /auth (la ruta de login) 
+                        en lugar de / para que el usuario pueda iniciar sesión
+                      */
                   }
                 />
               );
