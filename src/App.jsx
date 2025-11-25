@@ -2,10 +2,8 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { appRoutes } from './routes/config';
-
-// Componentes de layout
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
+import Navbar from "./components/organisms/Navbar";
+import Footer from "./components/organisms/Footer";
 
 // 🔥 COMPONENTE SIMPLE PARA RUTAS PROTEGIDAS
 const ProtectedRoute = ({ children, requireAdmin = false }) => {
