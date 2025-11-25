@@ -14,7 +14,7 @@ import {
 } from "react-bootstrap";
 import UserService from '../../services/UserService.jsx';
 
-const Auth = ({ setUser }) => { // 🔥 Agregar setUser como prop
+const Auth = ({ setUser }) => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState("login");
     const [loading, setLoading] = useState(false);
@@ -69,20 +69,31 @@ const Auth = ({ setUser }) => { // 🔥 Agregar setUser como prop
                 return;
             }
 
+            console.log('🔍 Respuesta completa de login:', result);
+            console.log('🔍 Datos del usuario:', result.data);
+
             const userData = {
                 ...result.data,
                 token: result.data.token || "mock-token-login"
             };
             
-            // 🔥 GUARDAR EN AMBOS STORAGE
-            sessionStorage.setItem("usuarioActivo", JSON.stringify(userData));
-            localStorage.setItem("user", JSON.stringify(userData)); // 🔥 IMPORTANTE: Guardar también en localStorage
-            localStorage.setItem("userToken", userData.token);
+            const normalizedUser = {
+                id: userData.id || userData._id || userData.usuarioId || 'N/A',
+                nombre: userData.nombre || userData.name || userData.nombreCompleto || 'N/A',
+                correo: userData.correo || userData.email || userData.mail || 'N/A',
+                rol: userData.rol || userData.role || userData.tipo || 'Cliente',
+                token: userData.token
+            };
 
-            // 🔥 ACTUALIZAR ESTADO GLOBAL
+            console.log('✅ Usuario normalizado:', normalizedUser);
+            
+            sessionStorage.setItem("usuarioActivo", JSON.stringify(normalizedUser));
+            localStorage.setItem("user", JSON.stringify(normalizedUser));
+            localStorage.setItem("userToken", normalizedUser.token);
+
             if (setUser) {
-                setUser(userData);
-                console.log('✅ Estado global actualizado desde Auth:', userData);
+                setUser(normalizedUser);
+                console.log('✅ Estado global actualizado:', normalizedUser);
             }
 
             setSuccess("Has iniciado sesion correctamente");
@@ -156,20 +167,31 @@ const Auth = ({ setUser }) => { // 🔥 Agregar setUser como prop
                 return;
             }
 
+            console.log('🔍 Respuesta completa de registro:', autoLoginResult);
+            console.log('🔍 Datos del usuario:', autoLoginResult.data);
+
             const userData = {
                 ...autoLoginResult.data,
                 token: autoLoginResult.data.token || "mock-token-registro"
             };
 
-            // 🔥 GUARDAR EN AMBOS STORAGE
-            sessionStorage.setItem("usuarioActivo", JSON.stringify(userData));
-            localStorage.setItem("user", JSON.stringify(userData)); // 🔥 IMPORTANTE: Guardar también en localStorage
-            localStorage.setItem("userToken", userData.token);
+            const normalizedUser = {
+                id: userData.id || userData._id || userData.usuarioId || 'N/A',
+                nombre: userData.nombre || userData.name || userData.nombreCompleto || 'N/A',
+                correo: userData.correo || userData.email || userData.mail || 'N/A',
+                rol: userData.rol || userData.role || userData.tipo || 'Cliente',
+                token: userData.token
+            };
 
-            // 🔥 ACTUALIZAR ESTADO GLOBAL
+            console.log('✅ Usuario normalizado:', normalizedUser);
+
+            sessionStorage.setItem("usuarioActivo", JSON.stringify(normalizedUser));
+            localStorage.setItem("user", JSON.stringify(normalizedUser));
+            localStorage.setItem("userToken", normalizedUser.token);
+
             if (setUser) {
-                setUser(userData);
-                console.log('✅ Estado global actualizado desde registro:', userData);
+                setUser(normalizedUser);
+                console.log('✅ Estado global actualizado:', normalizedUser);
             }
 
             setFormData((prev) => ({
