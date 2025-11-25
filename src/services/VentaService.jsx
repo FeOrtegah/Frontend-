@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 
 const BASE_URL = 'https://backend-fullstackv1.onrender.com/api/v1/ventas';
@@ -41,44 +41,73 @@ class VentaService {
             return Number(venta.total);
         }
         
-        const arrays = ['items', 'productoVenta', 'productos'];
-        for (let key of arrays) {
-            if (venta[key] && Array.isArray(venta[key]) && venta[key].length > 0) {
-                return venta[key].reduce((sum, item) => {
-                    const precio = item.precio || item.precioUnitario || 0;
-                    const cantidad = item.cantidad || 0;
-                    const subtotal = item.subtotal || (precio * cantidad);
-                    return sum + Number(subtotal);
-                }, 0);
-            }
+        if (venta.items && Array.isArray(venta.items) && venta.items.length > 0) {
+            return venta.items.reduce((sum, item) => {
+                const precio = item.precio || item.precioUnitario || 0;
+                const cantidad = item.cantidad || 0;
+                const subtotal = item.subtotal || (precio * cantidad);
+                return sum + Number(subtotal);
+            }, 0);
         }
+        
+        if (venta.productoVenta && Array.isArray(venta.productoVenta) && venta.productoVenta.length > 0) {
+            return venta.productoVenta.reduce((sum, item) => {
+                const precio = item.precio || item.precioUnitario || 0;
+                const cantidad = item.cantidad || 0;
+                const subtotal = item.subtotal || (precio * cantidad);
+                return sum + Number(subtotal);
+            }, 0);
+        }
+
+        if (venta.productos && Array.isArray(venta.productos) && venta.productos.length > 0) {
+            return venta.productos.reduce((sum, producto) => {
+                const precio = producto.precio || producto.precioUnitario || 0;
+                const cantidad = producto.cantidad || 0;
+                const subtotal = producto.subtotal || (precio * cantidad);
+                return sum + Number(subtotal);
+            }, 0);
+        }
+        
         return 0;
     }
 
     calcularCantidadProductos(venta) {
         if (!venta) return 0;
-
-        const arrays = ['items', 'productoVenta', 'productos'];
-        for (let key of arrays) {
-            if (venta[key] && Array.isArray(venta[key]) && venta[key].length > 0) {
-                return venta[key].reduce((sum, item) => sum + (Number(item.cantidad) || 0), 0);
-            }
+        
+        if (venta.items && Array.isArray(venta.items) && venta.items.length > 0) {
+            return venta.items.reduce((sum, item) => sum + (Number(item.cantidad) || 0), 0);
+        }
+        
+        if (venta.productoVenta && Array.isArray(venta.productoVenta) && venta.productoVenta.length > 0) {
+            return venta.productoVenta.reduce((sum, item) => sum + (Number(item.cantidad) || 0), 0);
         }
 
+        if (venta.productos && Array.isArray(venta.productos) && venta.productos.length > 0) {
+            return venta.productos.reduce((sum, producto) => sum + (Number(producto.cantidad) || 0), 0);
+        }
+        
         return 0;
     }
 
     procesarVentas(ventas) {
         if (!ventas || !Array.isArray(ventas)) return [];
-        return ventas.map(venta => ({
-            ...venta,
-            totalCalculado: this.calcularTotalVenta(venta),
-            cantidadProductos: this.calcularCantidadProductos(venta)
-        }));
+        
+        const ventasProcesadas = ventas.map((venta) => {
+            const totalCalculado = this.calcularTotalVenta(venta);
+            const cantidadProductos = this.calcularCantidadProductos(venta);
+            
+            return {
+                ...venta,
+                totalCalculado: totalCalculado,
+                cantidadProductos: cantidadProductos
+            };
+        });
+        
+        return ventasProcesadas;
     }
 }
 
-const ventaService = new VentaService();
+const ventaServiceInstance = new VentaService();
 
 const Container = ({ children, className }) => <div className={`p-4 mx-auto ${className || ''}`}>{children}</div>;
 const Card = ({ children, className, ...props }) => <div className={`bg-white rounded-lg shadow-md ${className || ''}`} {...props}>{children}</div>;
@@ -137,10 +166,10 @@ const MiCuentaComponent = ({ user, setUser, navigate }) => {
         setLoadingVentas(true);
         setError("");
         try {
-            const resultado = await ventaService.obtenerVentasPorUsuario(user.id);
+            const resultado = await ventaServiceInstance.obtenerVentasPorUsuario(user.id);
             
             if (resultado.success) {
-                const ventasProcesadas = ventaService.procesarVentas(resultado.data);
+                const ventasProcesadas = ventaServiceInstance.procesarVentas(resultado.data);
                 setVentas(ventasProcesadas);
             } else {
                 setError(resultado.error || "Error al cargar las ventas desde el servidor.");
@@ -154,11 +183,13 @@ const MiCuentaComponent = ({ user, setUser, navigate }) => {
 
     useEffect(() => {
         if (!user) {
+            // Esta redirección se maneja en AppWrapper, pero se mantiene para seguridad inmediata del componente
             navigate('/login');
         } else {
             cargarVentas();
         }
     }, [user, navigate, cargarVentas]);
+
 
     const cerrarSesion = () => {
         sessionStorage.removeItem("usuarioActivo");
@@ -196,15 +227,18 @@ const MiCuentaComponent = ({ user, setUser, navigate }) => {
                         <Card.Body>
                             <Row>
                                 <Col md={6}>
-                                    <p className="mb-2"><strong>Nombre:</strong> {user.nombre || 'N/A'}</p>
-                                    <p className="mb-2"><strong>Email:</strong> {user.correo || 'N/A'}</p>
-                                    <p className="mb-2"><strong>ID de Usuario:</strong> <Badge bg="secondary">{user.id || 'N/A'}</Badge></p>
+                                    <p className="mb-2"><strong>Nombre:</strong> {user.nombre}</p>
+                                    <p className="mb-2"><strong>Email:</strong> {user.correo}</p>
+                                    <p className="mb-2"><strong>ID de Usuario:</strong> <Badge bg="secondary">{user.id}</Badge></p>
                                 </Col>
                                 <Col md={6}>
                                     <p className="mb-2"><strong>Rol:</strong> 
                                         <Badge bg={esAdmin ? 'danger' : 'success'}>
                                             {rolName}
                                         </Badge>
+                                    </p>
+                                    <p className="mb-2"><strong>Fecha de Registro:</strong> 
+                                        {user.fechaRegistro ? new Date(user.fechaRegistro).toLocaleDateString() : 'N/A'}
                                     </p>
                                     <p className="mb-2"><strong>Total Compras:</strong> <Badge bg="info">{ventas.length}</Badge></p>
                                 </Col>
@@ -226,57 +260,85 @@ const MiCuentaComponent = ({ user, setUser, navigate }) => {
                                     <p className="text-gray-500 mt-2">Cargando tus compras...</p>
                                 </div>
                             ) : ventas.length > 0 ? (
-                                <div className="overflow-x-auto">
-                                    <Table striped bordered hover>
-                                        <Table.Thead className="bg-gray-800 text-white">
-                                            <tr>
-                                                <th className="p-3 text-left">N° Venta</th>
-                                                <th className="p-3 text-left">Fecha</th>
-                                                <th className="p-3 text-left">Estado</th>
-                                                <th className="p-3 text-left">Método Pago</th>
-                                                <th className="p-3 text-right">Productos</th>
-                                                <th className="p-3 text-right">Total</th>
-                                                <th className="p-3"></th>
-                                            </tr>
-                                        </Table.Thead>
-                                        <Table.Tbody>
-                                            {ventas.map((venta, index) => {
-                                                const total = obtenerTotalVenta(venta);
-                                                const cantidad = obtenerCantidadProductos(venta);
+                                <>
+                                    <div className="overflow-x-auto">
+                                        <Table striped bordered hover>
+                                            <Table.Thead className="bg-gray-800 text-white">
+                                                <tr>
+                                                    <th className="p-3 text-left">N° Venta</th>
+                                                    <th className="p-3 text-left">Fecha</th>
+                                                    <th className="p-3 text-left">Estado</th>
+                                                    <th className="p-3 text-left">Método Pago</th>
+                                                    <th className="p-3 text-right">Productos</th>
+                                                    <th className="p-3 text-right">Total</th>
+                                                    <th className="p-3"></th>
+                                                </tr>
+                                            </Table.Thead>
+                                            <Table.Tbody>
+                                                {ventas.map((venta, index) => {
+                                                    const total = obtenerTotalVenta(venta);
+                                                    const cantidad = obtenerCantidadProductos(venta);
 
-                                                return (
-                                                    <tr key={venta.id || index} className="border-b border-gray-200">
-                                                        <td className="p-3">{venta.id || `VEN-${index + 1}`}</td>
-                                                        <td className="p-3">{venta.fecha ? new Date(venta.fecha).toLocaleDateString() : "-"}</td>
-                                                        <td className="p-3">
-                                                            <Badge 
-                                                                bg={venta.estado?.nombre === "Completada" ? "success" : venta.estado?.nombre === "Cancelada" ? "danger" : "info"}
-                                                            >
-                                                                {venta.estado?.nombre || "PENDIENTE"}
-                                                            </Badge>
-                                                        </td>
-                                                        <td className="p-3">{venta.metodoPago?.nombre || "No especificado"}</td>
-                                                        <td className="p-3 text-right">{cantidad}</td>
-                                                        <td className="p-3 text-right font-semibold text-green-600">{formatClp(total)}</td>
-                                                        <td className="p-3">
-                                                            <Button 
-                                                                size="sm"
-                                                                variant="primary"
-                                                                onClick={() => console.log('Ver detalles de venta:', venta.id)}
-                                                            >
-                                                                Ver detalles
-                                                            </Button>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </Table.Tbody>
-                                    </Table>
-                                </div>
+                                                    return (
+                                                        <tr key={venta.id || index} className="border-b border-gray-200">
+                                                            <td className="p-3">{venta.id || `VEN-${index + 1}`}</td>
+                                                            <td className="p-3">{venta.fecha ? new Date(venta.fecha).toLocaleDateString() : "-"}</td>
+                                                            <td className="p-3">
+                                                                <Badge 
+                                                                    bg={venta.estado?.nombre === "Completada" ? "success" : venta.estado?.nombre === "Cancelada" ? "danger" : "info"}
+                                                                >
+                                                                    {venta.estado?.nombre || "PENDIENTE"}
+                                                                </Badge>
+                                                            </td>
+                                                            <td className="p-3">{venta.metodoPago?.nombre || "No especificado"}</td>
+                                                            <td className="p-3 text-right">{cantidad}</td>
+                                                            <td className="p-3 text-right font-semibold text-green-600">{formatClp(total)}</td>
+                                                            <td className="p-3">
+                                                                <Button 
+                                                                    size="sm"
+                                                                    variant="primary"
+                                                                    onClick={() => console.log('Ver detalles de venta:', venta.id)}
+                                                                >
+                                                                    Ver detalles
+                                                                </Button>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </Table.Tbody>
+                                        </Table>
+                                    </div>
+
+                                    <Row className="mt-4 justify-end">
+                                        <Col md={6}>
+                                            <Card className="bg-gray-50 border border-gray-300">
+                                                <Card.Body>
+                                                    <h6 className="font-bold text-lg mb-3 border-b pb-1 text-gray-700">Resumen de Compras</h6>
+                                                    <div className="flex justify-between mb-2">
+                                                        <span className="text-gray-600">Total de compras:</span>
+                                                        <strong className="text-gray-800">{ventas.length}</strong>
+                                                    </div>
+                                                    <div className="flex justify-between mb-2">
+                                                        <span className="text-gray-600">Total de productos comprados:</span>
+                                                        <strong className="text-gray-800">
+                                                            {ventas.reduce((t, v) => t + obtenerCantidadProductos(v), 0)}
+                                                        </strong>
+                                                    </div>
+                                                    <div className="flex justify-between pt-3 border-t border-gray-300">
+                                                        <span className="text-lg font-bold">Total gastado:</span>
+                                                        <strong className="text-blue-600 text-xl font-extrabold">
+                                                            {formatClp(ventas.reduce((t, v) => t + obtenerTotalVenta(v), 0))}
+                                                        </strong>
+                                                    </div>
+                                                </Card.Body>
+                                            </Card>
+                                        </Col>
+                                    </Row>
+                                </>
                             ) : (
                                 <div className="text-center py-10">
                                     <h5 className="text-gray-500 mb-4 text-xl">Aún no has realizado compras</h5>
-                                    <Button variant="primary" size="lg" onClick={() => console.log('Ir a /productos')}>
+                                    <Button variant="primary" size="lg" onClick={() => console.log('Simular navegación a /productos')}>
                                         Comenzar a Comprar
                                     </Button>
                                 </div>
@@ -295,7 +357,125 @@ const MiCuentaComponent = ({ user, setUser, navigate }) => {
     );
 };
 
-export default MiCuentaComponent;
+const AppWrapper = () => {
+    const [user, setUser] = useState(() => {
+        try {
+            const storedUser = sessionStorage.getItem("usuarioActivo");
+            return storedUser ? JSON.parse(storedUser) : null;
+        } catch (error) {
+            return null;
+        }
+    });
 
+    const initialRoute = user ? '/micuenta' : '/'; 
+    const [currentRoute, setCurrentRoute] = useState(initialRoute);
+    
+    const navigate = useCallback((path, state = {}) => {
+        setCurrentRoute(path);
+    }, []);
 
+    useEffect(() => {
+        const publicRoutes = ['/', '/login', '/registro'];
+        
+        // Caso 1: Usuario NO logueado intentando acceder a una ruta privada
+        if (!user && currentRoute === '/micuenta') {
+            navigate('/login');
+            return;
+        }
+        
+        // Caso 2: Usuario logueado intentando acceder a una ruta pública de autenticación
+        if (user && publicRoutes.includes(currentRoute) && currentRoute !== '/') {
+            navigate('/micuenta');
+        }
+    }, [user, currentRoute, navigate]);
 
+    const handleLogin = (e) => {
+        e.preventDefault();
+        const userData = { 
+            id: '123456789',
+            nombre: 'Juanito Pérez', 
+            correo: 'juanito@tienda.cl', 
+            rol: { id: 2, nombreRol: 'cliente' },
+            fechaRegistro: '2023-10-01'
+        };
+        
+        sessionStorage.setItem("usuarioActivo", JSON.stringify(userData));
+        setUser(userData);
+        navigate('/micuenta'); 
+    };
+    
+    let componentToRender;
+
+    if (currentRoute === '/micuenta' && user) {
+        componentToRender = <MiCuentaComponent user={user} setUser={setUser} navigate={navigate} />;
+    } else if (currentRoute === '/login' || currentRoute === '/registro' || (currentRoute === '/micuenta' && !user)) {
+        componentToRender = (
+            <Container className="text-center my-5 max-w-lg">
+                <Card className="p-8 mx-auto shadow-xl">
+                    <h3 className="text-3xl font-bold mb-6 text-gray-800">{user ? "Sesión Activa" : "Iniciar Sesión"}</h3>
+                    {!user ? (
+                        <form onSubmit={handleLogin} className="space-y-4">
+                            <input 
+                                type="email" 
+                                placeholder="Correo" 
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" 
+                                required
+                            />
+                            <input 
+                                type="password" 
+                                placeholder="Contraseña" 
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" 
+                                required
+                            />
+                            <Button 
+                                type="submit"
+                                variant="primary" 
+                                className="w-full"
+                            >
+                                Ingresar (Simulación)
+                            </Button>
+                            <p className="text-sm text-gray-500 mt-4">Para probar, pulsa "Ingresar". No se requiere llenar los campos.</p>
+                        </form>
+                    ) : (
+                        <div className="mt-4">
+                            <Alert variant="success">Ya has iniciado sesión como **{user.nombre}**</Alert>
+                            <Button variant="primary" onClick={() => navigate('/micuenta')}>Ir a Mi Cuenta</Button>
+                        </div>
+                    )}
+                </Card>
+            </Container>
+        );
+    } else {
+        componentToRender = (
+            <Container className="text-center my-12">
+                <h3 className="text-4xl font-extrabold mb-6 text-blue-600">Bienvenido a la Tienda EFA</h3>
+                <p className="text-xl text-gray-600 mb-8">Esta es la página principal.</p>
+                {user ? (
+                    <Button variant="primary" size="lg" onClick={() => navigate('/micuenta')}>Ver Mi Cuenta</Button>
+                ) : (
+                    <Button variant="primary" size="lg" onClick={() => navigate('/login')}>Comenzar / Ingresar</Button>
+                )}
+            </Container>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-gray-50 antialiased">
+            <header className="bg-white shadow-lg p-4 flex justify-between items-center sticky top-0 z-10">
+                <span className="font-extrabold text-2xl text-blue-600 cursor-pointer" onClick={() => navigate('/')}>EFA Store</span>
+                <nav className="space-x-4 flex items-center">
+                    {user && <span className="text-gray-700 font-medium hidden sm:inline">Hola, {user.nombre}!</span>}
+                    <Button 
+                        variant="primary" 
+                        onClick={() => navigate(user ? '/micuenta' : '/login')}
+                    >
+                        {user ? 'Mi Cuenta' : 'Ingresar'}
+                    </Button>
+                </nav>
+            </header>
+            <main>{componentToRender}</main>
+        </div>
+    );
+};
+
+export default AppWrapper;
