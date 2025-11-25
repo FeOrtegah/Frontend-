@@ -6,16 +6,11 @@ import { appRoutes } from './routes/config';
 // Componentes de layout
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
-import LoadingSpinner from './components/common/LoadingSpinner';
 
-// 🔥 COMPONENTE PARA RUTAS PROTEGIDAS
+// 🔥 COMPONENTE SIMPLE PARA RUTAS PROTEGIDAS
 const ProtectedRoute = ({ children, requireAdmin = false }) => {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   
-  if (loading) {
-    return <LoadingSpinner message="Verificando autenticación..." />;
-  }
-
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
@@ -27,14 +22,10 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
   return children;
 };
 
-// 🔥 COMPONENTE PARA RUTAS PÚBLICAS (solo para no autenticados)
+// 🔥 COMPONENTE SIMPLE PARA RUTAS PÚBLICAS
 const PublicRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
   if (user) {
     return <Navigate to="/" replace />;
   }
@@ -42,9 +33,8 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
-// 🔥 COMPONENTE PARA MANEJAR LAS RUTAS DINÁMICAMENTE
-const RouteHandler = () => {
-  const { user } = useAuth();
+// 🔥 COMPONENTE PRINCIPAL SIN COMPLICACIONES
+function App() {
   const [carrito, setCarrito] = useState([]);
 
   // Cargar carrito desde localStorage
@@ -54,7 +44,6 @@ const RouteHandler = () => {
       try {
         setCarrito(JSON.parse(carritoGuardado));
       } catch (error) {
-        console.error('Error cargando carrito:', error);
         localStorage.removeItem('carrito');
       }
     }
@@ -70,86 +59,69 @@ const RouteHandler = () => {
   }, [carrito]);
 
   return (
-    <Routes>
-      {appRoutes.map((route, index) => {
-        let element = route.element;
-
-        // 🔥 Pasar props a componentes que las necesiten
-        if (route.path === "/producto/:id") {
-          element = React.cloneElement(route.element, { 
-            carrito, 
-            setCarrito 
-          });
-        }
-
-        if (route.path === "/carrito") {
-          element = React.cloneElement(route.element, { 
-            carrito, 
-            setCarrito 
-          });
-        }
-
-        if (route.path === "/pago") {
-          element = React.cloneElement(route.element, { 
-            carrito, 
-            setCarrito,
-            user 
-          });
-        }
-
-        // 🔥 MANEJO DE RUTAS PROTEGIDAS
-        if (route.private) {
-          return (
-            <Route
-              key={index}
-              path={route.path}
-              element={
-                <ProtectedRoute requireAdmin={route.admin}>
-                  {element}
-                </ProtectedRoute>
-              }
-            />
-          );
-        }
-
-        // 🔥 MANEJO DE RUTAS SOLO PÚBLICAS (como /auth)
-        if (route.onlyPublic) {
-          return (
-            <Route
-              key={index}
-              path={route.path}
-              element={
-                <PublicRoute>
-                  {element}
-                </PublicRoute>
-              }
-            />
-          );
-        }
-
-        // 🔥 RUTAS PÚBLICAS NORMALES
-        return (
-          <Route
-            key={index}
-            path={route.path}
-            element={element}
-          />
-        );
-      })}
-    </Routes>
-  );
-};
-
-// 🔥 COMPONENTE PRINCIPAL
-function App() {
-  return (
     <AuthProvider>
       <Router>
         <div className="App d-flex flex-column min-vh-100">
           <Navbar />
           <main className="flex-grow-1">
-            <Suspense fallback={<LoadingSpinner />}>
-              <RouteHandler />
+            <Suspense fallback={<div className="text-center py-5">Cargando...</div>}>
+              <Routes>
+                {appRoutes.map((route, index) => {
+                  // 🔥 CLONAR ELEMENTOS PARA PASAR PROPS
+                  let element = route.element;
+
+                  if (route.path === "/producto/:id") {
+                    element = React.cloneElement(route.element, { carrito, setCarrito });
+                  }
+
+                  if (route.path === "/carrito") {
+                    element = React.cloneElement(route.element, { carrito, setCarrito });
+                  }
+
+                  if (route.path === "/pago") {
+                    const { user } = useAuth();
+                    element = React.cloneElement(route.element, { carrito, setCarrito, user });
+                  }
+
+                  // 🔥 MANEJAR TIPOS DE RUTAS
+                  if (route.private) {
+                    return (
+                      <Route
+                        key={index}
+                        path={route.path}
+                        element={
+                          <ProtectedRoute requireAdmin={route.admin}>
+                            {element}
+                          </ProtectedRoute>
+                        }
+                      />
+                    );
+                  }
+
+                  if (route.onlyPublic) {
+                    return (
+                      <Route
+                        key={index}
+                        path={route.path}
+                        element={
+                          <PublicRoute>
+                            {element}
+                          </PublicRoute>
+                        }
+                      />
+                    );
+                  }
+
+                  // Ruta pública normal
+                  return (
+                    <Route
+                      key={index}
+                      path={route.path}
+                      element={element}
+                    />
+                  );
+                })}
+              </Routes>
             </Suspense>
           </main>
           <Footer />
