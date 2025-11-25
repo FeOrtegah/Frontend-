@@ -26,10 +26,18 @@ const Login = () => {
         setLoading(true);
 
         try {
+            console.log('🚀 Iniciando proceso de login...');
             const response = await UserService.login(form);
-            const usuario = response.data; // YA ES EL USUARIO COMPLETO
+            
+            // VERIFICAR SI LA RESPUESTA FUE EXITOSA
+            if (!response.success) {
+                throw new Error(response.error?.message || response.error || 'Error en el login');
+            }
 
-            // GUARDA SOLO user (SIN token)
+            const usuario = response.data;
+            console.log('👤 Usuario recibido:', usuario);
+
+            // GUARDA EN LOCALSTORAGE
             localStorage.setItem('user', JSON.stringify({
                 id: usuario.id,
                 nombre: usuario.nombre,
@@ -54,8 +62,9 @@ const Login = () => {
             }, 1500);
 
         } catch (error) {
-            const msg = error.response?.data || 'Credenciales inválidas';
-            generarMensaje(msg, 'error');
+            console.error('💥 Error completo en login:', error);
+            const errorMessage = error.message;
+            generarMensaje(errorMessage, 'error');
         } finally {
             setLoading(false);
             setForm({ correo: "", contrasena: "" });
