@@ -18,7 +18,6 @@ function App() {
 
   React.useEffect(() => {
     const savedCarrito = JSON.parse(localStorage.getItem("carrito")) || [];
-    // 🔥 CORREGIDO: Cargar usuario desde localStorage también
     const savedUser = JSON.parse(localStorage.getItem("user")) || 
                      JSON.parse(sessionStorage.getItem("usuarioActivo")) || 
                      null;
@@ -36,7 +35,6 @@ function App() {
     localStorage.setItem("carrito", JSON.stringify(carrito));
   }, [carrito]);
 
-  // 🔥 NUEVO: Sincronizar automáticamente user con localStorage
   React.useEffect(() => {
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));
@@ -52,35 +50,21 @@ function App() {
 
   const navbarHidden = ["/admin"].includes(location.pathname);
 
-  // 🔥 CORREGIDO: Función para manejar props específicas
   const getRouteElement = (route) => {
     const baseProps = { user, setUser };
     
     const routeSpecificProps = {};
     
-    // 🔥 CORRECCIÓN: Incluir /producto/:id en las rutas que necesitan carrito
     if (route.path === "/carrito" || route.path === "/pago" || route.path === "/confirmacion" || route.path === "/producto/:id") {
       routeSpecificProps.carrito = carrito;
       routeSpecificProps.setCarrito = setCarrito;
     }
     
-    // ProductDetail podría necesitar products (opcional)
-    if (route.path === "/producto/:id") {
-      routeSpecificProps.products = products;
-    }
-    
-    // 🔥 IMPORTANTE: Auth y CreateUser necesitan setUser para actualizar estado global
-    if (route.path === "/auth" || route.path === "/create-user") {
+    if (route.path === "/auth") {
       routeSpecificProps.setUser = setUser;
     }
     
-    // Para debugging
-    console.log(`🛣️ Ruta ${route.path} - Props:`, { 
-      hasUser: !!user, 
-      hasSetUser: !!routeSpecificProps.setUser,
-      hasCarrito: !!routeSpecificProps.carrito,
-      hasProducts: !!routeSpecificProps.products
-    });
+    console.log(`🛣️ Ruta ${route.path} - User:`, user);
 
     return React.cloneElement(route.element, {
       ...baseProps,
@@ -107,7 +91,8 @@ function App() {
           {appRoutes.map((route, i) => {
             console.log(`🔍 Procesando ruta: ${route.path}`, { 
               isAdmin: route.isAdmin, 
-              private: route.private 
+              private: route.private,
+              user: user 
             });
 
             if (route.isAdmin)
@@ -132,7 +117,6 @@ function App() {
                 />
               );
 
-            // 🔥 RUTAS PÚBLICAS (incluyendo carrito)
             return (
               <Route
                 key={i}
