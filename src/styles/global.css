@@ -1,11 +1,9 @@
-/* Logo del navbar */
 .logo-efa {
   height: 60px;
   width: auto;
   object-fit: contain;
 }
 
-/* Offcanvas submenu */
 .menu-category {
   font-weight: 600;
   cursor: pointer;
@@ -28,7 +26,6 @@
   color: #007bff;
 }
 
-/* En tu archivo CSS global o en el componente */
 .responsive-container {
   width: 100%;
   max-width: 100%;
@@ -42,7 +39,6 @@
   margin-right: calc(-50vw + 50%);
 }
 
-/* Asegurar que el body y html ocupen todo el ancho */
 html, body {
   width: 100%;
   max-width: 100%;
@@ -51,7 +47,6 @@ html, body {
   padding: 0;
 }
 
-/* Contenedor principal */
 .main-container {
   width: 100%;
   min-height: 100vh;
@@ -59,7 +54,6 @@ html, body {
   flex-direction: column;
 }
 
-/* Header y Footer de ancho completo */
 .full-width-header, .full-width-footer {
   width: 100vw;
   position: relative;
@@ -69,12 +63,10 @@ html, body {
   margin-right: -50vw;
 }
 
-/* ===== RESET COMPLETO PARA ESPACIOS NO DESEADOS ===== */
 * {
   box-sizing: border-box;
 }
 
-/* Eliminar márgenes por defecto de Bootstrap que puedan causar espacios */
 .container-fluid {
   padding-left: 0;
   padding-right: 0;
@@ -89,8 +81,6 @@ html, body {
   padding-left: 0;
   padding-right: 0;
 }
-
-/* ===== CONTENEDORES DE ANCHO COMPLETO ===== */
 .full-width-container {
   width: 100vw;
   position: relative;
@@ -101,7 +91,6 @@ html, body {
   padding: 0;
 }
 
-/* Contenedor principal de productos */
 .products-main-container {
   width: 100%;
   max-width: 100%;
@@ -115,7 +104,6 @@ html, body {
   }
 }
 
-/* ===== GRID DE PRODUCTOS SIN ESPACIOS ===== */
 .products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -125,7 +113,6 @@ html, body {
   padding: 0;
 }
 
-/* ===== FILTROS Y SIDEBAR ===== */
 .filters-sidebar {
   background: #f8f9fa;
   padding: 1.5rem;
@@ -141,7 +128,6 @@ html, body {
   }
 }
 
-/* ===== TARJETAS DE PRODUCTO ===== */
 .product-card {
   border: none;
   border-radius: 8px;
@@ -177,7 +163,6 @@ html, body {
   transform: scale(1.05);
 }
 
-/* ===== HEADER Y FOOTER ===== */
 .navbar-main {
   width: 100vw;
   position: relative;
@@ -200,7 +185,6 @@ html, body {
   margin-top: auto;
 }
 
-/* ===== SECCIONES INFORMATIVAS ===== */
 .info-section {
   width: 100%;
   padding: 3rem 1rem;
@@ -218,8 +202,6 @@ html, body {
   padding: 0 1rem;
 }
 
-/* ===== AJUSTES ESPECÍFICOS PARA Bootstrap ===== */
-/* Override de Bootstrap para eliminar espacios */
 .container-fluid {
   --bs-gutter-x: 0;
 }
@@ -229,7 +211,6 @@ html, body {
   margin: 0;
 }
 
-/* Padding interno para contenido */
 .content-padding {
   padding: 0 1rem;
 }
@@ -246,7 +227,6 @@ html, body {
   }
 }
 
-/* ===== UTILIDADES PARA ELIMINAR ESPACIOS ===== */
 .no-margin {
   margin: 0 !important;
 }
@@ -261,7 +241,6 @@ html, body {
   padding: 0;
 }
 
-/* ===== RESPONSIVE ADJUSTMENTS ===== */
 @media (max-width: 575.98px) {
   .products-grid {
     grid-template-columns: 1fr;
@@ -293,4 +272,39 @@ html, body {
   .products-grid {
     grid-template-columns: repeat(4, 1fr);
   }
+}
+.btn-danger {
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
+  color: white !important;
+}
+
+.btn-primary:hover,
+.btn-danger:hover {
+  background-color: #c82333 !important;
+  border-color: #bd2130 !important;
+}
+
+
+.btn-outline-primary,
+.btn-outline-danger {
+  color: #dc3545 !important;
+  border-color: #dc3545 !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-danger:hover {
+  background-color: #dc3545 !important;
+  color: white !important;
+}
+
+
+.text-primary,
+.h6.text-primary,
+.product-price {
+  color: #000000 !important;
+}
+
+.badge.bg-danger {
+  background-color: #dc3545 !important;
 }
