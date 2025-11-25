@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Container, Card, Button, Alert, Spinner, Row, Col, Badge, Table } from "react-bootstrap";
-import VentaService from "../../services/VentaService";
+import { ventaService } from "../../services/VentaService";
 
 const MiCuenta = ({ user, setUser }) => {
   const navigate = useNavigate();
@@ -9,6 +9,8 @@ const MiCuenta = ({ user, setUser }) => {
   const [loadingVentas, setLoadingVentas] = useState(false);
   const [error, setError] = useState("");
   const [checkingSession, setCheckingSession] = useState(true);
+
+  const formatClp = (value) => (value || 0).toLocaleString("es-CL");
 
   useEffect(() => {
     if (checkingSession) {
@@ -34,34 +36,13 @@ const MiCuenta = ({ user, setUser }) => {
     setLoadingVentas(true);
     setError("");
     try {
-      const resultado = await VentaService.obtenerVentasPorUsuario(user.id);
+      const resultado = await ventaService.obtenerVentasPorUsuario(user.id);
 
       if (resultado.success) {
-        const ventasProcesadas = resultado.data.map((venta) => {
-          let totalCalculado = venta.total || 0;
-          let cantidadProductos = 0;
-
-          if (venta.items?.length > 0) {
-            totalCalculado = venta.items.reduce((sum, item) => sum + (item.subtotal || 0), 0);
-            cantidadProductos = venta.items.reduce((sum, item) => sum + (item.cantidad || 0), 0);
-          } else if (venta.productoVenta?.length > 0) {
-            totalCalculado = venta.productoVenta.reduce((sum, item) => sum + (item.subtotal || 0), 0);
-            cantidadProductos = venta.productoVenta.reduce((sum, item) => sum + (item.cantidad || 0), 0);
-          } else if (venta.productos?.length > 0) {
-            totalCalculado = venta.productos.reduce((sum, p) => sum + (p.subtotal || 0), 0);
-            cantidadProductos = venta.productos.reduce((sum, p) => sum + (p.cantidad || 0), 0);
-          }
-
-          return {
-            ...venta,
-            totalCalculado,
-            cantidadProductos
-          };
-        });
-
+        const ventasProcesadas = ventaService.procesarVentas(resultado.data);
         setVentas(ventasProcesadas);
       } else {
-        setError("Error al cargar las ventas");
+        setError(resultado.error || "Error al cargar las ventas");
       }
     } catch (error) {
       setError("No se pudieron cargar las ventas");
@@ -103,6 +84,7 @@ const MiCuenta = ({ user, setUser }) => {
 
       <Row className="justify-content-center">
         <Col md={10}>
+          {/* Información Personal */}
           <Card className="shadow-sm mb-4">
             <Card.Header className="bg-primary text-white">
               <h5 className="mb-0">Información Personal</h5>
@@ -110,20 +92,24 @@ const MiCuenta = ({ user, setUser }) => {
             <Card.Body>
               <Row>
                 <Col md={6}>
-                  <p><strong>Nombre:</strong> {user.nombre}</p>
-                  <p><strong>Email:</strong> {user.correo}</p>
-                  <p><strong>ID:</strong> <Badge bg="secondary">{user.id}</Badge></p>
+                  <p><strong>Nombre:</strong> {user.nombre || 'N/A'}</p>
+                  <p><strong>Email:</strong> {user.correo || 'N/A'}</p>
+                  <p><strong>ID:</strong> <Badge bg="secondary">{user.id || 'N/A'}</Badge></p>
                 </Col>
                 <Col md={6}>
-                  <p><strong>Rol:</strong> <Badge bg={esAdmin ? 'danger' : 'success'}>
-                    {user.rol?.nombreRol || user.rol || 'usuario'}
-                  </Badge></p>
+                  <p>
+                    <strong>Rol:</strong> 
+                    <Badge bg={esAdmin ? 'danger' : 'success'}>
+                      {user.rol?.nombreRol || user.rol || 'usuario'}
+                    </Badge>
+                  </p>
                   <p><strong>Total Compras:</strong> <Badge bg="info">{ventas.length}</Badge></p>
                 </Col>
               </Row>
             </Card.Body>
           </Card>
 
+          {/* Historial de Compras */}
           <Card className="shadow-sm mb-4">
             <Card.Header>
               <div className="d-flex justify-content-between align-items-center">
@@ -157,16 +143,20 @@ const MiCuenta = ({ user, setUser }) => {
                           const total = obtenerTotalVenta(venta);
                           const cantidad = obtenerCantidadProductos(venta);
 
+                          let estadoColor = 'info';
+                          if (venta.estado?.nombre === 'Completada') estadoColor = 'success';
+                          else if (venta.estado?.nombre === 'Cancelada') estadoColor = 'danger';
+
                           return (
                             <tr key={index}>
                               <td>{venta.numeroVenta || `VEN-${index + 1}`}</td>
                               <td>{venta.fecha ? new Date(venta.fecha).toLocaleDateString() : "-"}</td>
                               <td>
-                                <Badge bg="success">{venta.estado?.nombre || "PENDIENTE"}</Badge>
+                                <Badge bg={estadoColor}>{venta.estado?.nombre || "PENDIENTE"}</Badge>
                               </td>
                               <td>{venta.metodoPago?.nombre || "No especificado"}</td>
                               <td>{cantidad}</td>
-                              <td>${total.toLocaleString("es-CL")}</td>
+                              <td>${formatClp(total)}</td>
                               <td>
                                 <Button 
                                   size="sm"
@@ -183,6 +173,7 @@ const MiCuenta = ({ user, setUser }) => {
                     </Table>
                   </div>
 
+                  {/* Resumen de Compras */}
                   <Row className="mt-4">
                     <Col md={6}>
                       <Card className="bg-light border-0">
@@ -201,7 +192,7 @@ const MiCuenta = ({ user, setUser }) => {
                           <div className="d-flex justify-content-between mb-2">
                             <span>Total gastado:</span>
                             <strong className="text-success fs-5">
-                              ${ventas.reduce((t, v) => t + obtenerTotalVenta(v), 0).toLocaleString('es-CL')}
+                              ${formatClp(ventas.reduce((t, v) => t + obtenerTotalVenta(v), 0))}
                             </strong>
                           </div>
                         </Card.Body>
@@ -220,6 +211,7 @@ const MiCuenta = ({ user, setUser }) => {
             </Card.Body>
           </Card>
 
+          {/* Cerrar Sesión */}
           <div className="text-center mt-4">
             <Button variant="outline-danger" onClick={cerrarSesion}>
               Cerrar Sesión
@@ -232,3 +224,4 @@ const MiCuenta = ({ user, setUser }) => {
 };
 
 export default MiCuenta;
+
