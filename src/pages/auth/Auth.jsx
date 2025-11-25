@@ -12,7 +12,7 @@ import {
   Tabs,
   Tab
 } from "react-bootstrap";
-import UserService from '../services/UserService';
+import UserService from '../../services/UserService.jsx';
 
 const Auth = () => {
   const navigate = useNavigate();
