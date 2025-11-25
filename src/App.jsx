@@ -4,8 +4,8 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { appRoutes } from './routes/config';
 
 // Componentes de layout
-import Navbar from './components/layout/Navbar';
-import Footer from './components/layout/Footer';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 
 // 🔥 COMPONENTE SIMPLE PARA RUTAS PROTEGIDAS
 const ProtectedRoute = ({ children, requireAdmin = false }) => {
