@@ -23,8 +23,36 @@ const Pago = ({ carrito, setCarrito, user }) => {
     const [pasoActual, setPasoActual] = useState(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [usuario, setUsuario] = useState(null); // 🔥 Cambiado a estado
+    const [usuario, setUsuario] = useState(null);
     const navigate = useNavigate();
+
+    // 🔥 CORREGIDO: Función para validar ID de usuario
+    const isValidUserId = (userId) => {
+        if (!userId) return false;
+        if (userId === 'N/A' || userId === 'null' || userId === 'undefined' || userId === '') return false;
+        
+        const num = parseInt(userId);
+        return !isNaN(num) && num > 0;
+    };
+
+    // 🔥 CORREGIDO: Función para asegurar número
+    const ensureNumber = (value) => {
+        console.log('🔢 Convirtiendo a número:', value, 'Tipo:', typeof value);
+        
+        if (value === null || value === undefined || value === 'N/A') {
+            console.error('❌ Valor inválido para conversión:', value);
+            return 0;
+        }
+        
+        const num = parseInt(value);
+        if (isNaN(num)) {
+            console.error('❌ Valor no numérico:', value);
+            return 0;
+        }
+        
+        console.log('✅ Número convertido:', num);
+        return num;
+    };
 
     // 🔥 CORREGIDO: useEffect para cargar usuario correctamente
     useEffect(() => {
@@ -44,19 +72,29 @@ const Pago = ({ carrito, setCarrito, user }) => {
         
         console.log('✅ Usuario encontrado:', usuarioEncontrado);
         
-        if (usuarioEncontrado && usuarioEncontrado.id) {
-            console.log('✅ Usuario ID válido:', usuarioEncontrado.id);
-            setUsuario(usuarioEncontrado);
+        if (usuarioEncontrado) {
+            console.log('🔍 Analizando usuario:');
+            console.log('- ID:', usuarioEncontrado.id);
+            console.log('- Tipo de ID:', typeof usuarioEncontrado.id);
+            console.log('- ¿ID válido?:', isValidUserId(usuarioEncontrado.id));
             
-            // Rellenar automáticamente el formulario
-            setFormData(prev => ({
-                ...prev,
-                nombre: usuarioEncontrado.nombre || '',
-                email: usuarioEncontrado.correo || usuarioEncontrado.email || '',
-                telefono: usuarioEncontrado.telefono || ''
-            }));
+            if (isValidUserId(usuarioEncontrado.id)) {
+                console.log('✅ Usuario ID válido detectado');
+                setUsuario(usuarioEncontrado);
+                
+                // Rellenar automáticamente el formulario
+                setFormData(prev => ({
+                    ...prev,
+                    nombre: usuarioEncontrado.nombre || '',
+                    email: usuarioEncontrado.correo || usuarioEncontrado.email || '',
+                    telefono: usuarioEncontrado.telefono || ''
+                }));
+            } else {
+                console.error('❌ Usuario ID inválido:', usuarioEncontrado.id);
+                setError(`ID de usuario inválido: "${usuarioEncontrado.id}". Por favor, inicia sesión nuevamente.`);
+            }
         } else {
-            console.error('❌ No se encontró usuario válido con ID');
+            console.error('❌ No se encontró usuario');
             setError('No se pudo cargar la información del usuario. Por favor, inicia sesión nuevamente.');
         }
     }, [user]);
@@ -106,21 +144,6 @@ const Pago = ({ carrito, setCarrito, user }) => {
         setPasoActual(pasoActual - 1);
     };
 
-    // 🔥 NUEVO: Función para asegurar número
-    const ensureNumber = (value) => {
-        if (value === null || value === undefined) {
-            console.error('❌ Valor nulo o indefinido:', value);
-            return 0;
-        }
-        
-        const num = parseInt(value);
-        if (isNaN(num)) {
-            console.error('❌ Valor no numérico:', value);
-            return 0;
-        }
-        return num;
-    };
-
     const procesarPago = async () => {
         if (pasoActual === 3 && !validarPaso3()) {
             setError('Por favor completa la información de pago');
@@ -138,9 +161,10 @@ const Pago = ({ carrito, setCarrito, user }) => {
         console.log('- Usuario completo:', usuario);
         console.log('- Usuario ID:', usuario.id);
         console.log('- Tipo de ID:', typeof usuario.id);
+        console.log('- ¿ID válido?:', isValidUserId(usuario.id));
 
-        if (!usuario.id) {
-            setError('Error: ID de usuario no disponible. Por favor, contacta al soporte.');
+        if (!isValidUserId(usuario.id)) {
+            setError(`Error: ID de usuario inválido ("${usuario.id}"). Por favor, contacta al soporte.`);
             return;
         }
 
@@ -155,11 +179,14 @@ const Pago = ({ carrito, setCarrito, user }) => {
         setError('');
 
         try {
-            // 🔥 CORREGIDO: Estructura de datos con conversión segura
+            // 🔥 CORREGIDO: Estructura de datos con ID validado
+            const usuarioId = ensureNumber(usuario.id);
+            console.log('✅ Usuario ID final para venta:', usuarioId);
+
             const ventaData = {
                 numeroVenta: `VEN-${Date.now()}`,
                 usuario: { 
-                    id: ensureNumber(usuario.id)
+                    id: usuarioId
                 },
                 estado: { 
                     id: 1 // PENDIENTE
@@ -224,6 +251,14 @@ const Pago = ({ carrito, setCarrito, user }) => {
         }
     };
 
+    // 🔥 CORREGIDO: Para las imágenes, usar una ruta local
+    const getImageSrc = (imageUrl) => {
+        if (!imageUrl || imageUrl.includes('placeholder.com')) {
+            return '/images/placeholder-product.jpg'; // Ruta local
+        }
+        return imageUrl;
+    };
+
     if (carrito.length === 0) {
         return (
             <div className="container py-5 text-center">
@@ -245,7 +280,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
     }
 
     // 🔥 MEJORADO: Validación de usuario con estado
-    if (!usuario || !usuario.id) {
+    if (!usuario || !isValidUserId(usuario.id)) {
         return (
             <div className="container py-5 text-center">
                 <div className="card shadow">
@@ -254,7 +289,9 @@ const Pago = ({ carrito, setCarrito, user }) => {
                             <i className="bi bi-exclamation-triangle" style={{ fontSize: '4rem', color: '#dc3545' }}></i>
                         </div>
                         <h2>Error de Autenticación</h2>
-                        <p className="text-muted mb-3">No se pudo verificar tu identidad.</p>
+                        <p className="text-muted mb-3">
+                            {usuario ? `ID de usuario inválido: "${usuario.id}"` : 'No se pudo verificar tu identidad.'}
+                        </p>
                         <p className="text-muted mb-4">Por favor, inicia sesión nuevamente.</p>
                         <div className="d-flex gap-2 justify-content-center">
                             <button 
@@ -332,7 +369,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                         {usuario.correo && ` (${usuario.correo})`}
                                         {usuario.email && ` (${usuario.email})`}
                                         <br />
-                                        <small>ID: {usuario.id}</small>
+                                        <small>ID: {usuario.id} (Validado: {isValidUserId(usuario.id) ? '✅' : '❌'})</small>
                                     </div>
                                 </div>
                             )}
@@ -661,12 +698,12 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                 {carrito.map(item => (
                                     <div key={item.id} className="d-flex align-items-center mb-2 pb-2 border-bottom">
                                         <img 
-                                            src={item.image || item.imagen} 
+                                            src={getImageSrc(item.image || item.imagen)} 
                                             alt={item.name || item.nombre}
                                             className="rounded me-3"
                                             style={{ width: '50px', height: '50px', objectFit: 'cover' }}
                                             onError={(e) => {
-                                                e.target.src = 'https://via.placeholder.com/50x50/eee/333?text=Imagen';
+                                                e.target.src = '/images/placeholder-product.jpg';
                                             }}
                                         />
                                         <div className="flex-grow-1">
