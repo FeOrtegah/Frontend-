@@ -19,6 +19,18 @@ const Navbar = ({ carrito }) => {
     navigate(path);
   };
 
+  // 🔥 Detectar si el usuario está logueado
+  const usuarioActivo = JSON.parse(sessionStorage.getItem("usuarioActivo"));
+
+  // 🔥 Acción del botón de "persona"
+  const handleUserClick = () => {
+    if (usuarioActivo) {
+      navigate("/micuenta"); // Si está logueado → ir a Mi Cuenta
+    } else {
+      navigate("/auth"); // Si NO → ir a login/registro
+    }
+  };
+
   return (
     <>
       <nav className="navbar bg-white border-bottom py-2">
@@ -42,9 +54,14 @@ const Navbar = ({ carrito }) => {
           </Link>
 
           <div className="iconos-derecha d-flex align-items-center">
-            <Link to="/auth" className="btn p-1 me-2 text-dark"> 
+
+            {/* 🔥 BOTÓN DE USUARIO CON LÓGICA AGREGADA */}
+            <button 
+              onClick={handleUserClick}
+              className="btn p-1 me-2 text-dark"
+            >
               <span className="material-icons">person</span>
-            </Link>
+            </button>
 
             <Link to="/carrito" className="btn p-1 position-relative text-dark">
               <span className="material-icons">shopping_cart</span>
@@ -90,8 +107,6 @@ const Navbar = ({ carrito }) => {
                 border: 'none',
                 borderRadius: '0'
               }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
             >
               <span className="fw-medium">Hombre</span>
               <span className="text-muted">→</span>
@@ -105,8 +120,6 @@ const Navbar = ({ carrito }) => {
                 border: 'none',
                 borderRadius: '0'
               }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
             >
               <span className="fw-medium">Mujer</span>
               <span className="text-muted">→</span>
@@ -120,13 +133,12 @@ const Navbar = ({ carrito }) => {
                 border: 'none',
                 borderRadius: '0'
               }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
             >
               <span className="fw-medium">Infantil</span>
               <span className="text-muted">→</span>
             </button>
           </div>
+
           <div className="border-top p-3 bg-light">
             <button
               className="btn w-100 text-start p-3 text-dark d-flex justify-content-between align-items-center"
@@ -137,8 +149,6 @@ const Navbar = ({ carrito }) => {
                 borderRadius: '8px',
                 backgroundColor: 'white'
               }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
             >
               <span className="fw-medium">Ver mi cuenta</span>
               <span className="material-icons text-muted" style={{ fontSize: '1.2rem' }}>person</span>
