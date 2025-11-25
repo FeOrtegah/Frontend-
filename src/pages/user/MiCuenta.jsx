@@ -9,20 +9,12 @@ const MiCuenta = ({ user, setUser }) => {
   const [loadingVentas, setLoadingVentas] = useState(false);
   const [error, setError] = useState("");
 
-  // 🔥 DEBUG: Ver qué datos llegan al componente
-  console.log("🔍 MiCuenta - user prop:", user);
-  console.log("🔍 MiCuenta - sessionStorage:", JSON.parse(sessionStorage.getItem("usuarioActivo") || "null"));
-  console.log("🔍 MiCuenta - localStorage:", JSON.parse(localStorage.getItem("user") || "null"));
-
-  // Normalizar los datos del usuario para evitar problemas de estructura
   const normalizedUser = user ? {
     id: user.id || user._id || user.usuarioId || 'N/A',
     nombre: user.nombre || user.name || user.nombreCompleto || 'N/A',
     correo: user.correo || user.email || user.mail || 'N/A',
     rol: user.rol || user.role || user.tipo || 'Cliente'
   } : null;
-
-  console.log("✅ Usuario normalizado en MiCuenta:", normalizedUser);
 
   const formatClp = (value) => (value || 0).toLocaleString("es-CL");
   const obtenerTotalVenta = useCallback((venta) => venta.totalCalculado || 0, []);
