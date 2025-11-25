@@ -4,6 +4,7 @@ import Navbar from "./components/organisms/Navbar";
 import Footer from "./components/organisms/Footer";
 import { appRoutes } from "./routes/config";
 import { useProducts } from "./context/ProductContext";
+import './global.css';
 
 function App() {
   const [carrito, setCarrito] = React.useState([]);
