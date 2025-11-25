@@ -34,6 +34,8 @@ function App() {
 
   return (
     <div className="d-flex flex-column min-vh-100">
+
+      {/* 🔥 SE AGREGA user y setUser AL NAVBAR  */}
       {!navbarHidden && <Navbar carrito={carrito} user={user} setUser={setUser} />}
 
       <main className="flex-grow-1">
@@ -55,7 +57,12 @@ function App() {
                   path={route.path}
                   element={
                     isAuthenticated()
-                      ? React.cloneElement(route.element, { carrito, setCarrito, user, setUser })
+                      ? React.cloneElement(route.element, {
+                          carrito,
+                          setCarrito,
+                          user,
+                          setUser,
+                        })
                       : <Navigate to="/" replace state={{ from: location }} />
                   }
                 />
@@ -65,7 +72,12 @@ function App() {
               <Route
                 key={i}
                 path={route.path}
-                element={React.cloneElement(route.element, { carrito, setCarrito, user, setUser })}
+                element={React.cloneElement(route.element, {
+                  carrito,
+                  setCarrito,
+                  user,
+                  setUser,
+                })}
               />
             );
           })}
