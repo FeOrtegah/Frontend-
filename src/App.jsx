@@ -1,135 +1,161 @@
-import React from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import Navbar from "./components/organisms/Navbar";
-import Footer from "./components/organisms/Footer";
-import { appRoutes } from "./routes/config";
-import { useProducts } from "./context/ProductContext";
-import 'bootstrap/dist/css/bootstrap.min.css';
-import "./styles/global.css";
-import { Container, Spinner } from "react-bootstrap"; 
+import React, { useState, useEffect, Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { appRoutes } from './routes/config';
 
-function App() {
-  const [carrito, setCarrito] = React.useState([]);
-  const [user, setUser] = React.useState(null);
-  const [isAuthLoaded, setIsAuthLoaded] = React.useState(false); 
+// Componentes de layout
+import Navbar from './components/layout/Navbar';
+import Footer from './components/layout/Footer';
+import LoadingSpinner from './components/common/LoadingSpinner';
 
-  const location = useLocation();
-  const { products, loading, error } = useProducts();
-
-  React.useEffect(() => {
-    const savedCarrito = JSON.parse(localStorage.getItem("carrito")) || [];
-    const savedUser = JSON.parse(localStorage.getItem("user")) || 
-                     JSON.parse(sessionStorage.getItem("usuarioActivo")) || 
-                     null;
-
-    setCarrito(savedCarrito);
-    if (savedUser) {
-      setUser(savedUser);
-      console.log('✅ Usuario cargado al iniciar App:', savedUser);
-    }
-    
-    setIsAuthLoaded(true); 
-  }, []);
-
-  React.useEffect(() => {
-    localStorage.setItem("carrito", JSON.stringify(carrito));
-  }, [carrito]);
-
-  React.useEffect(() => {
-    if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
-      console.log('💾 Usuario guardado en localStorage:', user);
-    } else {
-      localStorage.removeItem("user");
-    }
-  }, [user]);
-
-  const isAuthenticated = () => user !== null;
-  const isAdmin = () =>
-    user && (user.rol === "admin" || user.rol?.nombreRol === "admin");
-
-  const navbarHidden = ["/admin"].includes(location.pathname);
-
-  const getRouteElement = (route) => {
-    const baseProps = { user, setUser };
-    
-    const routeSpecificProps = {};
-    
-    if (route.path === "/carrito" || route.path === "/pago" || route.path === "/confirmacion" || route.path === "/producto/:id") {
-      routeSpecificProps.carrito = carrito;
-      routeSpecificProps.setCarrito = setCarrito;
-    }
-    
-    if (route.path === "/auth") {
-      routeSpecificProps.setUser = setUser;
-    }
-    
-    console.log(`🛣️ Ruta ${route.path} - User:`, user);
-
-    return React.cloneElement(route.element, {
-      ...baseProps,
-      ...routeSpecificProps
-    });
-  };
-
-  if (!isAuthLoaded) {
-    return (
-      <Container className="text-center d-flex flex-column justify-content-center align-items-center min-vh-100">
-        <Spinner animation="border" variant="primary" />
-        <p className="mt-3">Cargando sesión...</p>
-      </Container>
-    );
+// 🔥 COMPONENTE PARA RUTAS PROTEGIDAS
+const ProtectedRoute = ({ children, requireAdmin = false }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return <LoadingSpinner message="Verificando autenticación..." />;
   }
 
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (requireAdmin && user.rol?.id !== 1 && user.rol?.id !== 2) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
+// 🔥 COMPONENTE PARA RUTAS PÚBLICAS (solo para no autenticados)
+const PublicRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
+// 🔥 COMPONENTE PARA MANEJAR LAS RUTAS DINÁMICAMENTE
+const RouteHandler = () => {
+  const { user } = useAuth();
+  const [carrito, setCarrito] = useState([]);
+
+  // Cargar carrito desde localStorage
+  useEffect(() => {
+    const carritoGuardado = localStorage.getItem('carrito');
+    if (carritoGuardado) {
+      try {
+        setCarrito(JSON.parse(carritoGuardado));
+      } catch (error) {
+        console.error('Error cargando carrito:', error);
+        localStorage.removeItem('carrito');
+      }
+    }
+  }, []);
+
+  // Guardar carrito en localStorage
+  useEffect(() => {
+    if (carrito.length > 0) {
+      localStorage.setItem('carrito', JSON.stringify(carrito));
+    } else {
+      localStorage.removeItem('carrito');
+    }
+  }, [carrito]);
+
   return (
-    <div className="d-flex flex-column min-vh-100">
+    <Routes>
+      {appRoutes.map((route, index) => {
+        let element = route.element;
 
-      {!navbarHidden && <Navbar carrito={carrito} user={user} setUser={setUser} />}
+        // 🔥 Pasar props a componentes que las necesiten
+        if (route.path === "/producto/:id") {
+          element = React.cloneElement(route.element, { 
+            carrito, 
+            setCarrito 
+          });
+        }
 
-      <main className="flex-grow-1">
-        <Routes>
-          {appRoutes.map((route, i) => {
-            console.log(`🔍 Procesando ruta: ${route.path}`, { 
-              isAdmin: route.isAdmin, 
-              private: route.private,
-              user: user 
-            });
+        if (route.path === "/carrito") {
+          element = React.cloneElement(route.element, { 
+            carrito, 
+            setCarrito 
+          });
+        }
 
-            if (route.isAdmin)
-              return (
-                <Route
-                  key={i}
-                  path={route.path}
-                  element={isAdmin() ? getRouteElement(route) : <Navigate to="/" replace />}
-                />
-              );
+        if (route.path === "/pago") {
+          element = React.cloneElement(route.element, { 
+            carrito, 
+            setCarrito,
+            user 
+          });
+        }
 
-            if (route.private)
-              return (
-                <Route
-                  key={i}
-                  path={route.path}
-                  element={
-                    isAuthenticated()
-                      ? getRouteElement(route)
-                      : <Navigate to="/auth" replace state={{ from: location }} />
-                  }
-                />
-              );
+        // 🔥 MANEJO DE RUTAS PROTEGIDAS
+        if (route.private) {
+          return (
+            <Route
+              key={index}
+              path={route.path}
+              element={
+                <ProtectedRoute requireAdmin={route.admin}>
+                  {element}
+                </ProtectedRoute>
+              }
+            />
+          );
+        }
 
-            return (
-              <Route
-                key={i}
-                path={route.path}
-                element={getRouteElement(route)}
-              />
-            );
-          })}
-        </Routes>
-      </main>
+        // 🔥 MANEJO DE RUTAS SOLO PÚBLICAS (como /auth)
+        if (route.onlyPublic) {
+          return (
+            <Route
+              key={index}
+              path={route.path}
+              element={
+                <PublicRoute>
+                  {element}
+                </PublicRoute>
+              }
+            />
+          );
+        }
 
-      {!navbarHidden && <Footer />}
-    </div>
+        // 🔥 RUTAS PÚBLICAS NORMALES
+        return (
+          <Route
+            key={index}
+            path={route.path}
+            element={element}
+          />
+        );
+      })}
+    </Routes>
+  );
+};
+
+// 🔥 COMPONENTE PRINCIPAL
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <div className="App d-flex flex-column min-vh-100">
+          <Navbar />
+          <main className="flex-grow-1">
+            <Suspense fallback={<LoadingSpinner />}>
+              <RouteHandler />
+            </Suspense>
+          </main>
+          <Footer />
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 
