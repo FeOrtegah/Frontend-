@@ -7,6 +7,7 @@ import UserService from '../../services/UserService';
 const CreateUser = () => {
     const [form, setForm] = useState({ nombre:"" ,correo: "", contrasena: "" });
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -14,7 +15,7 @@ const CreateUser = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!form.correo || !form.contrasena) {
+        if (!form.nombre || !form.correo || !form.contrasena) {
             generarMensaje('Completa todos los campos', 'warning');
             return;
         }
@@ -30,19 +31,27 @@ const CreateUser = () => {
                     "id": 3
                 }
             }
+            
+            console.log('📤 Creando usuario...');
             const response = await UserService.createUser(usuario);
+            
+            // VERIFICAR SI LA RESPUESTA FUE EXITOSA
+            if (!response.success) {
+                throw new Error(response.error?.message || response.error || 'Error al crear usuario');
+            }
 
-            generarMensaje('usuario creado!', 'success');
+            console.log('✅ Usuario creado exitosamente:', response.data);
+            generarMensaje('¡Usuario creado exitosamente!', 'success');
 
-            // Redirigir al dashboard
-            /*setTimeout(() => {
-                navigate('/dashboard');
-            }, 800);*/
+            // Redirigir al login después de crear cuenta
+            setTimeout(() => {
+                navigate('/login');
+            }, 1500);
 
         } catch (error) {
-            // ERRORES
-            const msg = error.response?.data?.message || 'Error al crear usuario';
-            generarMensaje(msg, 'error');
+            console.error('💥 Error completo:', error);
+            const errorMessage = error.message;
+            generarMensaje(errorMessage, 'error');
         } finally {
             setLoading(false);
         }
@@ -97,27 +106,32 @@ const CreateUser = () => {
         },
         {           
             type: "button",
-            text: "Crear usuario",
-            className: "transform w-full mt-4 mb-4 rounded-sm bg-indigo-600 py-2 font-bold duration-300 hover:bg-indigo-400"
+            text: loading ? "Creando..." : "Crear usuario",
+            onClick: handleSubmit,
+            disabled: loading,
+            className: `transform w-full mt-4 mb-4 rounded-sm py-2 font-bold duration-300 ${
+                loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-400'
+            }`
         },
         {
-      type: "text",
-      text: [
-        {
-          content: (
-            <Link
-              to="/login"
-              className="text-indigo-400 hover:text-indigo-300 underline transition"
-            >
-              Ya tengo un usuario
-            </Link>
-          ),
-          variant: "p",
-          className: "text-center text-lg",
+            type: "text",
+            text: [
+                {
+                    content: (
+                        <Link
+                            to="/login"
+                            className="text-indigo-400 hover:text-indigo-300 underline transition"
+                        >
+                            Ya tengo un usuario
+                        </Link>
+                    ),
+                    variant: "p",
+                    className: "text-center text-lg",
+                },
+            ],
         },
-      ],
-    },
     ];
+    
     return (
         <>
             <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-900 via-blue-900 to-orange-800 p-4">
@@ -129,4 +143,4 @@ const CreateUser = () => {
     );
 };
 
-export default CreateUser;   
+export default CreateUser;
