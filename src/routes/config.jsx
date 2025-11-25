@@ -1,3 +1,4 @@
+// routes/index.js
 import { lazy } from "react";
 
 const Home = lazy(() => import("../pages/user/Home"));
@@ -28,10 +29,12 @@ export const publicRoutes = [
   { path: "/ayuda", element: <Ayuda />, showNavbar: true },
   { path: "/noticias", element: <Noticias />, showNavbar: true },
   { path: "/auth", element: <Auth />, showNavbar: false },
+  // CARRITO AHORA ES PÚBLICO
+  { path: "/carrito", element: <Carrito />, showNavbar: true },
 ];
 
 export const privateRoutes = [
-  { path: "/carrito", element: <Carrito />, private: true, showNavbar: true },
+  // Solo pago y confirmación requieren autenticación
   { path: "/pago", element: <Pago />, private: true, showNavbar: true },
   { path: "/confirmacion", element: <Confirmacion />, private: true, showNavbar: true },
   { path: "/micuenta", element: <MiCuenta />, private: true, showNavbar: true },
