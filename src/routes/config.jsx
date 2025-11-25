@@ -27,24 +27,7 @@ export const publicRoutes = [
   { path: "/blog", element: <Blogs />, showNavbar: true },
   { path: "/ayuda", element: <Ayuda />, showNavbar: true },
   { path: "/noticias", element: <Noticias />, showNavbar: true },
-
-  // 🔥 Agregar esta ruta
   { path: "/auth", element: <Auth />, showNavbar: false },
-];
-
-
-export const publicRoutes = [
-  { path: "/", element: <Home />, showNavbar: true },
-  { path: "/hombre", element: <RopaHombre />, showNavbar: true },
-  { path: "/hombre/:subcategoria", element: <RopaHombre />, showNavbar: true },
-  { path: "/mujer", element: <RopaMujer />, showNavbar: true },
-  { path: "/mujer/:subcategoria", element: <RopaMujer />, showNavbar: true },
-  { path: "/infantil", element: <RopaInfantil />, showNavbar: true },
-  { path: "/infantil/:subcategoria", element: <RopaInfantil />, showNavbar: true },
-  { path: "/producto/:id", element: <ProductDetail />, showNavbar: true },
-  { path: "/blog", element: <Blogs />, showNavbar: true },
-  { path: "/ayuda", element: <Ayuda />, showNavbar: true },
-  { path: "/noticias", element: <Noticias />, showNavbar: true },
 ];
 
 export const privateRoutes = [
