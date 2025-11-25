@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useProducts } from '../../context/ProductContext';
@@ -9,6 +8,15 @@ const RopaInfantil = () => {
   const [filtroOferta, setFiltroOferta] = useState(false);
   
   const { products, loading } = useProducts();
+
+  // DEBUG: Ver productos infantil
+  React.useEffect(() => {
+    const productosInfantil = products.filter(p => p.categoria?.toLowerCase() === 'infantil');
+    console.log('🎯 PRODUCTOS INFANTIL CON IMÁGENES:');
+    productosInfantil.forEach(p => {
+      console.log(`📸 ${p.name}:`, p.image);
+    });
+  }, [products]);
 
   // SOLO LAS 3 SUBCATEGORÍAS PARA INFANTIL
   const subcategorias = [
@@ -220,12 +228,16 @@ const RopaInfantil = () => {
                   <div key={product.id} className="col-xl-3 col-lg-4 col-md-6 mb-4">
                     <div className="card h-100 product-card">
                       <img 
-                        src={product.image} 
+                        src={product.image}
                         className="card-img-top" 
                         alt={product.name}
                         style={{ height: '250px', objectFit: 'cover' }}
                         onError={(e) => {
-                          e.target.src = 'https://via.placeholder.com/250x250?text=Imagen+No+Disponible';
+                          console.error('Error cargando imagen:', product.image);
+                          e.target.src = '/img/logo.webp';
+                        }}
+                        onLoad={() => {
+                          console.log('Imagen cargada correctamente:', product.image);
                         }}
                       />
                       <div className="card-body d-flex flex-column">
@@ -262,24 +274,6 @@ const RopaInfantil = () => {
         </div>
       </div>
     </div>
-=======
-import React from "react";
-import { useLocation } from "react-router-dom";
-import Products from "./Products";
-
-const RopaInfantil = ({ carrito, setCarrito }) => {
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const tipo = searchParams.get("categoria");
-
-  return (
-    <Products 
-      categoria="infantil" 
-      tipo={tipo}
-      carrito={carrito} 
-      setCarrito={setCarrito} 
-    />
->>>>>>> 117f769bce0402b3d4c3cc178c29a8febc55edc9
   );
 };
 
