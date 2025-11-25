@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+// pages/user/Carrito.js
+import React, { useState } from "react";
 import { 
   Container, 
   Button, 
@@ -13,18 +14,6 @@ const Carrito = ({ carrito, setCarrito }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [usuario, setUsuario] = useState(null);
-
-  // Verificar si el usuario está autenticado
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUsuario(JSON.parse(userData));
-    } else {
-      // Si no hay usuario, redirigir al login
-      navigate('/login');
-    }
-  }, [navigate]);
 
   const handleRemoveItem = (index) => {
     const nuevoCarrito = carrito.filter((_, i) => i !== index);
@@ -57,11 +46,15 @@ const Carrito = ({ carrito, setCarrito }) => {
       setLoading(true);
       setError(null);
       
-      // Verificar nuevamente que el usuario esté autenticado
-      const userData = localStorage.getItem('user');
-      if (!userData) {
+      // Verificar si el usuario está logueado para proceder al pago
+      const usuario = JSON.parse(localStorage.getItem('user') || 'null');
+      
+      if (!usuario) {
+        // Si no está logueado, redirigir al login
         setError("Debes iniciar sesión para proceder al pago");
-        navigate('/login');
+        setTimeout(() => {
+          navigate('/auth');
+        }, 2000);
         return;
       }
       
@@ -76,18 +69,6 @@ const Carrito = ({ carrito, setCarrito }) => {
       setLoading(false);
     }
   };
-
-  // Si no hay usuario, mostrar loading
-  if (!usuario) {
-    return (
-      <Container className="my-5 text-center">
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Cargando...</span>
-        </Spinner>
-        <p>Verificando autenticación...</p>
-      </Container>
-    );
-  }
 
   if (carrito.length === 0) {
     return (
@@ -108,7 +89,6 @@ const Carrito = ({ carrito, setCarrito }) => {
   return (
     <Container className="my-5">
       <h2 className="text-center mb-4">Tu Carrito de Compras</h2>
-      <p className="text-center text-muted">Bienvenido, {usuario.nombre}</p>
       
       {error && (
         <Alert variant="danger" className="mb-3">
@@ -228,6 +208,15 @@ const Carrito = ({ carrito, setCarrito }) => {
             )}
           </Button>
         </div>
+        
+        {/* Mensaje informativo para usuarios no logueados */}
+        {!localStorage.getItem('user') && (
+          <Alert variant="info" className="mt-3">
+            <small>
+              💡 <strong>Nota:</strong> Necesitarás iniciar sesión para completar tu compra
+            </small>
+          </Alert>
+        )}
       </div>
     </Container>
   );
