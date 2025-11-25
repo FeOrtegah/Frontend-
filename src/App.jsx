@@ -5,47 +5,56 @@ import { appRoutes } from './routes/config';
 import Navbar from "./components/organisms/Navbar";
 import Footer from "./components/organisms/Footer";
 
-// 🔥 COMPONENTE SIMPLE PARA RUTAS PROTEGIDAS
-const ProtectedRoute = ({ children, requireAdmin = false }) => {
+// 🔥 COMPONENTE SIMPLIFICADO PARA RUTAS
+const RouteHandler = ({ route, carrito, setCarrito }) => {
   const { user } = useAuth();
-  
-  if (!user) {
+
+  // Verificar autenticación para rutas privadas
+  if (route.private && !user) {
     return <Navigate to="/auth" replace />;
   }
 
-  if (requireAdmin && user.rol?.id !== 1 && user.rol?.id !== 2) {
+  // Verificar admin para rutas de admin
+  if (route.admin && (!user || (user.rol?.id !== 1 && user.rol?.id !== 2))) {
     return <Navigate to="/" replace />;
   }
 
-  return children;
-};
-
-// 🔥 COMPONENTE SIMPLE PARA RUTAS PÚBLICAS
-const PublicRoute = ({ children }) => {
-  const { user } = useAuth();
-  
-  if (user) {
+  // Verificar rutas solo públicas (onlyPublic)
+  if (route.onlyPublic && user) {
     return <Navigate to="/" replace />;
   }
 
-  return children;
+  // Pasar props según el tipo de ruta
+  let element = route.element;
+
+  if (route.path === "/producto/:id" || route.path === "/carrito") {
+    element = React.cloneElement(route.element, { carrito, setCarrito });
+  }
+
+  if (route.path === "/pago") {
+    element = React.cloneElement(route.element, { carrito, setCarrito, user });
+  }
+
+  if (route.path === "/micuenta") {
+    element = React.cloneElement(route.element, { user });
+  }
+
+  return element;
 };
 
-// 🔥 COMPONENTE PARA RUTAS CON CARRITO
-const CarritoRoute = ({ children, carrito, setCarrito }) => {
-  return React.cloneElement(children, { carrito, setCarrito });
-};
+// 🔥 COMPONENTE DE CARGA
+const LoadingSpinner = () => (
+  <div className="text-center py-5">
+    <div className="spinner-border text-primary" role="status">
+      <span className="visually-hidden">Cargando...</span>
+    </div>
+    <p className="mt-2">Cargando...</p>
+  </div>
+);
 
-// 🔥 COMPONENTE PARA RUTAS CON PAGO
-const PagoRoute = ({ children, carrito, setCarrito }) => {
-  const { user } = useAuth();
-  return React.cloneElement(children, { carrito, setCarrito, user });
-};
-
-// 🔥 COMPONENTE PRINCIPAL - SIN useAuth AQUÍ
-function AppContent() {
+// 🔥 COMPONENTE PRINCIPAL
+function App() {
   const [carrito, setCarrito] = useState([]);
-  const { user } = useAuth(); // ✅ Ahora sí está dentro de AuthProvider
 
   // Cargar carrito desde localStorage
   useEffect(() => {
@@ -54,6 +63,7 @@ function AppContent() {
       try {
         setCarrito(JSON.parse(carritoGuardado));
       } catch (error) {
+        console.error('Error cargando carrito:', error);
         localStorage.removeItem('carrito');
       }
     }
@@ -69,82 +79,31 @@ function AppContent() {
   }, [carrito]);
 
   return (
-    <div className="App d-flex flex-column min-vh-100">
-      <Navbar />
-      <main className="flex-grow-1">
-        <Suspense fallback={<div className="text-center py-5">Cargando...</div>}>
-          <Routes>
-            {appRoutes.map((route, index) => {
-              // 🔥 MANEJAR TIPOS DE RUTAS
-              if (route.private) {
-                return (
-                  <Route
-                    key={index}
-                    path={route.path}
-                    element={
-                      <ProtectedRoute requireAdmin={route.admin}>
-                        {route.path === "/pago" ? (
-                          <PagoRoute carrito={carrito} setCarrito={setCarrito}>
-                            {route.element}
-                          </PagoRoute>
-                        ) : route.path === "/carrito" ? (
-                          <CarritoRoute carrito={carrito} setCarrito={setCarrito}>
-                            {route.element}
-                          </CarritoRoute>
-                        ) : (
-                          route.element
-                        )}
-                      </ProtectedRoute>
-                    }
-                  />
-                );
-              }
-
-              if (route.onlyPublic) {
-                return (
-                  <Route
-                    key={index}
-                    path={route.path}
-                    element={
-                      <PublicRoute>
-                        {route.element}
-                      </PublicRoute>
-                    }
-                  />
-                );
-              }
-
-              // Ruta pública normal
-              return (
-                <Route
-                  key={index}
-                  path={route.path}
-                  element={
-                    route.path === "/producto/:id" || route.path === "/carrito" ? (
-                      <CarritoRoute carrito={carrito} setCarrito={setCarrito}>
-                        {route.element}
-                      </CarritoRoute>
-                    ) : (
-                      route.element
-                    )
-                  }
-                />
-              );
-            })}
-          </Routes>
-        </Suspense>
-      </main>
-      <Footer />
-    </div>
-  );
-}
-
-// 🔥 COMPONENTE PRINCIPAL QUE ENVUELVE CON AuthProvider
-function App() {
-  return (
     <AuthProvider>
       <Router>
-        <AppContent />
+        <div className="App d-flex flex-column min-vh-100">
+          <Navbar />
+          <main className="flex-grow-1">
+            <Suspense fallback={<LoadingSpinner />}>
+              <Routes>
+                {appRoutes.map((route, index) => (
+                  <Route
+                    key={index}
+                    path={route.path}
+                    element={
+                      <RouteHandler 
+                        route={route} 
+                        carrito={carrito} 
+                        setCarrito={setCarrito} 
+                      />
+                    }
+                  />
+                ))}
+              </Routes>
+            </Suspense>
+          </main>
+          <Footer />
+        </div>
       </Router>
     </AuthProvider>
   );
