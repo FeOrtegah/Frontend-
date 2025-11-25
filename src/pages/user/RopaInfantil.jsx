@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useProducts } from '../../context/ProductContext';
-import './global.css';
+import "../../styles/global.css";
 const RopaInfantil = () => {
   const { subcategoria } = useParams();
   const [filtroPrecio, setFiltroPrecio] = useState('');
