@@ -1,9 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Container, 
-  Row, 
-  Col, 
-  Card, 
   Button, 
   Table, 
   Alert, 
@@ -11,12 +8,23 @@ import {
   Badge 
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import OrderService from "/src/services/OrderService";
 
 const Carrito = ({ carrito, setCarrito }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [usuario, setUsuario] = useState(null);
+
+  // Verificar si el usuario está autenticado
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUsuario(JSON.parse(userData));
+    } else {
+      // Si no hay usuario, redirigir al login
+      navigate('/login');
+    }
+  }, [navigate]);
 
   const handleRemoveItem = (index) => {
     const nuevoCarrito = carrito.filter((_, i) => i !== index);
@@ -49,6 +57,14 @@ const Carrito = ({ carrito, setCarrito }) => {
       setLoading(true);
       setError(null);
       
+      // Verificar nuevamente que el usuario esté autenticado
+      const userData = localStorage.getItem('user');
+      if (!userData) {
+        setError("Debes iniciar sesión para proceder al pago");
+        navigate('/login');
+        return;
+      }
+      
       // Guardar el carrito actual en localStorage para usarlo en el pago
       localStorage.setItem("carritoParaPago", JSON.stringify(carrito));
       localStorage.setItem("totalParaPago", getTotal().toString());
@@ -60,6 +76,18 @@ const Carrito = ({ carrito, setCarrito }) => {
       setLoading(false);
     }
   };
+
+  // Si no hay usuario, mostrar loading
+  if (!usuario) {
+    return (
+      <Container className="my-5 text-center">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Cargando...</span>
+        </Spinner>
+        <p>Verificando autenticación...</p>
+      </Container>
+    );
+  }
 
   if (carrito.length === 0) {
     return (
@@ -80,6 +108,7 @@ const Carrito = ({ carrito, setCarrito }) => {
   return (
     <Container className="my-5">
       <h2 className="text-center mb-4">Tu Carrito de Compras</h2>
+      <p className="text-center text-muted">Bienvenido, {usuario.nombre}</p>
       
       {error && (
         <Alert variant="danger" className="mb-3">
@@ -172,55 +201,34 @@ const Carrito = ({ carrito, setCarrito }) => {
         </tbody>
       </Table>
 
-      <Row className="mt-4">
-        <Col md={8}></Col>
-        <Col md={4}>
-          <Card className="border-0 shadow-sm">
-            <Card.Body>
-              <div className="d-flex justify-content-between mb-2">
-                <span>Subtotal:</span>
-                <span>${getTotal().toLocaleString()}</span>
-              </div>
-              <div className="d-flex justify-content-between mb-2">
-                <span>Envío:</span>
-                <span>Gratis</span>
-              </div>
-              <hr />
-              <div className="d-flex justify-content-between mb-3">
-                <strong>Total:</strong>
-                <strong className="text-primary h5">
-                  ${getTotal().toLocaleString()}
-                </strong>
-              </div>
-              
-              <div className="d-grid gap-2">
-                <Button 
-                  variant="success" 
-                  size="lg" 
-                  onClick={handleProceedToPayment}
-                  disabled={loading || carrito.length === 0}
-                >
-                  {loading ? (
-                    <>
-                      <Spinner animation="border" size="sm" className="me-2" />
-                      Procesando...
-                    </>
-                  ) : (
-                    'Proceder al Pago'
-                  )}
-                </Button>
-                
-                <Button 
-                  variant="outline-primary" 
-                  onClick={() => navigate('/')}
-                >
-                  Seguir Comprando
-                </Button>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+      <div className="text-end mt-4">
+        <h4>Total: ${getTotal().toLocaleString()}</h4>
+        
+        <div className="d-flex justify-content-end gap-3 mt-3">
+          <Button 
+            variant="outline-primary" 
+            onClick={() => navigate('/')}
+          >
+            Seguir Comprando
+          </Button>
+          
+          <Button 
+            variant="success" 
+            size="lg" 
+            onClick={handleProceedToPayment}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Procesando...
+              </>
+            ) : (
+              'Proceder al Pago'
+            )}
+          </Button>
+        </div>
+      </div>
     </Container>
   );
 };
