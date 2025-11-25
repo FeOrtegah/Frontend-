@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import VentaService from '../../services/VentaService';
+import 'animate.css'; // 🔥 IMPORTANTE: Agregar esta importación
 
 const Pago = ({ carrito, setCarrito, user }) => {
     const [formData, setFormData] = useState({
@@ -26,19 +27,26 @@ const Pago = ({ carrito, setCarrito, user }) => {
     const [usuario, setUsuario] = useState(null);
     const navigate = useNavigate();
 
-    // 🔥 CORREGIDO: Función para validar ID de usuario
+    // 🔥 CORREGIDO: Función mejorada para validar ID de usuario
     const isValidUserId = (userId) => {
-        if (!userId) return false;
-        if (userId === 'N/A' || userId === 'null' || userId === 'undefined' || userId === '') return false;
+        if (userId === null || userId === undefined) return false;
+        if (typeof userId === 'string') {
+            if (userId === 'N/A' || userId === 'null' || userId === 'undefined' || userId.trim() === '') return false;
+        }
         
-        const num = parseInt(userId);
+        const num = Number(userId);
         return !isNaN(num) && num > 0;
     };
 
-    // 🔥 NUEVO: Función para extraer ID real del usuario
+    // 🔥 CORREGIDO: Función mejorada para extraer ID real del usuario
     const extractValidUserId = (usuarioData) => {
         console.log('🔍 Extrayendo ID válido de usuario:', usuarioData);
         
+        if (!usuarioData) {
+            console.error('❌ Datos de usuario no definidos');
+            return null;
+        }
+
         // Buscar ID en diferentes ubicaciones posibles
         const posiblesIds = [
             usuarioData.id,
@@ -47,12 +55,12 @@ const Pago = ({ carrito, setCarrito, user }) => {
             usuarioData.user?.id,
             usuarioData.userId,
             usuarioData.usuarioId
-        ];
+        ].filter(id => id !== undefined && id !== null);
         
         for (const id of posiblesIds) {
             if (isValidUserId(id)) {
                 console.log('✅ ID válido encontrado:', id);
-                return id;
+                return Number(id);
             }
         }
         
@@ -62,55 +70,68 @@ const Pago = ({ carrito, setCarrito, user }) => {
 
     // 🔥 CORREGIDO: Función para asegurar número
     const ensureNumber = (value) => {
-        console.log('🔢 Convirtiendo a número:', value, 'Tipo:', typeof value);
-        
         if (value === null || value === undefined || value === 'N/A') {
-            console.error('❌ Valor inválido para conversión:', value);
+            console.warn('⚠️ Valor inválido para conversión, usando 0:', value);
             return 0;
         }
         
-        const num = parseInt(value);
+        const num = Number(value);
         if (isNaN(num)) {
-            console.error('❌ Valor no numérico:', value);
+            console.warn('⚠️ Valor no numérico, usando 0:', value);
             return 0;
         }
         
-        console.log('✅ Número convertido:', num);
         return num;
     };
 
-    // 🔥 CORREGIDO: useEffect para cargar usuario correctamente
+    // 🔥 CORREGIDO: useEffect mejorado para cargar usuario
     useEffect(() => {
-        console.log('🔍 DEBUG - Buscando usuario en Pago:');
+        console.log('🔄 Iniciando carga de usuario...');
         
-        // Intentar todas las fuentes posibles
-        const usuarioDeProps = user;
-        const usuarioDeLocalStorage = JSON.parse(localStorage.getItem('user') || 'null');
-        const usuarioDeSessionStorage = JSON.parse(sessionStorage.getItem('usuarioActivo') || 'null');
-        
-        console.log('- user de props:', usuarioDeProps);
-        console.log('- localStorage user:', usuarioDeLocalStorage);
-        console.log('- sessionStorage usuarioActivo:', usuarioDeSessionStorage);
+        const loadUser = () => {
+            try {
+                // Intentar todas las fuentes posibles
+                const usuarioDeProps = user;
+                const usuarioDeLocalStorage = JSON.parse(localStorage.getItem('user') || 'null');
+                const usuarioDeSessionStorage = JSON.parse(sessionStorage.getItem('usuarioActivo') || 'null');
+                
+                console.log('📋 Fuentes de usuario:');
+                console.log('- Props:', usuarioDeProps);
+                console.log('- LocalStorage:', usuarioDeLocalStorage);
+                console.log('- SessionStorage:', usuarioDeSessionStorage);
 
-        // Orden de prioridad: props -> localStorage -> sessionStorage
-        let usuarioEncontrado = usuarioDeProps || usuarioDeLocalStorage || usuarioDeSessionStorage;
-        
-        console.log('✅ Usuario encontrado:', usuarioEncontrado);
-        
-        if (usuarioEncontrado) {
-            console.log('🔍 Analizando usuario:');
-            console.log('- ID original:', usuarioEncontrado.id);
-            console.log('- Tipo de ID:', typeof usuarioEncontrado.id);
-            
-            // 🔥 CORREGIDO: Extraer ID válido
-            const idValido = extractValidUserId(usuarioEncontrado);
-            console.log('- ¿ID válido encontrado?:', idValido);
-            
-            if (idValido) {
-                // 🔥 CORREGIDO: Crear usuario con ID válido
+                // Orden de prioridad: props -> localStorage -> sessionStorage
+                let usuarioEncontrado = usuarioDeProps || usuarioDeLocalStorage || usuarioDeSessionStorage;
+                
+                if (!usuarioEncontrado) {
+                    console.error('❌ No se encontró usuario en ninguna fuente');
+                    setError('No se pudo cargar la información del usuario. Por favor, inicia sesión nuevamente.');
+                    return;
+                }
+
+                console.log('✅ Usuario encontrado:', usuarioEncontrado);
+                
+                // 🔥 CORREGIDO: Extraer ID válido
+                const idValido = extractValidUserId(usuarioEncontrado);
+                
+                if (!idValido) {
+                    console.error('❌ No se pudo encontrar ID válido para el usuario');
+                    setError('Error: ID de usuario inválido. Por favor, inicia sesión nuevamente.');
+                    
+                    // Limpiar datos inválidos
+                    localStorage.removeItem('user');
+                    sessionStorage.removeItem('usuarioActivo');
+                    return;
+                }
+
+                // 🔥 CORREGIDO: Crear usuario con ID válido y datos completos
                 const usuarioCorregido = {
                     ...usuarioEncontrado,
-                    id: idValido // Reemplazar el ID inválido
+                    id: idValido,
+                    nombre: usuarioEncontrado.nombre || '',
+                    correo: usuarioEncontrado.correo || usuarioEncontrado.email || '',
+                    email: usuarioEncontrado.email || usuarioEncontrado.correo || '',
+                    telefono: usuarioEncontrado.telefono || ''
                 };
                 
                 console.log('✅ Usuario corregido con ID válido:', usuarioCorregido);
@@ -123,23 +144,37 @@ const Pago = ({ carrito, setCarrito, user }) => {
                     email: usuarioCorregido.correo || usuarioCorregido.email || '',
                     telefono: usuarioCorregido.telefono || ''
                 }));
-            } else {
-                console.error('❌ No se pudo encontrar ID válido para el usuario');
-                setError('Error: ID de usuario inválido. Por favor, inicia sesión nuevamente.');
-                
-                // 🔥 LIMPIAR DATOS INVÁLIDOS
-                localStorage.removeItem('user');
-                sessionStorage.removeItem('usuarioActivo');
+
+            } catch (error) {
+                console.error('💥 Error al cargar usuario:', error);
+                setError('Error al cargar información del usuario. Por favor, recarga la página.');
             }
-        } else {
-            console.error('❌ No se encontró usuario');
-            setError('No se pudo cargar la información del usuario. Por favor, inicia sesión nuevamente.');
-        }
+        };
+
+        loadUser();
     }, [user]);
 
-    const subtotal = carrito.reduce((sum, item) => sum + ((item.price || item.precio || 0) * (item.cantidad || 1)), 0);
-    const costoEnvio = formData.metodoEnvio === 'delivery' ? 3500 : 0;
-    const total = subtotal + costoEnvio;
+    // 🔥 CORREGIDO: Calcular totales de forma segura
+    const calcularTotales = () => {
+        try {
+            const subtotal = carrito.reduce((sum, item) => {
+                if (!item) return sum;
+                const precio = Number(item.price || item.precio || 0);
+                const cantidad = Number(item.cantidad || 1);
+                return sum + (precio * cantidad);
+            }, 0);
+            
+            const costoEnvio = formData.metodoEnvio === 'delivery' ? 3500 : 0;
+            const total = subtotal + costoEnvio;
+            
+            return { subtotal, costoEnvio, total };
+        } catch (error) {
+            console.error('Error calculando totales:', error);
+            return { subtotal: 0, costoEnvio: 0, total: 0 };
+        }
+    };
+
+    const { subtotal, costoEnvio, total } = calcularTotales();
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -150,30 +185,45 @@ const Pago = ({ carrito, setCarrito, user }) => {
     };
 
     const validarPaso1 = () => {
-        return formData.nombre && formData.email && formData.telefono;
+        return formData.nombre.trim() && formData.email.trim() && formData.telefono.trim();
     };
 
     const validarPaso2 = () => {
-        return formData.direccion && formData.ciudad && formData.comuna;
+        return formData.direccion.trim() && formData.ciudad.trim() && formData.comuna.trim();
     };
 
     const validarPaso3 = () => {
         if (formData.metodoPago === 'tarjeta') {
-            return formData.numeroTarjeta && formData.nombreTarjeta && formData.fechaExpiracion && formData.cvv;
+            const tarjetaValida = formData.numeroTarjeta.trim().replace(/\s/g, '').length >= 15;
+            const nombreValido = formData.nombreTarjeta.trim().length >= 3;
+            const fechaValida = formData.fechaExpiracion.trim().length === 5;
+            const cvvValido = formData.cvv.trim().length >= 3;
+            
+            return tarjetaValida && nombreValido && fechaValida && cvvValido;
         }
         return true;
     };
 
     const siguientePaso = () => {
-        if (pasoActual === 1 && !validarPaso1()) {
-            setError('Por favor completa toda la información personal');
-            return;
-        }
-        if (pasoActual === 2 && !validarPaso2()) {
-            setError('Por favor completa la dirección de envío');
-            return;
-        }
         setError('');
+        
+        switch(pasoActual) {
+            case 1:
+                if (!validarPaso1()) {
+                    setError('Por favor completa toda la información personal');
+                    return;
+                }
+                break;
+            case 2:
+                if (!validarPaso2()) {
+                    setError('Por favor completa la dirección de envío');
+                    return;
+                }
+                break;
+            default:
+                break;
+        }
+        
         setPasoActual(pasoActual + 1);
     };
 
@@ -182,37 +232,33 @@ const Pago = ({ carrito, setCarrito, user }) => {
         setPasoActual(pasoActual - 1);
     };
 
+    // 🔥 CORREGIDO: Función de procesamiento de pago mejorada
     const procesarPago = async () => {
         if (pasoActual === 3 && !validarPaso3()) {
             setError('Por favor completa la información de pago');
             return;
         }
 
-        // 🔥 VALIDACIÓN MEJORADA
-        if (!usuario) {
-            setError('No se encontró información del usuario. Por favor, inicia sesión nuevamente.');
+        // Validación de usuario
+        if (!usuario || !isValidUserId(usuario.id)) {
+            setError('No se encontró información válida del usuario. Por favor, inicia sesión nuevamente.');
             setTimeout(() => navigate('/auth'), 3000);
             return;
         }
 
-        console.log('🔍 DEBUG FINAL - Usuario antes de procesar:');
-        console.log('- Usuario completo:', usuario);
-        console.log('- Usuario ID:', usuario.id);
-        console.log('- Tipo de ID:', typeof usuario.id);
-        console.log('- ¿ID válido?:', isValidUserId(usuario.id));
-
-        if (!isValidUserId(usuario.id)) {
-            setError(`Error: ID de usuario inválido ("${usuario.id}"). Por favor, contacta al soporte.`);
-            
-            // 🔥 LIMPIAR DATOS CORRUPTOS
-            localStorage.removeItem('user');
-            sessionStorage.removeItem('usuarioActivo');
-            setTimeout(() => navigate('/auth'), 3000);
+        // Validación de carrito
+        if (!carrito || carrito.length === 0) {
+            setError('El carrito está vacío');
             return;
         }
 
-        // Validar carrito
-        const carritoValido = carrito.every(item => item && item.id && (item.price || item.precio));
+        const carritoValido = carrito.every(item => 
+            item && 
+            item.id && 
+            isValidUserId(item.id) && 
+            (item.price || item.precio)
+        );
+        
         if (!carritoValido) {
             setError('El carrito contiene productos inválidos');
             return;
@@ -222,12 +268,12 @@ const Pago = ({ carrito, setCarrito, user }) => {
         setError('');
 
         try {
-            // 🔥 CORREGIDO: Estructura de datos con ID validado
+            // 🔥 CORREGIDO: Estructura de datos validada
             const usuarioId = ensureNumber(usuario.id);
             console.log('✅ Usuario ID final para venta:', usuarioId);
 
             const ventaData = {
-                numeroVenta: `VEN-${Date.now()}`,
+                numeroVenta: `VEN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 usuario: { 
                     id: usuarioId
                 },
@@ -251,22 +297,27 @@ const Pago = ({ carrito, setCarrito, user }) => {
                 })),
                 total: parseFloat(total),
                 direccionEnvio: {
-                    direccion: formData.direccion,
-                    ciudad: formData.ciudad,
-                    comuna: formData.comuna,
-                    codigoPostal: formData.codigoPostal,
-                    instrucciones: formData.instruccionesEspeciales
+                    direccion: formData.direccion.trim(),
+                    ciudad: formData.ciudad.trim(),
+                    comuna: formData.comuna.trim(),
+                    codigoPostal: formData.codigoPostal.trim(),
+                    instrucciones: formData.instruccionesEspeciales.trim()
+                },
+                cliente: {
+                    nombre: formData.nombre.trim(),
+                    email: formData.email.trim(),
+                    telefono: formData.telefono.trim()
                 }
             };
 
-            console.log('📤 Enviando datos de venta validados:', ventaData);
+            console.log('📤 Enviando datos de venta:', ventaData);
 
             const resultado = await VentaService.crearVenta(ventaData);
 
             if (resultado.success) {
                 console.log('✅ Venta creada exitosamente:', resultado.data);
                 
-                // Limpiar carrito
+                // Limpiar carrito y datos temporales
                 setCarrito([]);
                 localStorage.removeItem('carrito');
                 localStorage.removeItem('carritoParaPago');
@@ -278,17 +329,19 @@ const Pago = ({ carrito, setCarrito, user }) => {
                         venta: resultado.data,
                         carrito: carrito,
                         total: total,
-                        datosEnvio: formData
+                        datosEnvio: formData,
+                        usuario: usuario
                     } 
                 });
             } else {
-                console.error('❌ Error del servicio:', resultado.error);
-                setError(resultado.error || 'Error al procesar el pago');
+                console.error('❌ Error del servicio:', resultado);
+                const mensajeError = resultado.error?.message || resultado.error || 'Error al procesar el pago';
+                setError(mensajeError);
             }
 
         } catch (err) {
             console.error('💥 Error en procesarPago:', err);
-            setError('Error de conexión. Intenta nuevamente.');
+            setError(err.message || 'Error de conexión. Intenta nuevamente.');
         } finally {
             setLoading(false);
         }
@@ -296,13 +349,14 @@ const Pago = ({ carrito, setCarrito, user }) => {
 
     // 🔥 CORREGIDO: Para las imágenes, usar una ruta local
     const getImageSrc = (imageUrl) => {
-        if (!imageUrl || imageUrl.includes('placeholder.com')) {
-            return '/images/placeholder-product.jpg'; // Ruta local
+        if (!imageUrl || imageUrl.includes('placeholder.com') || imageUrl.includes('undefined')) {
+            return '/images/placeholder-product.jpg';
         }
         return imageUrl;
     };
 
-    if (carrito.length === 0) {
+    // 🔥 CORREGIDO: Renderizado condicional mejorado
+    if (!carrito || carrito.length === 0) {
         return (
             <div className="container py-5 text-center">
                 <div className="card shadow">
@@ -322,8 +376,8 @@ const Pago = ({ carrito, setCarrito, user }) => {
         );
     }
 
-    // 🔥 MEJORADO: Validación de usuario con estado
-    if (!usuario || !isValidUserId(usuario.id)) {
+    // 🔥 CORREGIDO: Validación de usuario con mensajes más claros
+    if (error && !usuario) {
         return (
             <div className="container py-5 text-center">
                 <div className="card shadow">
@@ -333,17 +387,15 @@ const Pago = ({ carrito, setCarrito, user }) => {
                         </div>
                         <h2>Error de Autenticación</h2>
                         <p className="text-muted mb-3">
-                            {usuario ? `ID de usuario inválido: "${usuario.id}"` : 'No se pudo verificar tu identidad.'}
+                            {error}
                         </p>
                         <p className="text-muted mb-4">
-                            Se detectó un problema con tus datos de sesión. 
                             Por favor, inicia sesión nuevamente.
                         </p>
                         <div className="d-flex gap-2 justify-content-center">
                             <button 
                                 className="btn btn-primary btn-lg" 
                                 onClick={() => {
-                                    // 🔥 LIMPIAR DATOS CORRUPTOS
                                     localStorage.removeItem('user');
                                     sessionStorage.removeItem('usuarioActivo');
                                     navigate('/auth');
@@ -360,6 +412,27 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                 Recargar
                             </button>
                         </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // 🔥 CORREGIDO: Mostrar loading mientras se carga el usuario
+    if (!usuario) {
+        return (
+            <div className="container py-5 text-center">
+                <div className="card shadow">
+                    <div className="card-body py-5">
+                        <div className="mb-4">
+                            <div className="spinner-border text-primary" style={{ width: '3rem', height: '3rem' }} role="status">
+                                <span className="visually-hidden">Cargando...</span>
+                            </div>
+                        </div>
+                        <h2>Cargando información...</h2>
+                        <p className="text-muted mb-4">
+                            Verificando tu sesión de usuario...
+                        </p>
                     </div>
                 </div>
             </div>
@@ -413,14 +486,11 @@ const Pago = ({ carrito, setCarrito, user }) => {
 
                             {/* Información del usuario actual */}
                             {usuario && (
-                                <div className="alert alert-success d-flex align-items-center mb-4">
+                                <div className="alert alert-info d-flex align-items-center mb-4">
                                     <i className="bi bi-person-check me-2"></i>
                                     <div>
                                         <strong>Comprador identificado:</strong> {usuario.nombre} 
-                                        {usuario.correo && ` (${usuario.correo})`}
-                                        {usuario.email && ` (${usuario.email})`}
-                                        <br />
-                                        <small>ID: {usuario.id} (Validado: {isValidUserId(usuario.id) ? '✅' : '❌'})</small>
+                                        {(usuario.correo || usuario.email) && ` (${usuario.correo || usuario.email})`}
                                     </div>
                                 </div>
                             )}
@@ -544,7 +614,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                         <div className="row g-3">
                                             <div className="col-md-4">
                                                 <div className={`card border ${formData.metodoPago === 'tarjeta' ? 'border-primary' : ''}`}>
-                                                    <div className="card-body text-center">
+                                                    <div className="card-body text-center p-2">
                                                         <input
                                                             type="radio"
                                                             className="btn-check"
@@ -554,7 +624,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                                             checked={formData.metodoPago === 'tarjeta'}
                                                             onChange={handleInputChange}
                                                         />
-                                                        <label className="btn btn-outline-primary w-100" htmlFor="tarjeta">
+                                                        <label className="btn btn-outline-primary w-100 mb-0" htmlFor="tarjeta">
                                                             <i className="bi bi-credit-card me-2"></i>
                                                             Tarjeta
                                                         </label>
@@ -563,7 +633,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                             </div>
                                             <div className="col-md-4">
                                                 <div className={`card border ${formData.metodoPago === 'transferencia' ? 'border-primary' : ''}`}>
-                                                    <div className="card-body text-center">
+                                                    <div className="card-body text-center p-2">
                                                         <input
                                                             type="radio"
                                                             className="btn-check"
@@ -573,7 +643,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                                             checked={formData.metodoPago === 'transferencia'}
                                                             onChange={handleInputChange}
                                                         />
-                                                        <label className="btn btn-outline-primary w-100" htmlFor="transferencia">
+                                                        <label className="btn btn-outline-primary w-100 mb-0" htmlFor="transferencia">
                                                             <i className="bi bi-bank me-2"></i>
                                                             Transferencia
                                                         </label>
@@ -582,7 +652,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                             </div>
                                             <div className="col-md-4">
                                                 <div className={`card border ${formData.metodoPago === 'efectivo' ? 'border-primary' : ''}`}>
-                                                    <div className="card-body text-center">
+                                                    <div className="card-body text-center p-2">
                                                         <input
                                                             type="radio"
                                                             className="btn-check"
@@ -592,7 +662,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                                             checked={formData.metodoPago === 'efectivo'}
                                                             onChange={handleInputChange}
                                                         />
-                                                        <label className="btn btn-outline-primary w-100" htmlFor="efectivo">
+                                                        <label className="btn btn-outline-primary w-100 mb-0" htmlFor="efectivo">
                                                             <i className="bi bi-cash-coin me-2"></i>
                                                             Efectivo
                                                         </label>
@@ -689,6 +759,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                         type="button" 
                                         className="btn btn-outline-secondary"
                                         onClick={() => navigate('/carrito')}
+                                        disabled={loading}
                                     >
                                         <i className="bi bi-arrow-left me-2"></i>
                                         Volver al Carrito
@@ -700,6 +771,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                         type="button" 
                                         className="btn btn-primary"
                                         onClick={siguientePaso}
+                                        disabled={loading}
                                     >
                                         Siguiente
                                         <i className="bi bi-arrow-right ms-2"></i>
@@ -719,21 +791,12 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                         ) : (
                                             <>
                                                 <i className="bi bi-lock-fill me-2"></i>
-                                                Pagar ${total.toLocaleString()}
+                                                Pagar ${total.toLocaleString('es-CL')}
                                             </>
                                         )}
                                     </button>
                                 )}
                             </div>
-                        </div>
-                    </div>
-
-                    <div className="card border-0 bg-light">
-                        <div className="card-body text-center py-3">
-                            <small className="text-muted">
-                                <i className="bi bi-shield-check me-1"></i>
-                                Pago seguro
-                            </small>
                         </div>
                     </div>
                 </div>
@@ -760,11 +823,11 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                         <div className="flex-grow-1">
                                             <div className="fw-semibold small">{item.name || item.nombre}</div>
                                             <div className="text-muted small">
-                                                {item.cantidad || 1} x ${(item.price || item.precio || 0).toLocaleString()}
+                                                {item.cantidad || 1} x ${(item.price || item.precio || 0).toLocaleString('es-CL')}
                                             </div>
                                         </div>
                                         <div className="fw-semibold">
-                                            ${((item.price || item.precio || 0) * (item.cantidad || 1)).toLocaleString()}
+                                            ${((item.price || item.precio || 0) * (item.cantidad || 1)).toLocaleString('es-CL')}
                                         </div>
                                     </div>
                                 ))}
@@ -774,22 +837,22 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                 <h6>Método de envío</h6>
                                 <div className="d-flex justify-content-between">
                                     <span>{formData.metodoEnvio === 'delivery' ? 'Delivery a domicilio' : 'Retiro en tienda'}</span>
-                                    <span>{costoEnvio === 0 ? 'Gratis' : `$${costoEnvio.toLocaleString()}`}</span>
+                                    <span>{costoEnvio === 0 ? 'Gratis' : `$${costoEnvio.toLocaleString('es-CL')}`}</span>
                                 </div>
                             </div>
 
                             <div className="border-top pt-3">
                                 <div className="d-flex justify-content-between mb-2">
                                     <span>Subtotal</span>
-                                    <span>${subtotal.toLocaleString()}</span>
+                                    <span>${subtotal.toLocaleString('es-CL')}</span>
                                 </div>
                                 <div className="d-flex justify-content-between mb-2">
                                     <span>Envío</span>
-                                    <span>{costoEnvio === 0 ? 'Gratis' : `$${costoEnvio.toLocaleString()}`}</span>
+                                    <span>{costoEnvio === 0 ? 'Gratis' : `$${costoEnvio.toLocaleString('es-CL')}`}</span>
                                 </div>
                                 <div className="d-flex justify-content-between fw-bold fs-5 text-success">
                                     <span>Total</span>
-                                    <span>${total.toLocaleString()}</span>
+                                    <span>${total.toLocaleString('es-CL')}</span>
                                 </div>
                             </div>
                         </div>
