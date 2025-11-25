@@ -146,10 +146,22 @@ Table.Thead = ({ children, className }) => <thead className={className}>{childre
 Table.Tbody = ({ children }) => <tbody>{children}</tbody>;
 
 // COMPONENTE PRINCIPAL: MiCuentaComponent
-const MiCuentaComponent = ({ user, setUser, navigate }) => {
+const MiCuentaComponent = ({ navigate }) => {
+    // 🔥 SOLUCIÓN: Cargar el usuario directamente desde sessionStorage dentro del componente
+    const [user, setUser] = useState(() => {
+        try {
+            const storedUser = sessionStorage.getItem("usuarioActivo");
+            return storedUser ? JSON.parse(storedUser) : null;
+        } catch (error) {
+            console.error('Error al cargar usuario:', error);
+            return null;
+        }
+    });
+
     const [ventas, setVentas] = useState([]);
     const [loadingVentas, setLoadingVentas] = useState(false);
     const [error, setError] = useState("");
+    const [verificandoSesion, setVerificandoSesion] = useState(true);
 
     const formatClp = (value) => (value || 0).toLocaleString("es-CL");
     
@@ -179,13 +191,36 @@ const MiCuentaComponent = ({ user, setUser, navigate }) => {
         }
     }, [user]);
 
+    // 🔥 Verificar sesión solo UNA VEZ al montar el componente
     useEffect(() => {
-        if (!user) {
-            navigate('/login');
-        } else {
+        const verificarSesion = () => {
+            const usuarioGuardado = sessionStorage.getItem("usuarioActivo");
+            
+            if (!usuarioGuardado) {
+                // Solo redirigir si realmente no hay usuario
+                navigate('/auth');
+            } else {
+                // Si hay usuario, cargar sus datos
+                try {
+                    const userData = JSON.parse(usuarioGuardado);
+                    setUser(userData);
+                } catch (error) {
+                    console.error('Error al parsear usuario:', error);
+                    navigate('/auth');
+                }
+            }
+            setVerificandoSesion(false);
+        };
+
+        verificarSesion();
+    }, []); // Solo se ejecuta una vez al montar
+
+    // Cargar ventas cuando el usuario esté disponible
+    useEffect(() => {
+        if (user && !verificandoSesion) {
             cargarVentas();
         }
-    }, [user, navigate, cargarVentas]);
+    }, [user, verificandoSesion, cargarVentas]);
 
     const cerrarSesion = () => {
         sessionStorage.removeItem("usuarioActivo");
@@ -193,11 +228,22 @@ const MiCuentaComponent = ({ user, setUser, navigate }) => {
         navigate('/');
     };
 
+    // Mientras verifica la sesión
+    if (verificandoSesion) {
+        return (
+            <Container className="my-5 text-center">
+                <Spinner />
+                <p className="mt-2 text-gray-600">Verificando sesión...</p>
+            </Container>
+        );
+    }
+
+    // Si no hay usuario después de verificar
     if (!user) {
         return (
             <Container className="my-5 text-center">
                 <Spinner />
-                <p className="mt-2 text-gray-600">Cargando datos de sesión...</p>
+                <p className="mt-2 text-gray-600">Redirigiendo...</p>
             </Container>
         );
     }
