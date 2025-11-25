@@ -9,17 +9,29 @@ const RopaHombre = () => {
   
   const { products, loading } = useProducts();
 
+  // DEBUG: Ver productos de hombre
+  React.useEffect(() => {
+    const productosHombre = products.filter(p => p.categoria?.toLowerCase() === 'hombre');
+    console.log('🎯 PRODUCTOS HOMBRE CON IMÁGENES:');
+    productosHombre.forEach(p => {
+      console.log(`📸 ${p.name}:`, p.image);
+    });
+  }, [products]);
+
+  // SOLO LAS 3 SUBCATEGORÍAS QUE TIENES
   const subcategorias = [
     { id: 'poleras', nombre: 'Poleras' },
     { id: 'pantalones', nombre: 'Pantalones' },
     { id: 'chaquetas', nombre: 'Chaquetas' }
   ];
 
+  // FILTRO MEJORADO - Busca en nombre y descripción
   const productosFiltrados = useMemo(() => {
     let filtered = products.filter(product => 
       product.categoria?.toLowerCase() === 'hombre'
     );
 
+    // Filtrar por subcategoría
     if (subcategoria) {
       filtered = filtered.filter(product => {
         const textoBusqueda = `${product.name} ${product.descripcion}`.toLowerCase();
@@ -40,6 +52,7 @@ const RopaHombre = () => {
       });
     }
 
+    // Resto de filtros igual
     if (filtroOferta) {
       filtered = filtered.filter(product => product.oferta);
     }
@@ -62,16 +75,6 @@ const RopaHombre = () => {
 
     return filtered;
   }, [products, subcategoria, filtroPrecio, filtroOferta]);
-
-  // Función para obtener imagen segura
-  const getSafeImage = (productImage) => {
-    // Si la imagen existe, úsala
-    if (productImage) {
-      return productImage;
-    }
-    // Si no, usa una imagen por defecto según la categoría
-    return '/img/logo.webp';
-  };
 
   const generarTitulo = () => {
     if (subcategoria) {
@@ -223,14 +226,18 @@ const RopaHombre = () => {
                 {productosFiltrados.map(product => (
                   <div key={product.id} className="col-xl-3 col-lg-4 col-md-6 mb-4">
                     <div className="card h-100 product-card">
+                      {/* ✅ CORREGIDO - SOLO IMAGEN REAL */}
                       <img 
-                        src={getSafeImage(product.image)}
+                        src={product.image} {/* ✅ QUITADO el fallback placeholder */}
                         className="card-img-top" 
                         alt={product.name}
                         style={{ height: '250px', objectFit: 'cover' }}
                         onError={(e) => {
-                          e.target.src = '/img/logo.webp';
-                          e.target.alt = 'Imagen no disponible';
+                          console.error('❌ Error cargando imagen:', product.image);
+                          e.target.src = '/img/logo.webp'; // ✅ Solo si falla la imagen real
+                        }}
+                        onLoad={() => {
+                          console.log('✅ Imagen cargada correctamente:', product.image);
                         }}
                       />
                       <div className="card-body d-flex flex-column">
