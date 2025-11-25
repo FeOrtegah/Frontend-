@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-<<<<<<< HEAD
 const BASE_URL = 'https://backend-fullstackv1.onrender.com/api/v1/usuarios';
 
 class UserService {
@@ -51,29 +50,36 @@ class UserService {
                 error: error.response?.data || 'Error de conexión al crear cuenta' 
             };
         }
-=======
-const BASE_URL = 'https://backend-fullstackv1.onrender.com/api/usuarios';
-
-class UserService {
-    login(usuario) {
-        return axios.post(`${BASE_URL}/login`, usuario);
     }
 
-    createUser(usuario) {
-        return axios.post(`${BASE_URL}`, usuario);
+    async verifyToken(token) {
+        try {
+            const response = await axios.get(`${BASE_URL}/verify`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            return { success: true, data: response.data };
+        } catch (error) {
+            console.error('❌ Error verificando token:', error);
+            return { 
+                success: false, 
+                error: error.response?.data || 'Error verificando token' 
+            };
+        }
     }
 
-    verifyToken(token) {
-        return axios.get(`${BASE_URL}/verify`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-    }
-
-    logout(token) {
-        return axios.post(`${BASE_URL}/logout`, {}, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
->>>>>>> 117f769bce0402b3d4c3cc178c29a8febc55edc9
+    async logout(token) {
+        try {
+            const response = await axios.post(`${BASE_URL}/logout`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            return { success: true, data: response.data };
+        } catch (error) {
+            console.error('❌ Error en logout:', error);
+            return { 
+                success: false, 
+                error: error.response?.data || 'Error en logout' 
+            };
+        }
     }
 }
 
