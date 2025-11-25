@@ -6,12 +6,11 @@ import { appRoutes } from "./routes/config";
 import { useProducts } from "./context/ProductContext";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import "./styles/global.css";
-import { Container, Spinner } from "react-bootstrap"; // Importado para el loading
+import { Container, Spinner } from "react-bootstrap"; 
 
 function App() {
   const [carrito, setCarrito] = React.useState([]);
   const [user, setUser] = React.useState(null);
-  // Nuevo estado: Indica si ya terminamos de revisar sessionStorage
   const [isAuthLoaded, setIsAuthLoaded] = React.useState(false); 
 
   const location = useLocation();
@@ -24,7 +23,6 @@ function App() {
     setCarrito(savedCarrito);
     if (savedUser) setUser(savedUser);
     
-    // Una vez que hemos revisado sessionStorage, marcamos la carga como completa
     setIsAuthLoaded(true); 
   }, []);
 
@@ -38,7 +36,31 @@ function App() {
 
   const navbarHidden = ["/admin"].includes(location.pathname);
 
-  // 🔴 AGREGAR ESTE BLOQUE: Mostrar spinner mientras se carga la autenticación inicial
+  const getRouteElement = (route) => {
+    const baseProps = { user, setUser };
+    
+    const routeSpecificProps = {};
+    
+    if (route.path === "/carrito" || route.path === "/pago") {
+      routeSpecificProps.carrito = carrito;
+      routeSpecificProps.setCarrito = setCarrito;
+    }
+    
+    if (route.path === "/producto/:id") {
+      routeSpecificProps.products = products;
+    }
+    
+    if (route.needsCarrito) {
+      routeSpecificProps.carrito = carrito;
+      routeSpecificProps.setCarrito = setCarrito;
+    }
+    
+    return React.cloneElement(route.element, {
+      ...baseProps,
+      ...routeSpecificProps
+    });
+  };
+
   if (!isAuthLoaded) {
     return (
       <Container className="text-center d-flex flex-column justify-content-center align-items-center min-vh-100">
@@ -51,7 +73,6 @@ function App() {
   return (
     <div className="d-flex flex-column min-vh-100">
 
-      {/* SE AGREGA user y setUser AL NAVBAR  */}
       {!navbarHidden && <Navbar carrito={carrito} user={user} setUser={setUser} />}
 
       <main className="flex-grow-1">
@@ -62,7 +83,7 @@ function App() {
                 <Route
                   key={i}
                   path={route.path}
-                  element={isAdmin() ? route.element : <Navigate to="/" replace />}
+                  element={isAdmin() ? getRouteElement(route) : <Navigate to="/" replace />}
                 />
               );
 
@@ -73,16 +94,9 @@ function App() {
                   path={route.path}
                   element={
                     isAuthenticated()
-                      ? React.cloneElement(route.element, {
-                          carrito,
-                          setCarrito,
-                          user,
-                          setUser,
-                        })
+                      ? getRouteElement(route)
                       : <Navigate to="/auth" replace state={{ from: location }} />
-                      /* IMPORTANTE: Redirigimos a /auth (la ruta de login) 
-                        en lugar de / para que el usuario pueda iniciar sesión
-                      */
+
                   }
                 />
               );
@@ -91,12 +105,7 @@ function App() {
               <Route
                 key={i}
                 path={route.path}
-                element={React.cloneElement(route.element, {
-                  carrito,
-                  setCarrito,
-                  user,
-                  setUser,
-                })}
+                element={getRouteElement(route)}
               />
             );
           })}
