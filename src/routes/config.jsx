@@ -1,4 +1,4 @@
-// routes/index.js
+// routes/config.js
 import { lazy } from "react";
 
 const Home = lazy(() => import("../pages/user/Home"));
@@ -16,43 +16,23 @@ const Noticias = lazy(() => import("../pages/user/Noticias"));
 const HomeAdmin = lazy(() => import("../pages/admin/HomeAdmin"));
 const Auth = lazy(() => import("../pages/auth/Auth"));
 
-export const publicRoutes = [
-  { path: "/", element: <Home />, showNavbar: true },
-  { path: "/hombre", element: <RopaHombre />, showNavbar: true },
-  { path: "/hombre/:subcategoria", element: <RopaHombre />, showNavbar: true },
-  { path: "/mujer", element: <RopaMujer />, showNavbar: true },
-  { path: "/mujer/:subcategoria", element: <RopaMujer />, showNavbar: true },
-  { path: "/infantil", element: <RopaInfantil />, showNavbar: true },
-  { path: "/infantil/:subcategoria", element: <RopaInfantil />, showNavbar: true },
-  { path: "/producto/:id", element: <ProductDetail />, showNavbar: true },
-  { path: "/blog", element: <Blogs />, showNavbar: true },
-  { path: "/ayuda", element: <Ayuda />, showNavbar: true },
-  { path: "/noticias", element: <Noticias />, showNavbar: true },
-  { path: "/auth", element: <Auth />, showNavbar: false },
-  // CARRITO AHORA ES PÚBLICO
-  { path: "/carrito", element: <Carrito />, showNavbar: true },
-];
-
-export const privateRoutes = [
-  // Solo pago y confirmación requieren autenticación
-  { path: "/pago", element: <Pago />, private: true, showNavbar: true },
-  { path: "/confirmacion", element: <Confirmacion />, private: true, showNavbar: true },
-  { path: "/micuenta", element: <MiCuenta />, private: true, showNavbar: true },
-];
-
-export const adminRoutes = [
-  { path: "/admin", element: <HomeAdmin />, isAdmin: true, showNavbar: false },
-];
-
-export const notFoundRoute = {
-  path: "*",
-  element: <div className="text-center text-3xl py-10">404 - Página no encontrada</div>,
-  showNavbar: false,
-};
-
 export const appRoutes = [
-  ...publicRoutes,
-  ...privateRoutes,
-  ...adminRoutes,
-  notFoundRoute,
+  { path: "/", element: <Home /> },
+  { path: "/hombre", element: <RopaHombre /> },
+  { path: "/hombre/:subcategoria", element: <RopaHombre /> },
+  { path: "/mujer", element: <RopaMujer /> },
+  { path: "/mujer/:subcategoria", element: <RopaMujer /> },
+  { path: "/infantil", element: <RopaInfantil /> },
+  { path: "/infantil/:subcategoria", element: <RopaInfantil /> },
+  { path: "/producto/:id", element: <ProductDetail /> },
+  { path: "/blog", element: <Blogs /> },
+  { path: "/ayuda", element: <Ayuda /> },
+  { path: "/noticias", element: <Noticias /> },
+  { path: "/auth", element: <Auth /> },
+  { path: "/carrito", element: <Carrito /> },
+  { path: "/pago", element: <Pago />, private: true },
+  { path: "/confirmacion", element: <Confirmacion />, private: true },
+  { path: "/micuenta", element: <MiCuenta />, private: true },
+  { path: "/admin", element: <HomeAdmin />, isAdmin: true },
+  { path: "*", element: <div className="text-center text-3xl py-10">404 - Página no encontrada</div> },
 ];
