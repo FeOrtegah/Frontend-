@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import VentaService from '../../services/VentaService';
-import 'animate.css'; // 🔥 IMPORTANTE: Agregar esta importación
 
 const Pago = ({ carrito, setCarrito, user }) => {
     const [formData, setFormData] = useState({
