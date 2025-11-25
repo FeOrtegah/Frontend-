@@ -33,9 +33,21 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
+// 🔥 COMPONENTE PARA RUTAS CON CARRITO
+const CarritoRoute = ({ children, carrito, setCarrito }) => {
+  return React.cloneElement(children, { carrito, setCarrito });
+};
+
+// 🔥 COMPONENTE PARA RUTAS CON PAGO
+const PagoRoute = ({ children, carrito, setCarrito }) => {
+  const { user } = useAuth();
+  return React.cloneElement(children, { carrito, setCarrito, user });
+};
+
 // 🔥 COMPONENTE PRINCIPAL SIN COMPLICACIONES
 function App() {
   const [carrito, setCarrito] = useState([]);
+  const { user } = useAuth(); // 🔥 MOVER useAuth AQUÍ
 
   // Cargar carrito desde localStorage
   useEffect(() => {
@@ -67,22 +79,6 @@ function App() {
             <Suspense fallback={<div className="text-center py-5">Cargando...</div>}>
               <Routes>
                 {appRoutes.map((route, index) => {
-                  // 🔥 CLONAR ELEMENTOS PARA PASAR PROPS
-                  let element = route.element;
-
-                  if (route.path === "/producto/:id") {
-                    element = React.cloneElement(route.element, { carrito, setCarrito });
-                  }
-
-                  if (route.path === "/carrito") {
-                    element = React.cloneElement(route.element, { carrito, setCarrito });
-                  }
-
-                  if (route.path === "/pago") {
-                    const { user } = useAuth();
-                    element = React.cloneElement(route.element, { carrito, setCarrito, user });
-                  }
-
                   // 🔥 MANEJAR TIPOS DE RUTAS
                   if (route.private) {
                     return (
@@ -91,7 +87,17 @@ function App() {
                         path={route.path}
                         element={
                           <ProtectedRoute requireAdmin={route.admin}>
-                            {element}
+                            {route.path === "/pago" ? (
+                              <PagoRoute carrito={carrito} setCarrito={setCarrito}>
+                                {route.element}
+                              </PagoRoute>
+                            ) : route.path === "/carrito" ? (
+                              <CarritoRoute carrito={carrito} setCarrito={setCarrito}>
+                                {route.element}
+                              </CarritoRoute>
+                            ) : (
+                              route.element
+                            )}
                           </ProtectedRoute>
                         }
                       />
@@ -105,7 +111,7 @@ function App() {
                         path={route.path}
                         element={
                           <PublicRoute>
-                            {element}
+                            {route.element}
                           </PublicRoute>
                         }
                       />
@@ -117,7 +123,15 @@ function App() {
                     <Route
                       key={index}
                       path={route.path}
-                      element={element}
+                      element={
+                        route.path === "/producto/:id" || route.path === "/carrito" ? (
+                          <CarritoRoute carrito={carrito} setCarrito={setCarrito}>
+                            {route.element}
+                          </CarritoRoute>
+                        ) : (
+                          route.element
+                        )
+                      }
                     />
                   );
                 })}
