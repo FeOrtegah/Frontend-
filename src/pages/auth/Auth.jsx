@@ -12,7 +12,7 @@ import {
   Tabs,
   Tab
 } from "react-bootstrap";
-import axios from "axios";
+import UserService from '../services/UserService';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -57,24 +57,31 @@ const Auth = () => {
       setLoading(true);
       setError(null);
 
-     await axios.post(
-       "https://backend-fullstackv1.onrender.com/api/v1/usuarios",
-       { nombre, email, password }
-     );
+      const result = await UserService.login({ 
+        correo: email, 
+        contrasena: password 
+      });
+
+      if (!result.success) {
+        const errorData = result.error;
+        const mensaje = errorData?.msg || "Correo o contraseña incorrectos. Por favor, verifica tus credenciales.";
+        setError(mensaje);
+        return;
+      }
 
       const userData = {
-        ...response.data.usuario,
-        token: response.data.token
+        ...result.data,
+        token: result.data.token || "mock-token-login"
       };
-
+      
       sessionStorage.setItem("usuarioActivo", JSON.stringify(userData));
-      localStorage.setItem("userToken", response.data.token);
+      localStorage.setItem("userToken", userData.token);
 
       setSuccess("Has iniciado sesión correctamente");
 
       setTimeout(() => navigate("/"), 1200);
     } catch (err) {
-      setError("Correo o contraseña incorrectos. Por favor, verifica tus credenciales.");
+        setError("Ocurrió un error inesperado al intentar iniciar sesión.");
     } finally {
       setLoading(false);
     }
@@ -83,9 +90,9 @@ const Auth = () => {
   const handleRegistro = async (e) => {
     e.preventDefault();
 
-    const { nombre, email, password, confirmarPassword, telefono, direccion } =
-      formData.registro;
+    const { nombre, email, password, confirmarPassword } = formData.registro;
 
+    // --- Validaciones locales ---
     if (!validarEmail(email)) {
       setError("Solo se permiten correos @gmail.com, @duocuc.cl o @profesor.duoc.cl");
       return;
@@ -105,27 +112,47 @@ const Auth = () => {
       setLoading(true);
       setError(null);
 
-      await axios.post(
-        "https://backend-fullstackv1.onrender.com/auth/register",
-        {
-          nombre,
-          email,
-          password
-        }
-      );
 
-      const autoLogin = await axios.post(
-        "https://backend-fullstackv1.onrender.com/auth/login",
-        { email, password }
-      );
+      const registerResult = await UserService.createUser({
+        nombre,
+        correo: email,
+        contrasena: password
+      });
+
+      if (!registerResult.success) {
+        
+        const errorData = registerResult.error;
+        let mensajeError = "Ocurrió un error inesperado al contactar al servidor.";
+        
+        if (errorData && typeof errorData === 'object' && errorData.msg) {
+          mensajeError = errorData.msg; 
+        } else if (errorData && errorData.status === 400) {
+           mensajeError = "El correo ya puede estar en uso. Intenta iniciar sesión.";
+        }
+        
+        setError(mensajeError);
+        setLoading(false);
+        return;
+      }
+
+      const autoLoginResult = await UserService.login({ 
+        correo: email, 
+        contrasena: password 
+      });
+
+      if (!autoLoginResult.success) {
+
+        setError("Cuenta creada, pero el inicio de sesión automático falló. Intenta iniciar sesión manualmente.");
+        return;
+      }
 
       const userData = {
-        ...autoLogin.data.usuario,
-        token: autoLogin.data.token
+        ...autoLoginResult.data,
+        token: autoLoginResult.data.token || "mock-token-registro"
       };
 
       sessionStorage.setItem("usuarioActivo", JSON.stringify(userData));
-      localStorage.setItem("userToken", autoLogin.data.token);
+      localStorage.setItem("userToken", userData.token);
 
       setFormData((prev) => ({
         ...prev,
@@ -143,22 +170,7 @@ const Auth = () => {
       setTimeout(() => navigate("/"), 1200);
       
     } catch (err) {
-      let mensajeError = "Ocurrió un error inesperado al contactar al servidor.";
-
-      if (axios.isAxiosError(err) && err.response) {
-        
-        if (err.response.data && err.response.data.msg) {
-          mensajeError = err.response.data.msg; 
-        
-        } else if (err.response.status === 400 || err.response.status === 409) {
-           mensajeError = "El correo ya puede estar en uso. Intenta iniciar sesión.";
-        } else if (err.response.status >= 500) {
-           mensajeError = "Error interno del servidor. Intenta más tarde.";
-        }
-      }
-      
-      setError(mensajeError);
-
+        setError("Ocurrió un error irrecuperable al procesar el registro.");
     } finally {
       setLoading(false);
     }
@@ -187,6 +199,7 @@ const Auth = () => {
                 className="mb-4"
                 justify
               >
+                {/* --- LOGIN TAB --- */}
                 <Tab eventKey="login" title="Iniciar Sesión">
                   {error && <Alert variant="danger">{error}</Alert>}
                   {success && <Alert variant="success">{success}</Alert>}
@@ -238,6 +251,7 @@ const Auth = () => {
                   </Form>
                 </Tab>
 
+                {/* --- REGISTRO TAB --- */}
                 <Tab eventKey="registro" title="Crear Cuenta">
                   {error && <Alert variant="danger">{error}</Alert>}
                   {success && <Alert variant="success">{success}</Alert>}
