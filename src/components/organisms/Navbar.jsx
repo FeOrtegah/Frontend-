@@ -1,7 +1,9 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Navbar = ({ carrito }) => {
+  const navigate = useNavigate();
+
   return (
     <>
       <nav className="navbar bg-white border-bottom">
@@ -60,9 +62,26 @@ const Navbar = ({ carrito }) => {
         </div>
 
         <div className="offcanvas-body">
-          <div className="menu-category">Hombre</div>
-          <div className="menu-category mt-3">Mujer</div>
-          <div className="menu-category mt-3">Infantil</div>
+          <button
+            className="btn btn-outline-primary w-100 mb-2"
+            onClick={() => navigate("/hombre")}
+          >
+            Hombre
+          </button>
+
+          <button
+            className="btn btn-outline-primary w-100 mb-2"
+            onClick={() => navigate("/mujer")}
+          >
+            Mujer
+          </button>
+
+          <button
+            className="btn btn-outline-primary w-100"
+            onClick={() => navigate("/infantil")}
+          >
+            Infantil
+          </button>
         </div>
       </div>
     </>
