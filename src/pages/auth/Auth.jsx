@@ -22,7 +22,7 @@ const Auth = () => {
   const [success, setSuccess] = useState(null);
 
   const dominiosPermitidos = ["gmail.com", "duocuc.cl", "profesor.duoc.cl"];
-
+  
   const [formData, setFormData] = useState({
     login: { email: "", password: "" },
     registro: {
@@ -49,7 +49,6 @@ const Auth = () => {
     setSuccess(null);
   };
 
-  // 🔥 LOGIN
   const handleLogin = async (e) => {
     e.preventDefault();
     const { email, password } = formData.login;
@@ -75,13 +74,12 @@ const Auth = () => {
 
       setTimeout(() => navigate("/"), 1200);
     } catch (err) {
-      setError("Correo o contraseña incorrectos");
+      setError("Correo o contraseña incorrectos. Por favor, verifica tus credenciales.");
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔥 REGISTRO
   const handleRegistro = async (e) => {
     e.preventDefault();
 
@@ -107,7 +105,7 @@ const Auth = () => {
       setLoading(true);
       setError(null);
 
-      const response = await axios.post(
+      await axios.post(
         "https://backend-fullstackv1.onrender.com/auth/register",
         {
           nombre,
@@ -116,7 +114,6 @@ const Auth = () => {
         }
       );
 
-      // 🔥 Iniciar sesión automáticamente
       const autoLogin = await axios.post(
         "https://backend-fullstackv1.onrender.com/auth/login",
         { email, password }
@@ -130,10 +127,38 @@ const Auth = () => {
       sessionStorage.setItem("usuarioActivo", JSON.stringify(userData));
       localStorage.setItem("userToken", autoLogin.data.token);
 
+      setFormData((prev) => ({
+        ...prev,
+        registro: { 
+          nombre: "",
+          email: "",
+          password: "",
+          confirmarPassword: "",
+          telefono: "",
+          direccion: ""
+        }
+      }));
+
       setSuccess("Cuenta creada exitosamente");
       setTimeout(() => navigate("/"), 1200);
+      
     } catch (err) {
-      setError("El correo ya puede estar en uso");
+      let mensajeError = "Ocurrió un error inesperado al contactar al servidor.";
+
+      if (axios.isAxiosError(err) && err.response) {
+        
+        if (err.response.data && err.response.data.msg) {
+          mensajeError = err.response.data.msg; 
+        
+        } else if (err.response.status === 400 || err.response.status === 409) {
+           mensajeError = "El correo ya puede estar en uso. Intenta iniciar sesión.";
+        } else if (err.response.status >= 500) {
+           mensajeError = "Error interno del servidor. Intenta más tarde.";
+        }
+      }
+      
+      setError(mensajeError);
+
     } finally {
       setLoading(false);
     }
@@ -144,16 +169,6 @@ const Auth = () => {
       <Row className="justify-content-center">
         <Col md={8} lg={6}>
           <div className="text-center mb-4">
-            <img
-              src="/img/logo.png"
-              alt="EFA"
-              style={{
-                height: "80px",
-                cursor: "pointer",
-                marginBottom: "1rem"
-              }}
-              onClick={() => navigate("/")}
-            />
             <h2>
               Bienvenido a <strong style={{ color: "red" }}>EFA</strong>
             </h2>
@@ -172,7 +187,6 @@ const Auth = () => {
                 className="mb-4"
                 justify
               >
-                {/* --- LOGIN TAB --- */}
                 <Tab eventKey="login" title="Iniciar Sesión">
                   {error && <Alert variant="danger">{error}</Alert>}
                   {success && <Alert variant="success">{success}</Alert>}
@@ -224,7 +238,6 @@ const Auth = () => {
                   </Form>
                 </Tab>
 
-                {/* --- REGISTRO TAB --- */}
                 <Tab eventKey="registro" title="Crear Cuenta">
                   {error && <Alert variant="danger">{error}</Alert>}
                   {success && <Alert variant="success">{success}</Alert>}
