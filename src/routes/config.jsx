@@ -13,9 +13,6 @@ const Blogs = lazy(() => import("../pages/user/Blogs"));
 const Ayuda = lazy(() => import("../pages/user/Ayuda"));
 const Noticias = lazy(() => import("../pages/user/Noticias"));
 
-const Login = lazy(() => import("../pages/user/Login"));
-const Registro = lazy(() => import("../pages/user/Registro"));
-
 const HomeAdmin = lazy(() => import("../pages/admin/HomeAdmin"));
 const HomeFacciones = lazy(() => import("../pages/admin/Facciones/HomeFacciones"));
 
