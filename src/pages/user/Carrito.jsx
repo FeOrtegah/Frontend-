@@ -1,4 +1,3 @@
-// pages/user/Carrito.js
 import React, { useState } from "react";
 import { 
   Container, 
@@ -10,7 +9,7 @@ import {
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
-const Carrito = ({ carrito, setCarrito }) => {
+const Carrito = ({ carrito, setCarrito, user }) => { // 🔥 Agregar user como prop
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -46,11 +45,21 @@ const Carrito = ({ carrito, setCarrito }) => {
       setLoading(true);
       setError(null);
       
-      // Verificar si el usuario está logueado para proceder al pago
-      const usuario = JSON.parse(localStorage.getItem('user') || 'null');
+      // 🔥 MEJOR VERIFICACIÓN: Revisar tanto las props como localStorage
+      const usuarioLocal = JSON.parse(localStorage.getItem('user') || 'null');
+      const usuarioSession = JSON.parse(sessionStorage.getItem('usuarioActivo') || 'null');
+      const usuarioProps = user; // desde las props
+      
+      console.log('🔐 Verificando usuario para pago:', {
+        usuarioProps,
+        usuarioLocal,
+        usuarioSession
+      });
+      
+      // Usar el usuario de las props primero, luego sessionStorage, luego localStorage
+      const usuario = usuarioProps || usuarioSession || usuarioLocal;
       
       if (!usuario) {
-        // Si no está logueado, redirigir al login
         setError("Debes iniciar sesión para proceder al pago");
         setTimeout(() => {
           navigate('/auth');
@@ -58,11 +67,15 @@ const Carrito = ({ carrito, setCarrito }) => {
         return;
       }
       
+      console.log('✅ Usuario autenticado, procediendo al pago:', usuario);
+      
       // Guardar el carrito actual en localStorage para usarlo en el pago
       localStorage.setItem("carritoParaPago", JSON.stringify(carrito));
       localStorage.setItem("totalParaPago", getTotal().toString());
       
+      // 🔥 REDIRIGIR AL PAGO DIRECTAMENTE
       navigate('/pago');
+      
     } catch (err) {
       setError("Error al procesar el carrito: " + err.message);
     } finally {
@@ -210,7 +223,7 @@ const Carrito = ({ carrito, setCarrito }) => {
         </div>
         
         {/* Mensaje informativo para usuarios no logueados */}
-        {!localStorage.getItem('user') && (
+        {!user && !localStorage.getItem('user') && (
           <Alert variant="info" className="mt-3">
             <small>
               💡 <strong>Nota:</strong> Necesitarás iniciar sesión para completar tu compra
