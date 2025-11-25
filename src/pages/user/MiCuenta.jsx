@@ -8,14 +8,11 @@ const MiCuenta = ({ user, setUser }) => {
   const [ventas, setVentas] = useState([]);
   const [loadingVentas, setLoadingVentas] = useState(false);
   const [error, setError] = useState("");
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // 🔥 NUEVO: estado para controlar la verificación
 
-  // Funciones de utilidad
   const formatClp = (value) => (value || 0).toLocaleString("es-CL");
   const obtenerTotalVenta = useCallback((venta) => venta.totalCalculado || 0, []);
   const obtenerCantidadProductos = useCallback((venta) => venta.cantidadProductos || 0, []);
 
-  // Función para cargar ventas
   const cargarVentas = async (usuario) => {
     if (!usuario?.id) return;
 
@@ -37,79 +34,28 @@ const MiCuenta = ({ user, setUser }) => {
     }
   };
 
-  // 🔥 CORREGIDO: Efecto para VALIDACIÓN - SIN BUCLE INFINITO
   useEffect(() => {
-    const checkAuthentication = () => {
-      // Si ya tenemos usuario válido, no hacer nada
-      if (user && user.id) {
-        setIsCheckingAuth(false);
-        return;
-      }
-
-      // Intentar obtener de sessionStorage
-      const stored = sessionStorage.getItem("usuarioActivo");
-      if (stored) {
-        try {
-          const usuarioActivo = JSON.parse(stored);
-          if (usuarioActivo && usuarioActivo.id) {
-            setUser(usuarioActivo);
-            setIsCheckingAuth(false);
-            return;
-          }
-        } catch (err) {
-          console.error("Error parseando usuarioActivo:", err);
-        }
-      }
-      
-      // Si llegamos aquí, NO hay usuario válido
-      setIsCheckingAuth(false);
-      navigate("/auth", { replace: true });
-    };
-
-    checkAuthentication();
-  }, []); // 🔥 IMPORTANTE: dependencias vacías para que solo se ejecute una vez
-
-  // 🔥 CORREGIDO: Efecto para CARGAR VENTAS
-  useEffect(() => {
-    if (user && user.id && !isCheckingAuth) {
+    if (user && user.id) {
       cargarVentas(user);
     }
-  }, [user, isCheckingAuth]);
+  }, [user]);
 
-  // Cerrar sesión
   const cerrarSesion = () => {
     sessionStorage.removeItem("usuarioActivo");
-    localStorage.removeItem("user"); // 🔥 También limpiar localStorage
+    localStorage.removeItem("user");
     setUser(null);
     navigate('/');
   };
 
-  // 🔥 CORREGIDO: Mientras se verifica la autenticación
-  if (isCheckingAuth) {
+  if (!user) {
     return (
       <Container className="my-5 text-center">
         <Spinner animation="border" />
-        <p className="mt-2">Verificando sesión...</p>
+        <p className="mt-2">Cargando...</p>
       </Container>
     );
   }
 
-  // 🔥 CORREGIDO: Si no hay usuario después de la verificación
-  if (!user || !user.id) {
-    return (
-      <Container className="my-5 text-center">
-        <Alert variant="warning">
-          <h4>No has iniciado sesión</h4>
-          <p>Serás redirigido a la página de autenticación.</p>
-          <Button variant="primary" onClick={() => navigate("/auth")}>
-            Ir a Iniciar Sesión
-          </Button>
-        </Alert>
-      </Container>
-    );
-  }
-
-  // El resto del componente permanece igual
   const rolName = user.rol?.nombreRol || user.rol || 'Cliente';
   const esAdmin = rolName.toLowerCase() === 'admin';
 
@@ -124,7 +70,6 @@ const MiCuenta = ({ user, setUser }) => {
       
       <Row className="justify-content-center">
         <Col md={10}>
-          {/* Información Personal */}
           <Card className="shadow-sm mb-4">
             <Card.Header className="bg-primary text-white">
               <h5 className="mb-0">Información Personal</h5>
@@ -149,7 +94,6 @@ const MiCuenta = ({ user, setUser }) => {
             </Card.Body>
           </Card>
 
-          {/* Historial de Compras */}
           <Card className="shadow-sm mb-4">
             <Card.Header>
               <div className="d-flex justify-content-between align-items-center">
@@ -213,7 +157,6 @@ const MiCuenta = ({ user, setUser }) => {
                     </Table>
                   </div>
 
-                  {/* Resumen de Compras */}
                   <Row className="mt-4 justify-content-end">
                     <Col md={6}>
                       <Card className="bg-light border-0">
@@ -251,7 +194,6 @@ const MiCuenta = ({ user, setUser }) => {
             </Card.Body>
           </Card>
 
-          {/* Cerrar Sesión */}
           <div className="text-center mt-4">
             <Button variant="outline-danger" onClick={cerrarSesion}>
               Cerrar Sesión
