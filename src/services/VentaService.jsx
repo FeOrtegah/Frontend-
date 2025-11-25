@@ -2,12 +2,12 @@
 const BASE_URL = 'https://backend-fullstackv1.onrender.com/api/v1';
 
 class VentaService {
-    // Crear una nueva venta - CON MEJOR DEBUGGING
+    // 🔥 CORREGIDO: Crear venta sin leer el response dos veces
     async crearVenta(ventaData) {
         try {
             console.log('🔄 Creando nueva venta - Datos recibidos:', ventaData);
             
-            // 🔥 CORREGIDO: Validar datos antes de enviar
+            // Validar datos antes de enviar
             const datosValidados = this.validarDatosVenta(ventaData);
             console.log('✅ Datos validados para enviar:', datosValidados);
             
@@ -22,21 +22,34 @@ class VentaService {
             
             console.log(`📊 Response status: ${response.status}`);
             
+            // 🔥 CORREGIDO: Leer el response UNA SOLA VEZ
+            const responseText = await response.text();
+            
             if (!response.ok) {
+                console.error(`❌ Error ${response.status}:`, responseText);
                 let errorMessage = `Error ${response.status}`;
+                
                 try {
-                    const errorData = await response.json();
+                    // Intentar parsear como JSON si es posible
+                    const errorData = JSON.parse(responseText);
                     errorMessage = errorData.message || errorData.error || errorMessage;
-                    console.error(`❌ Error del servidor:`, errorData);
                 } catch (e) {
-                    const errorText = await response.text();
-                    errorMessage = errorText || errorMessage;
-                    console.error(`❌ Error ${response.status}:`, errorText);
+                    // Si no es JSON, usar el texto plano
+                    errorMessage = responseText || errorMessage;
                 }
+                
                 throw new Error(errorMessage);
             }
             
-            const data = await response.json();
+            // Parsear la respuesta exitosa
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (e) {
+                console.error('❌ Error parseando respuesta:', e);
+                throw new Error('Respuesta del servidor inválida');
+            }
+            
             console.log('✅ Venta creada exitosamente:', data);
             return { success: true, data };
             
@@ -49,18 +62,17 @@ class VentaService {
         }
     }
 
-    // 🔥 CORREGIDO: Validar y corregir datos antes de enviar
+    // 🔥 FUNCIÓN DE VALIDACIÓN (la misma que tenías)
     validarDatosVenta(ventaData) {
         console.log('🔍 Validando datos de venta:', ventaData);
         
-        // Validar que ventaData existe
         if (!ventaData) {
             throw new Error('Los datos de la venta son requeridos');
         }
         
         const datos = { ...ventaData };
         
-        // 🔥 CORREGIDO: Validar usuario de forma más robusta
+        // Validar usuario
         if (!datos.usuario) {
             console.error('❌ Usuario es requerido');
             throw new Error('Usuario es requerido');
@@ -71,7 +83,6 @@ class VentaService {
             throw new Error('Usuario ID es inválido');
         }
         
-        // 🔥 CORREGIDO: Asegurar que el usuario ID sea número
         datos.usuario.id = Number(datos.usuario.id);
         
         // Validar items del carrito
@@ -80,7 +91,7 @@ class VentaService {
             throw new Error('El carrito está vacío');
         }
         
-        // 🔥 CORREGIDO: Validar cada item del carrito de forma más robusta
+        // Validar cada item del carrito
         datos.items = datos.items.map((item, index) => {
             if (!item) {
                 throw new Error(`El item en posición ${index + 1} es inválido`);
@@ -96,7 +107,6 @@ class VentaService {
                 throw new Error(`El producto en posición ${index + 1} no tiene ID válido`);
             }
             
-            // 🔥 CORREGIDO: Asegurar que las cantidades y precios sean números
             const cantidad = Number(item.cantidad || 1);
             const precioUnitario = Number(item.precioUnitario || item.precio || 0);
             const subtotal = cantidad * precioUnitario;
@@ -113,7 +123,7 @@ class VentaService {
             
             return {
                 producto: { 
-                    id: Number(item.producto.id) // 🔥 Asegurar que sea número
+                    id: Number(item.producto.id)
                 },
                 cantidad: cantidad,
                 precioUnitario: precioUnitario,
@@ -121,34 +131,34 @@ class VentaService {
             };
         });
         
-        // 🔥 CORREGIDO: Validar método de pago
+        // Validar método de pago
         if (!datos.metodoPago) {
             console.warn('⚠️ Método de pago no especificado, usando default');
-            datos.metodoPago = { id: 1 }; // Default: Tarjeta de crédito
+            datos.metodoPago = { id: 1 };
         } else if (!datos.metodoPago.id) {
             datos.metodoPago.id = 1;
         }
         datos.metodoPago.id = Number(datos.metodoPago.id);
         
-        // 🔥 CORREGIDO: Validar método de envío
+        // Validar método de envío
         if (!datos.metodoEnvio) {
             console.warn('⚠️ Método de envío no especificado, usando default');
-            datos.metodoEnvio = { id: 1 }; // Default: Delivery
+            datos.metodoEnvio = { id: 1 };
         } else if (!datos.metodoEnvio.id) {
             datos.metodoEnvio.id = 1;
         }
         datos.metodoEnvio.id = Number(datos.metodoEnvio.id);
         
-        // 🔥 CORREGIDO: Validar estado
+        // Validar estado
         if (!datos.estado) {
             console.warn('⚠️ Estado no especificado, usando default');
-            datos.estado = { id: 1 }; // Default: Pendiente
+            datos.estado = { id: 1 };
         } else if (!datos.estado.id) {
             datos.estado.id = 1;
         }
         datos.estado.id = Number(datos.estado.id);
         
-        // 🔥 CORREGIDO: Calcular total de forma más precisa
+        // Calcular total
         if (!datos.total || datos.total === 0) {
             datos.total = datos.items.reduce((sum, item) => 
                 sum + (item.subtotal || (item.cantidad * item.precioUnitario)), 0
@@ -156,12 +166,12 @@ class VentaService {
         }
         datos.total = Number(datos.total);
         
-        // 🔥 CORREGIDO: Validar número de venta
+        // Validar número de venta
         if (!datos.numeroVenta) {
             datos.numeroVenta = `VEN-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
         }
         
-        // 🔥 CORREGIDO: Asegurar que la dirección de envío tenga estructura correcta
+        // Asegurar dirección de envío
         if (datos.direccionEnvio) {
             datos.direccionEnvio = {
                 direccion: datos.direccionEnvio.direccion || '',
@@ -176,12 +186,11 @@ class VentaService {
         return datos;
     }
 
-    // 🔥 CORREGIDO: Obtener ventas por usuario con mejor manejo de errores
+    // 🔥 MÉTODOS ADICIONALES (mantener los que tenías)
     async obtenerVentasPorUsuario(usuarioId) {
         try {
             console.log(`🔄 Obteniendo ventas para usuario: ${usuarioId}`);
             
-            // Validar usuarioId
             if (!usuarioId || isNaN(Number(usuarioId))) {
                 throw new Error('ID de usuario inválido');
             }
@@ -192,13 +201,11 @@ class VentaService {
                 throw new Error(`Error ${response.status} al obtener ventas`);
             }
             
-            const todasLasVentas = await response.json();
+            const responseText = await response.text();
+            const todasLasVentas = JSON.parse(responseText);
             
-            // 🔥 CORREGIDO: Filtrar por usuario ID de forma más robusta
             const ventasUsuario = todasLasVentas.filter(venta => {
                 if (!venta.usuario) return false;
-                
-                // Manejar diferentes estructuras de usuario
                 const ventaUsuarioId = venta.usuario.id || venta.usuario;
                 return Number(ventaUsuarioId) === Number(usuarioId);
             });
@@ -212,7 +219,6 @@ class VentaService {
         }
     }
 
-    // 🔥 CORREGIDO: Obtener venta por ID con mejor manejo de errores
     async obtenerVentaPorId(id) {
         try {
             console.log(`🔄 Obteniendo venta ID: ${id}`);
@@ -230,7 +236,9 @@ class VentaService {
                 throw new Error(`Error ${response.status} al obtener la venta`);
             }
             
-            const data = await response.json();
+            const responseText = await response.text();
+            const data = JSON.parse(responseText);
+            
             console.log('✅ Venta obtenida:', data);
             return { success: true, data };
             
@@ -240,16 +248,13 @@ class VentaService {
         }
     }
 
-    // 🔥 CORREGIDO: Calcular total de venta de forma más robusta
     calcularTotalVenta(venta) {
         if (!venta) return 0;
         
-        // Si ya tiene total, usarlo
         if (venta.total != null && !isNaN(Number(venta.total))) {
             return Number(venta.total);
         }
 
-        // Buscar en diferentes estructuras de items
         const arrays = ['items', 'productoVenta', 'productos', 'detalles'];
         for (let key of arrays) {
             if (venta[key] && Array.isArray(venta[key]) && venta[key].length > 0) {
@@ -269,7 +274,6 @@ class VentaService {
         return 0;
     }
 
-    // 🔥 CORREGIDO: Calcular cantidad de productos de forma más robusta
     calcularCantidadProductos(venta) {
         if (!venta) return 0;
 
@@ -288,7 +292,6 @@ class VentaService {
         return 0;
     }
 
-    // 🔥 CORREGIDO: Procesar ventas con validación mejorada
     procesarVentas(ventas) {
         if (!Array.isArray(ventas)) {
             console.warn('⚠️ procesarVentas: ventas no es un array', ventas);
@@ -302,14 +305,12 @@ class VentaService {
                 ...venta,
                 totalCalculado: this.calcularTotalVenta(venta),
                 cantidadProductos: this.calcularCantidadProductos(venta),
-                // 🔥 NUEVO: Agregar información útil para la UI
                 fechaFormateada: venta.fecha ? new Date(venta.fecha).toLocaleDateString('es-CL') : 'N/A',
                 estadoTexto: this.obtenerEstadoTexto(venta.estado?.id || venta.estado)
             };
-        }).filter(venta => venta !== null); // Filtrar ventas nulas
+        }).filter(venta => venta !== null);
     }
 
-    // 🔥 NUEVO: Método para obtener texto del estado
     obtenerEstadoTexto(estadoId) {
         const estados = {
             1: 'Pendiente',
@@ -322,7 +323,6 @@ class VentaService {
         return estados[estadoId] || 'Desconocido';
     }
 
-    // 🔥 NUEVO: Método para actualizar estado de venta
     async actualizarEstadoVenta(ventaId, nuevoEstadoId) {
         try {
             console.log(`🔄 Actualizando estado de venta ${ventaId} a ${nuevoEstadoId}`);
@@ -341,7 +341,9 @@ class VentaService {
                 throw new Error(`Error ${response.status} al actualizar venta`);
             }
             
-            const data = await response.json();
+            const responseText = await response.text();
+            const data = JSON.parse(responseText);
+            
             console.log('✅ Estado de venta actualizado:', data);
             return { success: true, data };
             
