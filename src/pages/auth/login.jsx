@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Forms from '../../components/templates/Forms';
@@ -36,26 +35,34 @@ const Login = () => {
             }
 
             const usuario = response.data;
-            console.log('👤 Usuario recibido:', usuario);
+            console.log('👤 Usuario recibido del servicio:', usuario);
 
-            // GUARDA EN LOCALSTORAGE
-            localStorage.setItem('user', JSON.stringify({
-                id: usuario.id,
-                nombre: usuario.nombre,
-                rol: usuario.rol
-            }));
+            // 🔥🔥🔥 CORREGIDO: Normalizar y guardar de forma CONSISTENTE
+            const userDataNormalizado = {
+                id: usuario.id || usuario.usuario?.id || usuario.data?.id,
+                nombre: usuario.nombre || usuario.usuario?.nombre,
+                correo: usuario.correo || usuario.email,
+                email: usuario.email || usuario.correo,
+                rol: usuario.rol || usuario.usuario?.rol,
+                telefono: usuario.telefono || ''
+            };
+
+            console.log('💾 Guardando usuario normalizado:', userDataNormalizado);
+
+            // GUARDAR EN TODAS LAS UBICACIONES
+            localStorage.setItem('user', JSON.stringify(userDataNormalizado));
+            sessionStorage.setItem('usuarioActivo', JSON.stringify(userDataNormalizado));
 
             // USA EL CONTEXTO
-            login({
-                id: usuario.id,
-                nombre: usuario.nombre,
-                rol: usuario.rol
-            });
+            if (login) {
+                login(userDataNormalizado);
+                console.log('✅ Contexto de auth actualizado');
+            }
 
-            generarMensaje(`¡Bienvenido ${usuario.nombre}!`, 'success');
+            generarMensaje(`¡Bienvenido ${userDataNormalizado.nombre}!`, 'success');
 
             setTimeout(() => {
-                if (usuario.rol.id === 1 || usuario.rol.id === 2) {
+                if (userDataNormalizado.rol?.id === 1 || userDataNormalizado.rol?.id === 2) {
                     navigate('/admin/dashboard');
                 } else {
                     navigate('/');
