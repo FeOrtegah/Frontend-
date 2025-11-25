@@ -27,3 +27,270 @@
 .submenu a:hover {
   color: #007bff;
 }
+
+/* En tu archivo CSS global o en el componente */
+.responsive-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.full-width-layout {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
+}
+
+/* Asegurar que el body y html ocupen todo el ancho */
+html, body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+/* Contenedor principal */
+.main-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header y Footer de ancho completo */
+.full-width-header, .full-width-footer {
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+}
+
+/* ===== RESET COMPLETO PARA ESPACIOS NO DESEADOS ===== */
+* {
+  box-sizing: border-box;
+}
+
+/* Eliminar márgenes por defecto de Bootstrap que puedan causar espacios */
+.container-fluid {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.row {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+[class*="col-"] {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* ===== CONTENEDORES DE ANCHO COMPLETO ===== */
+.full-width-container {
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  padding: 0;
+}
+
+/* Contenedor principal de productos */
+.products-main-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .products-main-container {
+    padding: 2rem;
+  }
+}
+
+/* ===== GRID DE PRODUCTOS SIN ESPACIOS ===== */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== FILTROS Y SIDEBAR ===== */
+.filters-sidebar {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  height: fit-content;
+  border-radius: 0;
+  margin: 0;
+}
+
+@media (max-width: 991.98px) {
+  .filters-sidebar {
+    margin-bottom: 2rem;
+    border-radius: 0;
+  }
+}
+
+/* ===== TARJETAS DE PRODUCTO ===== */
+.product-card {
+  border: none;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  margin: 0;
+  width: 100%;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.product-image-container {
+  width: 100%;
+  height: 250px;
+  overflow: hidden;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-image {
+  transform: scale(1.05);
+}
+
+/* ===== HEADER Y FOOTER ===== */
+.navbar-main {
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.footer-main {
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  background: #f8f9fa;
+  margin-top: auto;
+}
+
+/* ===== SECCIONES INFORMATIVAS ===== */
+.info-section {
+  width: 100%;
+  padding: 3rem 1rem;
+  margin: 2rem 0 0 0;
+  background: #f8f9fa;
+}
+
+.info-cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* ===== AJUSTES ESPECÍFICOS PARA Bootstrap ===== */
+/* Override de Bootstrap para eliminar espacios */
+.container-fluid {
+  --bs-gutter-x: 0;
+}
+
+.row.g-4 {
+  --bs-gutter-x: 0;
+  margin: 0;
+}
+
+/* Padding interno para contenido */
+.content-padding {
+  padding: 0 1rem;
+}
+
+@media (min-width: 768px) {
+  .content-padding {
+    padding: 0 2rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .content-padding {
+    padding: 0 3rem;
+  }
+}
+
+/* ===== UTILIDADES PARA ELIMINAR ESPACIOS ===== */
+.no-margin {
+  margin: 0 !important;
+}
+
+.no-padding {
+  padding: 0 !important;
+}
+
+.full-viewport {
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== RESPONSIVE ADJUSTMENTS ===== */
+@media (max-width: 575.98px) {
+  .products-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .products-main-container {
+    padding: 0.5rem;
+  }
+  
+  .filters-sidebar {
+    padding: 1rem;
+  }
+}
+
+@media (min-width: 576px) and (max-width: 767.98px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199.98px) {
+  .products-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .products-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
