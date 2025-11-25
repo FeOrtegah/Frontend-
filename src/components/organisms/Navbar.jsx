@@ -1,35 +1,30 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const Navbar = ({ carrito }) => {
   const navigate = useNavigate();
-  
-  const [subMenu, setSubMenu] = useState({
-    hombre: false,
-    mujer: false,
-    infantil: false,
-    cuenta: false,
-  });
 
-  const toggleSubMenu = (menu) => {
-    setSubMenu((prevSubMenu) => ({ 
-        ...prevSubMenu, 
-        [menu]: !prevSubMenu[menu] 
-    }));
-  };
-  
   const closeOffcanvas = () => {
-    // Código para cerrar el offcanvas de Bootstrap
+    // Intenta obtener la instancia de Offcanvas de Bootstrap para cerrarla.
     const offcanvas = document.getElementById('offcanvasMenu');
-    if (offcanvas) {
-        const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(offcanvas) || new window.bootstrap.Offcanvas(offcanvas);
+    if (offcanvas && window.bootstrap && window.bootstrap.Offcanvas) {
+      const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(offcanvas);
+      if (bsOffcanvas) {
         bsOffcanvas.hide();
+      }
     }
   };
 
-  const handleSubMenuClick = (path) => {
+  const handleNavigation = (path) => {
     closeOffcanvas();
     navigate(path);
+  };
+
+  const buttonStyle = {
+    backgroundColor: "red",
+    color: "white",
+    fontWeight: "bold",
+    border: "none"
   };
 
   return (
@@ -81,7 +76,7 @@ const Navbar = ({ carrito }) => {
       >
         <div className="offcanvas-header">
           <h5 className="offcanvas-title" id="offcanvasMenuLabel">
-            Categorías
+            Menú Principal
           </h5>
           <button
             type="button"
@@ -91,74 +86,45 @@ const Navbar = ({ carrito }) => {
           ></button>
         </div>
         
-        <div className="offcanvas-body">
-          {/* HOMBRE */}
-          <div className="menu-category" onClick={() => toggleSubMenu("hombre")}>
-            <button 
-                className="btn w-100 mb-2" 
-                style={{ backgroundColor: "red", color: "white", fontWeight: "bold" }}
-            >
-                Hombre
-            </button>
-          </div>
-          {subMenu.hombre && (
-            <div className="submenu ms-3 mb-2">
-              <Link to="/hombre?categoria=poleras" className="d-block" onClick={() => handleSubMenuClick("/hombre?categoria=poleras")}>Poleras</Link>
-              <Link to="/hombre?categoria=pantalones" className="d-block" onClick={() => handleSubMenuClick("/hombre?categoria=pantalones")}>Pantalones</Link>
-              <Link to="/hombre?categoria=chaquetas" className="d-block" onClick={() => handleSubMenuClick("/hombre?categoria=chaquetas")}>Chaquetas</Link>
-              <Link to="/hombre?categoria=todo" className="d-block" onClick={() => handleSubMenuClick("/hombre?categoria=todo")}>Ver todo</Link>
-            </div>
-          )}
+        <div className="offcanvas-body d-grid gap-3">
+          
+          {/* BOTÓN HOMBRE (ROJO) */}
+          <button
+            className="btn py-2"
+            style={buttonStyle}
+            onClick={() => handleNavigation("/hombre")}
+          >
+            Hombre
+          </button>
 
-          {/* MUJER */}
-          <div className="menu-category" onClick={() => toggleSubMenu("mujer")}>
-            <button 
-                className="btn w-100 mb-2" 
-                style={{ backgroundColor: "red", color: "white", fontWeight: "bold" }}
-            >
-                Mujer
-            </button>
-          </div>
-          {subMenu.mujer && (
-            <div className="submenu ms-3 mb-2">
-              <Link to="/mujer?categoria=poleras" className="d-block" onClick={() => handleSubMenuClick("/mujer?categoria=poleras")}>Poleras</Link>
-              <Link to="/mujer?categoria=pantalones" className="d-block" onClick={() => handleSubMenuClick("/mujer?categoria=pantalones")}>Pantalones</Link>
-              <Link to="/mujer?categoria=chaquetas" className="d-block" onClick={() => handleSubMenuClick("/mujer?categoria=chaquetas")}>Chaquetas</Link>
-              <Link to="/mujer?categoria=todo" className="d-block" onClick={() => handleSubMenuClick("/mujer?categoria=todo")}>Ver todo</Link>
-            </div>
-          )}
+          {/* BOTÓN MUJER (ROJO) */}
+          <button
+            className="btn py-2"
+            style={buttonStyle}
+            onClick={() => handleNavigation("/mujer")}
+          >
+            Mujer
+          </button>
 
-          {/* INFANTIL */}
-          <div className="menu-category" onClick={() => toggleSubMenu("infantil")}>
-            <button 
-                className="btn w-100 mb-2" 
-                style={{ backgroundColor: "red", color: "white", fontWeight: "bold" }}
-            >
-                Infantil
-            </button>
-          </div>
-          {subMenu.infantil && (
-            <div className="submenu ms-3 mb-2">
-              <Link to="/infantil?categoria=poleras" className="d-block" onClick={() => handleSubMenuClick("/infantil?categoria=poleras")}>Poleras</Link>
-              <Link to="/infantil?categoria=pantalones" className="d-block" onClick={() => handleSubMenuClick("/infantil?categoria=pantalones")}>Pantalones</Link>
-              <Link to="/infantil?categoria=chaquetas" className="d-block" onClick={() => handleSubMenuClick("/infantil?categoria=chaquetas")}>Chaquetas</Link>
-              <Link to="/infantil?categoria=todo" className="d-block" onClick={() => handleSubMenuClick("/infantil?categoria=todo")}>Ver todo</Link>
-            </div>
-          )}
+          {/* BOTÓN INFANTIL (ROJO) */}
+          <button
+            className="btn py-2"
+            style={buttonStyle}
+            onClick={() => handleNavigation("/infantil")}
+          >
+            Infantil
+          </button>
+          
+          <hr />
 
-          {/* CUENTA */}
-          <div className="menu-category mt-3" onClick={() => toggleSubMenu("cuenta")}>
-            <button 
-                className="btn w-100 mb-2 btn-outline-dark" 
-            >
-                Ver mi cuenta
-            </button>
-          </div>
-          {subMenu.cuenta && (
-            <div className="submenu ms-3 mb-2">
-              <Link to="/micuenta" className="d-block" onClick={() => handleSubMenuClick("/micuenta")}>Mi cuenta</Link>
-            </div>
-          )}
+          {/* BOTÓN MI CUENTA (REDIRECCIÓN AUTOMÁTICA) */}
+          <button
+            className="btn btn-outline-secondary py-2"
+            onClick={() => handleNavigation("/micuenta")}
+          >
+            Ver mi cuenta
+          </button>
+          
         </div>
       </div>
     </>
