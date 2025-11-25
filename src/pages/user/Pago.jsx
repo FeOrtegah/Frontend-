@@ -4,20 +4,9 @@ import VentaService from '../../services/VentaService';
 
 const Pago = ({ carrito, setCarrito, user }) => {
     const [formData, setFormData] = useState({
-        nombre: '',
-        email: '',
-        telefono: '',
-        direccion: '',
-        ciudad: '',
-        comuna: '',
-        codigoPostal: '',
-        metodoPago: 'tarjeta',
-        numeroTarjeta: '',
-        nombreTarjeta: '',
-        fechaExpiracion: '',
-        cvv: '',
-        metodoEnvio: 'delivery',
-        instruccionesEspeciales: ''
+        nombre: '', email: '', telefono: '', direccion: '', ciudad: '', comuna: '',
+        codigoPostal: '', metodoPago: 'tarjeta', numeroTarjeta: '', nombreTarjeta: '',
+        fechaExpiracion: '', cvv: '', metodoEnvio: 'delivery', instruccionesEspeciales: ''
     });
     
     const [pasoActual, setPasoActual] = useState(1);
@@ -26,155 +15,140 @@ const Pago = ({ carrito, setCarrito, user }) => {
     const [usuario, setUsuario] = useState(null);
     const navigate = useNavigate();
 
-    // 🔥 CORREGIDO: Función mejorada para validar ID de usuario
+    // 🔥🔥🔥 FUNCIONES DE UTILIDAD DIRECTAS EN EL COMPONENTE
     const isValidUserId = (userId) => {
         if (userId === null || userId === undefined) return false;
         if (typeof userId === 'string') {
-            if (userId === 'N/A' || userId === 'null' || userId === 'undefined' || userId.trim() === '') return false;
+            if (userId === 'N/A' || userId === 'null' || userId === 'undefined' || userId.trim() === '') {
+                return false;
+            }
         }
         
         const num = Number(userId);
-        return !isNaN(num) && num > 0;
+        return !isNaN(num) && num > 0 && num < 1000000;
     };
 
-    // 🔥 CORREGIDO: Función mejorada para extraer ID real del usuario
-    const extractValidUserId = (usuarioData) => {
-        console.log('🔍 Extrayendo ID válido de usuario:', usuarioData);
+    const extractUserId = (usuarioData) => {
+        console.log('🕵️‍♂️ BUSCANDO ID EN:', usuarioData);
         
         if (!usuarioData) {
-            console.error('❌ Datos de usuario no definidos');
+            console.error('❌ Datos de usuario son null/undefined');
             return null;
         }
 
-        // Buscar ID en diferentes ubicaciones posibles
+        // Buscar en TODAS las ubicaciones posibles
         const posiblesIds = [
+            // Nivel raíz
             usuarioData.id,
-            usuarioData.usuario?.id,
-            usuarioData.data?.id,
-            usuarioData.user?.id,
             usuarioData.userId,
-            usuarioData.usuarioId
-        ].filter(id => id !== undefined && id !== null);
-        
-        for (const id of posiblesIds) {
+            usuarioData.usuarioId,
+            
+            // Nivel 1 anidado
+            usuarioData?.usuario?.id,
+            usuarioData?.user?.id,
+            usuarioData?.data?.id,
+            
+            // Nivel 2 anidado
+            usuarioData?.data?.usuario?.id,
+            usuarioData?.data?.user?.id,
+            usuarioData?.response?.data?.id,
+            
+            // Para respuestas de API
+            usuarioData?.response?.id,
+            usuarioData?.result?.id,
+            usuarioData?.data?.data?.id,
+            
+            // Buscar en cualquier propiedad que tenga 'id'
+            (() => {
+                for (let key in usuarioData) {
+                    if (key.toLowerCase().includes('id') && usuarioData[key]) {
+                        console.log(`📌 Encontrado ID en propiedad: ${key} = ${usuarioData[key]}`);
+                        return usuarioData[key];
+                    }
+                }
+                return null;
+            })()
+        ];
+
+        for (let id of posiblesIds) {
             if (isValidUserId(id)) {
-                console.log('✅ ID válido encontrado:', id);
+                console.log('✅ ID ENCONTRADO:', id);
                 return Number(id);
             }
         }
-        
-        console.error('❌ No se encontró ID válido en:', usuarioData);
+
+        console.error('❌ NO SE ENCONTRÓ ID VÁLIDO EN NINGUNA UBICACIÓN');
+        console.log('🔍 Estructura completa:', JSON.stringify(usuarioData, null, 2));
         return null;
     };
 
-    // 🔥 CORREGIDO: Función para asegurar número
-    const ensureNumber = (value) => {
-        if (value === null || value === undefined || value === 'N/A') {
-            console.warn('⚠️ Valor inválido para conversión, usando 0:', value);
-            return 0;
-        }
+    const getUserFromAllSources = (userProp) => {
+        console.log('🔍 BUSCANDO USUARIO EN TODAS LAS FUENTES...');
         
-        const num = Number(value);
-        if (isNaN(num)) {
-            console.warn('⚠️ Valor no numérico, usando 0:', value);
-            return 0;
+        const sources = [
+            { name: 'Props', data: userProp },
+            { name: 'LocalStorage', data: JSON.parse(localStorage.getItem('user') || 'null') },
+            { name: 'SessionStorage', data: JSON.parse(sessionStorage.getItem('usuarioActivo') || 'null') },
+            { name: 'AuthStorage', data: JSON.parse(localStorage.getItem('authUser') || 'null') }
+        ];
+
+        for (let source of sources) {
+            console.log(`📦 Revisando ${source.name}:`, source.data);
+            if (source.data && typeof source.data === 'object') {
+                const userId = extractUserId(source.data);
+                if (userId) {
+                    console.log(`✅ USUARIO ENCONTRADO en ${source.name} con ID: ${userId}`);
+                    return {
+                        ...source.data,
+                        id: userId
+                    };
+                }
+            }
         }
-        
-        return num;
+
+        console.error('❌ NO SE ENCONTRÓ USUARIO EN NINGUNA FUENTE');
+        return null;
     };
 
-    // 🔥 CORREGIDO: useEffect mejorado para cargar usuario
+    // 🔥🔥🔥 useEffect MEJORADO
     useEffect(() => {
-        console.log('🔄 Iniciando carga de usuario...');
+        console.log('🚀 INICIANDO CARGA DE USUARIO EN PAGO...');
         
-        const loadUser = () => {
+        const cargarUsuario = () => {
             try {
-                // Intentar todas las fuentes posibles
-                const usuarioDeProps = user;
-                const usuarioDeLocalStorage = JSON.parse(localStorage.getItem('user') || 'null');
-                const usuarioDeSessionStorage = JSON.parse(sessionStorage.getItem('usuarioActivo') || 'null');
-                
-                console.log('📋 Fuentes de usuario:');
-                console.log('- Props:', usuarioDeProps);
-                console.log('- LocalStorage:', usuarioDeLocalStorage);
-                console.log('- SessionStorage:', usuarioDeSessionStorage);
-
-                // Orden de prioridad: props -> localStorage -> sessionStorage
-                let usuarioEncontrado = usuarioDeProps || usuarioDeLocalStorage || usuarioDeSessionStorage;
+                const usuarioEncontrado = getUserFromAllSources(user);
                 
                 if (!usuarioEncontrado) {
-                    console.error('❌ No se encontró usuario en ninguna fuente');
-                    setError('No se pudo cargar la información del usuario. Por favor, inicia sesión nuevamente.');
-                    return;
-                }
-
-                console.log('✅ Usuario encontrado:', usuarioEncontrado);
-                
-                // 🔥 CORREGIDO: Extraer ID válido
-                const idValido = extractValidUserId(usuarioEncontrado);
-                
-                if (!idValido) {
-                    console.error('❌ No se pudo encontrar ID válido para el usuario');
-                    setError('Error: ID de usuario inválido. Por favor, inicia sesión nuevamente.');
+                    console.error('💥 NO HAY USUARIO AUTENTICADO');
+                    setError('❌ No estás autenticado. Por favor inicia sesión.');
                     
-                    // Limpiar datos inválidos
                     localStorage.removeItem('user');
                     sessionStorage.removeItem('usuarioActivo');
+                    
+                    setTimeout(() => navigate('/auth'), 2000);
                     return;
                 }
 
-                // 🔥 CORREGIDO: Crear usuario con ID válido y datos completos
-                const usuarioCorregido = {
-                    ...usuarioEncontrado,
-                    id: idValido,
-                    nombre: usuarioEncontrado.nombre || '',
-                    correo: usuarioEncontrado.correo || usuarioEncontrado.email || '',
-                    email: usuarioEncontrado.email || usuarioEncontrado.correo || '',
-                    telefono: usuarioEncontrado.telefono || ''
-                };
+                console.log('🎯 USUARIO CARGADO EXITOSAMENTE:', usuarioEncontrado);
+                setUsuario(usuarioEncontrado);
                 
-                console.log('✅ Usuario corregido con ID válido:', usuarioCorregido);
-                setUsuario(usuarioCorregido);
-                
-                // Rellenar automáticamente el formulario
                 setFormData(prev => ({
                     ...prev,
-                    nombre: usuarioCorregido.nombre || '',
-                    email: usuarioCorregido.correo || usuarioCorregido.email || '',
-                    telefono: usuarioCorregido.telefono || ''
+                    nombre: usuarioEncontrado.nombre || usuarioEncontrado.name || '',
+                    email: usuarioEncontrado.correo || usuarioEncontrado.email || '',
+                    telefono: usuarioEncontrado.telefono || usuarioEncontrado.phone || ''
                 }));
 
             } catch (error) {
-                console.error('💥 Error al cargar usuario:', error);
-                setError('Error al cargar información del usuario. Por favor, recarga la página.');
+                console.error('💥 ERROR CATASTRÓFICO:', error);
+                setError('Error crítico al cargar usuario. Recarga la página.');
             }
         };
 
-        loadUser();
-    }, [user]);
+        cargarUsuario();
+    }, [user, navigate]);
 
-    // 🔥 CORREGIDO: Calcular totales de forma segura
-    const calcularTotales = () => {
-        try {
-            const subtotal = carrito.reduce((sum, item) => {
-                if (!item) return sum;
-                const precio = Number(item.price || item.precio || 0);
-                const cantidad = Number(item.cantidad || 1);
-                return sum + (precio * cantidad);
-            }, 0);
-            
-            const costoEnvio = formData.metodoEnvio === 'delivery' ? 3500 : 0;
-            const total = subtotal + costoEnvio;
-            
-            return { subtotal, costoEnvio, total };
-        } catch (error) {
-            console.error('Error calculando totales:', error);
-            return { subtotal: 0, costoEnvio: 0, total: 0 };
-        }
-    };
-
-    const { subtotal, costoEnvio, total } = calcularTotales();
-
+    // 🔥🔥🔥 FUNCIONES DEL FORMULARIO
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -193,36 +167,21 @@ const Pago = ({ carrito, setCarrito, user }) => {
 
     const validarPaso3 = () => {
         if (formData.metodoPago === 'tarjeta') {
-            const tarjetaValida = formData.numeroTarjeta.trim().replace(/\s/g, '').length >= 15;
-            const nombreValido = formData.nombreTarjeta.trim().length >= 3;
-            const fechaValida = formData.fechaExpiracion.trim().length === 5;
-            const cvvValido = formData.cvv.trim().length >= 3;
-            
-            return tarjetaValida && nombreValido && fechaValida && cvvValido;
+            return formData.numeroTarjeta && formData.nombreTarjeta && formData.fechaExpiracion && formData.cvv;
         }
         return true;
     };
 
     const siguientePaso = () => {
-        setError('');
-        
-        switch(pasoActual) {
-            case 1:
-                if (!validarPaso1()) {
-                    setError('Por favor completa toda la información personal');
-                    return;
-                }
-                break;
-            case 2:
-                if (!validarPaso2()) {
-                    setError('Por favor completa la dirección de envío');
-                    return;
-                }
-                break;
-            default:
-                break;
+        if (pasoActual === 1 && !validarPaso1()) {
+            setError('Por favor completa toda la información personal');
+            return;
         }
-        
+        if (pasoActual === 2 && !validarPaso2()) {
+            setError('Por favor completa la dirección de envío');
+            return;
+        }
+        setError('');
         setPasoActual(pasoActual + 1);
     };
 
@@ -231,35 +190,24 @@ const Pago = ({ carrito, setCarrito, user }) => {
         setPasoActual(pasoActual - 1);
     };
 
-    // 🔥 CORREGIDO: Función de procesamiento de pago mejorada
+    // 🔥🔥🔥 FUNCIÓN DE PAGO MEJORADA
     const procesarPago = async () => {
-        if (pasoActual === 3 && !validarPaso3()) {
-            setError('Por favor completa la información de pago');
-            return;
-        }
-
-        // Validación de usuario
-        if (!usuario || !isValidUserId(usuario.id)) {
-            setError('No se encontró información válida del usuario. Por favor, inicia sesión nuevamente.');
-            setTimeout(() => navigate('/auth'), 3000);
-            return;
-        }
-
-        // Validación de carrito
-        if (!carrito || carrito.length === 0) {
-            setError('El carrito está vacío');
-            return;
-        }
-
-        const carritoValido = carrito.every(item => 
-            item && 
-            item.id && 
-            isValidUserId(item.id) && 
-            (item.price || item.precio)
-        );
+        console.log('💰 INICIANDO PROCESO DE PAGO...');
         
-        if (!carritoValido) {
-            setError('El carrito contiene productos inválidos');
+        if (!usuario) {
+            setError('❌ No se encontró información del usuario');
+            return;
+        }
+
+        const userId = extractUserId(usuario);
+        if (!userId) {
+            setError('💥 ID de usuario inválido. Contacta al soporte.');
+            console.error('ID INVALIDO EN USUARIO:', usuario);
+            return;
+        }
+
+        if (!carrito || carrito.length === 0) {
+            setError('🛒 El carrito está vacío');
             return;
         }
 
@@ -267,106 +215,97 @@ const Pago = ({ carrito, setCarrito, user }) => {
         setError('');
 
         try {
-            // 🔥 CORREGIDO: Estructura de datos validada
-            const usuarioId = ensureNumber(usuario.id);
-            console.log('✅ Usuario ID final para venta:', usuarioId);
-
+            console.log('📦 PREPARANDO DATOS DE VENTA...');
+            
             const ventaData = {
-                numeroVenta: `VEN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                usuario: { 
-                    id: usuarioId
-                },
-                estado: { 
-                    id: 1 // PENDIENTE
-                },
+                numeroVenta: `VEN-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+                usuario: { id: userId },
+                estado: { id: 1 },
                 metodoPago: { 
                     id: formData.metodoPago === 'tarjeta' ? 1 : 
-                        formData.metodoPago === 'transferencia' ? 2 : 3 
+                         formData.metodoPago === 'transferencia' ? 2 : 3 
                 },
                 metodoEnvio: { 
                     id: formData.metodoEnvio === 'delivery' ? 1 : 2 
                 },
                 items: carrito.map(item => ({
-                    producto: { 
-                        id: ensureNumber(item.id)
-                    },
-                    cantidad: ensureNumber(item.cantidad || 1),
-                    precioUnitario: parseFloat(item.price || item.precio || 0),
-                    subtotal: parseFloat((item.price || item.precio || 0) * (item.cantidad || 1))
+                    producto: { id: Number(item.id) },
+                    cantidad: Number(item.cantidad || 1),
+                    precioUnitario: Number(item.price || item.precio || 0),
+                    subtotal: Number((item.price || item.precio || 0) * (item.cantidad || 1))
                 })),
-                total: parseFloat(total),
+                total: Number(total),
                 direccionEnvio: {
-                    direccion: formData.direccion.trim(),
-                    ciudad: formData.ciudad.trim(),
-                    comuna: formData.comuna.trim(),
-                    codigoPostal: formData.codigoPostal.trim(),
-                    instrucciones: formData.instruccionesEspeciales.trim()
-                },
-                cliente: {
-                    nombre: formData.nombre.trim(),
-                    email: formData.email.trim(),
-                    telefono: formData.telefono.trim()
+                    direccion: formData.direccion,
+                    ciudad: formData.ciudad,
+                    comuna: formData.comuna,
+                    codigoPostal: formData.codigoPostal,
+                    instrucciones: formData.instruccionesEspeciales
                 }
             };
 
-            console.log('📤 Enviando datos de venta:', ventaData);
-
+            console.log('🔄 ENVIANDO VENTA AL SERVIDOR:', ventaData);
+            
             const resultado = await VentaService.crearVenta(ventaData);
 
             if (resultado.success) {
-                console.log('✅ Venta creada exitosamente:', resultado.data);
+                console.log('🎉 VENTA EXITOSA:', resultado.data);
                 
-                // Limpiar carrito y datos temporales
                 setCarrito([]);
                 localStorage.removeItem('carrito');
                 localStorage.removeItem('carritoParaPago');
-                localStorage.removeItem('totalParaPago');
                 
-                // Redirigir a confirmación
                 navigate('/confirmacion', { 
                     state: { 
                         venta: resultado.data,
                         carrito: carrito,
                         total: total,
-                        datosEnvio: formData,
-                        usuario: usuario
+                        datosEnvio: formData
                     } 
                 });
             } else {
-                console.error('❌ Error del servicio:', resultado);
-                const mensajeError = resultado.error?.message || resultado.error || 'Error al procesar el pago';
-                setError(mensajeError);
+                console.error('❌ ERROR EN VENTA:', resultado.error);
+                setError(resultado.error || 'Error al procesar el pago');
             }
 
         } catch (err) {
-            console.error('💥 Error en procesarPago:', err);
-            setError(err.message || 'Error de conexión. Intenta nuevamente.');
+            console.error('💥 ERROR FATAL:', err);
+            setError('Error de conexión. Intenta nuevamente.');
         } finally {
             setLoading(false);
         }
     };
 
-    // 🔥 CORREGIDO: Para las imágenes, usar una ruta local
-    const getImageSrc = (imageUrl) => {
-        if (!imageUrl || imageUrl.includes('placeholder.com') || imageUrl.includes('undefined')) {
-            return '/images/placeholder-product.jpg';
-        }
-        return imageUrl;
-    };
+    // 🔥🔥🔥 CALCULAR TOTALES
+    const subtotal = carrito.reduce((sum, item) => sum + ((item.price || item.precio || 0) * (item.cantidad || 1)), 0);
+    const costoEnvio = formData.metodoEnvio === 'delivery' ? 3500 : 0;
+    const total = subtotal + costoEnvio;
 
-    // 🔥 CORREGIDO: Renderizado condicional mejorado
-    if (!carrito || carrito.length === 0) {
+    // 🔥🔥🔥 RENDERIZADO MEJORADO
+    if (!usuario) {
         return (
             <div className="container py-5 text-center">
                 <div className="card shadow">
                     <div className="card-body py-5">
-                        <div className="mb-4">
-                            <i className="bi bi-cart-x" style={{ fontSize: '4rem', color: '#6c757d' }}></i>
+                        <div className="spinner-border text-primary mb-3" role="status">
+                            <span className="visually-hidden">Cargando...</span>
                         </div>
-                        <h2>Carrito Vacío</h2>
-                        <p className="text-muted mb-4">No hay productos para procesar el pago</p>
-                        <button className="btn btn-primary btn-lg" onClick={() => navigate('/hombre')}>
-                            <i className="bi bi-arrow-left me-2"></i>
+                        <h4>Cargando información de usuario...</h4>
+                        {error && <div className="alert alert-danger mt-3">{error}</div>}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (carrito.length === 0) {
+        return (
+            <div className="container py-5 text-center">
+                <div className="card shadow">
+                    <div className="card-body py-5">
+                        <h4>🛒 Carrito Vacío</h4>
+                        <p>No hay productos para procesar el pago</p>
+                        <button className="btn btn-primary" onClick={() => navigate('/hombre')}>
                             Seguir Comprando
                         </button>
                     </div>
@@ -375,68 +314,13 @@ const Pago = ({ carrito, setCarrito, user }) => {
         );
     }
 
-    // 🔥 CORREGIDO: Validación de usuario con mensajes más claros
-    if (error && !usuario) {
-        return (
-            <div className="container py-5 text-center">
-                <div className="card shadow">
-                    <div className="card-body py-5">
-                        <div className="mb-4">
-                            <i className="bi bi-exclamation-triangle" style={{ fontSize: '4rem', color: '#dc3545' }}></i>
-                        </div>
-                        <h2>Error de Autenticación</h2>
-                        <p className="text-muted mb-3">
-                            {error}
-                        </p>
-                        <p className="text-muted mb-4">
-                            Por favor, inicia sesión nuevamente.
-                        </p>
-                        <div className="d-flex gap-2 justify-content-center">
-                            <button 
-                                className="btn btn-primary btn-lg" 
-                                onClick={() => {
-                                    localStorage.removeItem('user');
-                                    sessionStorage.removeItem('usuarioActivo');
-                                    navigate('/auth');
-                                }}
-                            >
-                                <i className="bi bi-box-arrow-in-right me-2"></i>
-                                Iniciar Sesión
-                            </button>
-                            <button 
-                                className="btn btn-outline-secondary btn-lg" 
-                                onClick={() => window.location.reload()}
-                            >
-                                <i className="bi bi-arrow-clockwise me-2"></i>
-                                Recargar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    // 🔥 CORREGIDO: Mostrar loading mientras se carga el usuario
-    if (!usuario) {
-        return (
-            <div className="container py-5 text-center">
-                <div className="card shadow">
-                    <div className="card-body py-5">
-                        <div className="mb-4">
-                            <div className="spinner-border text-primary" style={{ width: '3rem', height: '3rem' }} role="status">
-                                <span className="visually-hidden">Cargando...</span>
-                            </div>
-                        </div>
-                        <h2>Cargando información...</h2>
-                        <p className="text-muted mb-4">
-                            Verificando tu sesión de usuario...
-                        </p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    // 🔥🔥🔥 FUNCIÓN PARA IMÁGENES
+    const getImageSrc = (imageUrl) => {
+        if (!imageUrl || imageUrl.includes('placeholder.com')) {
+            return '/images/placeholder-product.jpg';
+        }
+        return imageUrl;
+    };
 
     return (
         <div className="container py-5">
@@ -483,19 +367,21 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                 </div>
                             )}
 
-                            {/* Información del usuario actual */}
+                            {/* 🔥 INFO DEL USUARIO ENCONTRADO */}
                             {usuario && (
-                                <div className="alert alert-info d-flex align-items-center mb-4">
+                                <div className="alert alert-success d-flex align-items-center mb-4">
                                     <i className="bi bi-person-check me-2"></i>
                                     <div>
-                                        <strong>Comprador identificado:</strong> {usuario.nombre} 
+                                        <strong>✅ Usuario identificado:</strong> {usuario.nombre} 
                                         {(usuario.correo || usuario.email) && ` (${usuario.correo || usuario.email})`}
+                                        <br />
+                                        <small>ID: {extractUserId(usuario)}</small>
                                     </div>
                                 </div>
                             )}
 
                             {pasoActual === 1 && (
-                                <div className="animate__animated animate__fadeIn">
+                                <div className="fade-in">
                                     <h5 className="mb-4">Información Personal</h5>
                                     <div className="row g-3">
                                         <div className="col-md-6">
@@ -539,7 +425,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
                             )}
 
                             {pasoActual === 2 && (
-                                <div className="animate__animated animate__fadeIn">
+                                <div className="fade-in">
                                     <h5 className="mb-4">Dirección de Envío</h5>
                                     <div className="row g-3">
                                         <div className="col-12">
@@ -605,7 +491,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
                             )}
 
                             {pasoActual === 3 && (
-                                <div className="animate__animated animate__fadeIn">
+                                <div className="fade-in">
                                     <h5 className="mb-4">Método de Pago</h5>
                                     
                                     <div className="mb-4">
@@ -613,7 +499,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                         <div className="row g-3">
                                             <div className="col-md-4">
                                                 <div className={`card border ${formData.metodoPago === 'tarjeta' ? 'border-primary' : ''}`}>
-                                                    <div className="card-body text-center p-2">
+                                                    <div className="card-body text-center">
                                                         <input
                                                             type="radio"
                                                             className="btn-check"
@@ -623,7 +509,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                                             checked={formData.metodoPago === 'tarjeta'}
                                                             onChange={handleInputChange}
                                                         />
-                                                        <label className="btn btn-outline-primary w-100 mb-0" htmlFor="tarjeta">
+                                                        <label className="btn btn-outline-primary w-100" htmlFor="tarjeta">
                                                             <i className="bi bi-credit-card me-2"></i>
                                                             Tarjeta
                                                         </label>
@@ -632,7 +518,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                             </div>
                                             <div className="col-md-4">
                                                 <div className={`card border ${formData.metodoPago === 'transferencia' ? 'border-primary' : ''}`}>
-                                                    <div className="card-body text-center p-2">
+                                                    <div className="card-body text-center">
                                                         <input
                                                             type="radio"
                                                             className="btn-check"
@@ -642,7 +528,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                                             checked={formData.metodoPago === 'transferencia'}
                                                             onChange={handleInputChange}
                                                         />
-                                                        <label className="btn btn-outline-primary w-100 mb-0" htmlFor="transferencia">
+                                                        <label className="btn btn-outline-primary w-100" htmlFor="transferencia">
                                                             <i className="bi bi-bank me-2"></i>
                                                             Transferencia
                                                         </label>
@@ -651,7 +537,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                             </div>
                                             <div className="col-md-4">
                                                 <div className={`card border ${formData.metodoPago === 'efectivo' ? 'border-primary' : ''}`}>
-                                                    <div className="card-body text-center p-2">
+                                                    <div className="card-body text-center">
                                                         <input
                                                             type="radio"
                                                             className="btn-check"
@@ -661,7 +547,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                                             checked={formData.metodoPago === 'efectivo'}
                                                             onChange={handleInputChange}
                                                         />
-                                                        <label className="btn btn-outline-primary w-100 mb-0" htmlFor="efectivo">
+                                                        <label className="btn btn-outline-primary w-100" htmlFor="efectivo">
                                                             <i className="bi bi-cash-coin me-2"></i>
                                                             Efectivo
                                                         </label>
@@ -758,7 +644,6 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                         type="button" 
                                         className="btn btn-outline-secondary"
                                         onClick={() => navigate('/carrito')}
-                                        disabled={loading}
                                     >
                                         <i className="bi bi-arrow-left me-2"></i>
                                         Volver al Carrito
@@ -770,7 +655,6 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                         type="button" 
                                         className="btn btn-primary"
                                         onClick={siguientePaso}
-                                        disabled={loading}
                                     >
                                         Siguiente
                                         <i className="bi bi-arrow-right ms-2"></i>
@@ -790,12 +674,21 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                         ) : (
                                             <>
                                                 <i className="bi bi-lock-fill me-2"></i>
-                                                Pagar ${total.toLocaleString('es-CL')}
+                                                Pagar ${total.toLocaleString()}
                                             </>
                                         )}
                                     </button>
                                 )}
                             </div>
+                        </div>
+                    </div>
+
+                    <div className="card border-0 bg-light">
+                        <div className="card-body text-center py-3">
+                            <small className="text-muted">
+                                <i className="bi bi-shield-check me-1"></i>
+                                Pago seguro
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -822,11 +715,11 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                         <div className="flex-grow-1">
                                             <div className="fw-semibold small">{item.name || item.nombre}</div>
                                             <div className="text-muted small">
-                                                {item.cantidad || 1} x ${(item.price || item.precio || 0).toLocaleString('es-CL')}
+                                                {item.cantidad || 1} x ${(item.price || item.precio || 0).toLocaleString()}
                                             </div>
                                         </div>
                                         <div className="fw-semibold">
-                                            ${((item.price || item.precio || 0) * (item.cantidad || 1)).toLocaleString('es-CL')}
+                                            ${((item.price || item.precio || 0) * (item.cantidad || 1)).toLocaleString()}
                                         </div>
                                     </div>
                                 ))}
@@ -836,22 +729,22 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                 <h6>Método de envío</h6>
                                 <div className="d-flex justify-content-between">
                                     <span>{formData.metodoEnvio === 'delivery' ? 'Delivery a domicilio' : 'Retiro en tienda'}</span>
-                                    <span>{costoEnvio === 0 ? 'Gratis' : `$${costoEnvio.toLocaleString('es-CL')}`}</span>
+                                    <span>{costoEnvio === 0 ? 'Gratis' : `$${costoEnvio.toLocaleString()}`}</span>
                                 </div>
                             </div>
 
                             <div className="border-top pt-3">
                                 <div className="d-flex justify-content-between mb-2">
                                     <span>Subtotal</span>
-                                    <span>${subtotal.toLocaleString('es-CL')}</span>
+                                    <span>${subtotal.toLocaleString()}</span>
                                 </div>
                                 <div className="d-flex justify-content-between mb-2">
                                     <span>Envío</span>
-                                    <span>{costoEnvio === 0 ? 'Gratis' : `$${costoEnvio.toLocaleString('es-CL')}`}</span>
+                                    <span>{costoEnvio === 0 ? 'Gratis' : `$${costoEnvio.toLocaleString()}`}</span>
                                 </div>
                                 <div className="d-flex justify-content-between fw-bold fs-5 text-success">
                                     <span>Total</span>
-                                    <span>${total.toLocaleString('es-CL')}</span>
+                                    <span>${total.toLocaleString()}</span>
                                 </div>
                             </div>
                         </div>
