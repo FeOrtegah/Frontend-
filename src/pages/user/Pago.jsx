@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import VentaService from '../../services/VentaService';
-import './global.css';
+import "../../styles/global.css";
 
 const Pago = ({ carrito, setCarrito }) => {
     const [formData, setFormData] = useState({
