@@ -35,6 +35,31 @@ const Pago = ({ carrito, setCarrito, user }) => {
         return !isNaN(num) && num > 0;
     };
 
+    // 🔥 NUEVO: Función para extraer ID real del usuario
+    const extractValidUserId = (usuarioData) => {
+        console.log('🔍 Extrayendo ID válido de usuario:', usuarioData);
+        
+        // Buscar ID en diferentes ubicaciones posibles
+        const posiblesIds = [
+            usuarioData.id,
+            usuarioData.usuario?.id,
+            usuarioData.data?.id,
+            usuarioData.user?.id,
+            usuarioData.userId,
+            usuarioData.usuarioId
+        ];
+        
+        for (const id of posiblesIds) {
+            if (isValidUserId(id)) {
+                console.log('✅ ID válido encontrado:', id);
+                return id;
+            }
+        }
+        
+        console.error('❌ No se encontró ID válido en:', usuarioData);
+        return null;
+    };
+
     // 🔥 CORREGIDO: Función para asegurar número
     const ensureNumber = (value) => {
         console.log('🔢 Convirtiendo a número:', value, 'Tipo:', typeof value);
@@ -68,30 +93,43 @@ const Pago = ({ carrito, setCarrito, user }) => {
         console.log('- sessionStorage usuarioActivo:', usuarioDeSessionStorage);
 
         // Orden de prioridad: props -> localStorage -> sessionStorage
-        const usuarioEncontrado = usuarioDeProps || usuarioDeLocalStorage || usuarioDeSessionStorage;
+        let usuarioEncontrado = usuarioDeProps || usuarioDeLocalStorage || usuarioDeSessionStorage;
         
         console.log('✅ Usuario encontrado:', usuarioEncontrado);
         
         if (usuarioEncontrado) {
             console.log('🔍 Analizando usuario:');
-            console.log('- ID:', usuarioEncontrado.id);
+            console.log('- ID original:', usuarioEncontrado.id);
             console.log('- Tipo de ID:', typeof usuarioEncontrado.id);
-            console.log('- ¿ID válido?:', isValidUserId(usuarioEncontrado.id));
             
-            if (isValidUserId(usuarioEncontrado.id)) {
-                console.log('✅ Usuario ID válido detectado');
-                setUsuario(usuarioEncontrado);
+            // 🔥 CORREGIDO: Extraer ID válido
+            const idValido = extractValidUserId(usuarioEncontrado);
+            console.log('- ¿ID válido encontrado?:', idValido);
+            
+            if (idValido) {
+                // 🔥 CORREGIDO: Crear usuario con ID válido
+                const usuarioCorregido = {
+                    ...usuarioEncontrado,
+                    id: idValido // Reemplazar el ID inválido
+                };
+                
+                console.log('✅ Usuario corregido con ID válido:', usuarioCorregido);
+                setUsuario(usuarioCorregido);
                 
                 // Rellenar automáticamente el formulario
                 setFormData(prev => ({
                     ...prev,
-                    nombre: usuarioEncontrado.nombre || '',
-                    email: usuarioEncontrado.correo || usuarioEncontrado.email || '',
-                    telefono: usuarioEncontrado.telefono || ''
+                    nombre: usuarioCorregido.nombre || '',
+                    email: usuarioCorregido.correo || usuarioCorregido.email || '',
+                    telefono: usuarioCorregido.telefono || ''
                 }));
             } else {
-                console.error('❌ Usuario ID inválido:', usuarioEncontrado.id);
-                setError(`ID de usuario inválido: "${usuarioEncontrado.id}". Por favor, inicia sesión nuevamente.`);
+                console.error('❌ No se pudo encontrar ID válido para el usuario');
+                setError('Error: ID de usuario inválido. Por favor, inicia sesión nuevamente.');
+                
+                // 🔥 LIMPIAR DATOS INVÁLIDOS
+                localStorage.removeItem('user');
+                sessionStorage.removeItem('usuarioActivo');
             }
         } else {
             console.error('❌ No se encontró usuario');
@@ -165,6 +203,11 @@ const Pago = ({ carrito, setCarrito, user }) => {
 
         if (!isValidUserId(usuario.id)) {
             setError(`Error: ID de usuario inválido ("${usuario.id}"). Por favor, contacta al soporte.`);
+            
+            // 🔥 LIMPIAR DATOS CORRUPTOS
+            localStorage.removeItem('user');
+            sessionStorage.removeItem('usuarioActivo');
+            setTimeout(() => navigate('/auth'), 3000);
             return;
         }
 
@@ -292,11 +335,19 @@ const Pago = ({ carrito, setCarrito, user }) => {
                         <p className="text-muted mb-3">
                             {usuario ? `ID de usuario inválido: "${usuario.id}"` : 'No se pudo verificar tu identidad.'}
                         </p>
-                        <p className="text-muted mb-4">Por favor, inicia sesión nuevamente.</p>
+                        <p className="text-muted mb-4">
+                            Se detectó un problema con tus datos de sesión. 
+                            Por favor, inicia sesión nuevamente.
+                        </p>
                         <div className="d-flex gap-2 justify-content-center">
                             <button 
                                 className="btn btn-primary btn-lg" 
-                                onClick={() => navigate('/auth')}
+                                onClick={() => {
+                                    // 🔥 LIMPIAR DATOS CORRUPTOS
+                                    localStorage.removeItem('user');
+                                    sessionStorage.removeItem('usuarioActivo');
+                                    navigate('/auth');
+                                }}
                             >
                                 <i className="bi bi-box-arrow-in-right me-2"></i>
                                 Iniciar Sesión
