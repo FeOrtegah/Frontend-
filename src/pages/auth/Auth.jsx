@@ -14,7 +14,7 @@ import {
 } from "react-bootstrap";
 import UserService from '../../services/UserService.jsx';
 
-const Auth = () => {
+const Auth = ({ setUser }) => { // 🔥 Agregar setUser como prop
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState("login");
     const [loading, setLoading] = useState(false);
@@ -74,8 +74,16 @@ const Auth = () => {
                 token: result.data.token || "mock-token-login"
             };
             
+            // 🔥 GUARDAR EN AMBOS STORAGE
             sessionStorage.setItem("usuarioActivo", JSON.stringify(userData));
+            localStorage.setItem("user", JSON.stringify(userData)); // 🔥 IMPORTANTE: Guardar también en localStorage
             localStorage.setItem("userToken", userData.token);
+
+            // 🔥 ACTUALIZAR ESTADO GLOBAL
+            if (setUser) {
+                setUser(userData);
+                console.log('✅ Estado global actualizado desde Auth:', userData);
+            }
 
             setSuccess("Has iniciado sesion correctamente");
 
@@ -118,7 +126,6 @@ const Auth = () => {
             });
 
             if (!registerResult.success) {
-                
                 const errorData = registerResult.error;
                 let mensajeError = "Ocurrio un error inesperado al contactar al servidor.";
                 
@@ -154,8 +161,16 @@ const Auth = () => {
                 token: autoLoginResult.data.token || "mock-token-registro"
             };
 
+            // 🔥 GUARDAR EN AMBOS STORAGE
             sessionStorage.setItem("usuarioActivo", JSON.stringify(userData));
+            localStorage.setItem("user", JSON.stringify(userData)); // 🔥 IMPORTANTE: Guardar también en localStorage
             localStorage.setItem("userToken", userData.token);
+
+            // 🔥 ACTUALIZAR ESTADO GLOBAL
+            if (setUser) {
+                setUser(userData);
+                console.log('✅ Estado global actualizado desde registro:', userData);
+            }
 
             setFormData((prev) => ({
                 ...prev,
