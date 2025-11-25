@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { Container, Row, Col, Card, Button, Table, Alert, Spinner } from "react-bootstrap";
+import { 
+  Container, 
+  Row, 
+  Col, 
+  Card, 
+  Button, 
+  Table, 
+  Alert, 
+  Spinner,
+  Badge 
+} from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import OrderService from "/src/services/OrderService";
 
@@ -38,6 +48,11 @@ const Carrito = ({ carrito, setCarrito }) => {
     try {
       setLoading(true);
       setError(null);
+      
+      // Guardar el carrito actual en localStorage para usarlo en el pago
+      localStorage.setItem("carritoParaPago", JSON.stringify(carrito));
+      localStorage.setItem("totalParaPago", getTotal().toString());
+      
       navigate('/pago');
     } catch (err) {
       setError("Error al procesar el carrito: " + err.message);
@@ -72,8 +87,8 @@ const Carrito = ({ carrito, setCarrito }) => {
         </Alert>
       )}
       
-      <Table responsive>
-        <thead>
+      <Table responsive striped bordered hover>
+        <thead className="table-dark">
           <tr>
             <th>Producto</th>
             <th>Talla</th>
@@ -93,31 +108,42 @@ const Carrito = ({ carrito, setCarrito }) => {
                 <td>
                   <div className="d-flex align-items-center">
                     <img
-                      src={item.image}
-                      alt={item.name}
-                      style={{ width: "50px", height: "50px", objectFit: "cover" }}
+                      src={item.image || item.imagen || "/placeholder-image.jpg"}
+                      alt={item.name || item.nombre}
+                      style={{ 
+                        width: "60px", 
+                        height: "60px", 
+                        objectFit: "cover",
+                        borderRadius: "8px" 
+                      }}
                       className="me-3"
+                      onError={(e) => {
+                        e.target.src = "/placeholder-image.jpg";
+                      }}
                     />
                     <div>
-                      <strong>{item.name}</strong>
+                      <strong>{item.name || item.nombre}</strong>
                       {item.oferta && (
                         <Badge bg="danger" className="ms-2">OFERTA</Badge>
                       )}
                     </div>
                   </div>
                 </td>
-                <td>{item.talla || "N/A"}</td>
-                <td>${precio.toLocaleString()}</td>
-                <td>
+                <td className="align-middle">{item.talla || "N/A"}</td>
+                <td className="align-middle">${precio.toLocaleString()}</td>
+                <td className="align-middle">
                   <div className="d-flex align-items-center gap-2">
                     <Button
                       variant="outline-secondary"
                       size="sm"
                       onClick={() => handleUpdateQuantity(index, (item.cantidad || 1) - 1)}
+                      disabled={(item.cantidad || 1) <= 1}
                     >
                       -
                     </Button>
-                    <span>{item.cantidad || 1}</span>
+                    <span className="mx-2" style={{ minWidth: "30px", textAlign: "center" }}>
+                      {item.cantidad || 1}
+                    </span>
                     <Button
                       variant="outline-secondary"
                       size="sm"
@@ -128,14 +154,16 @@ const Carrito = ({ carrito, setCarrito }) => {
                     </Button>
                   </div>
                 </td>
-                <td>${subtotal.toLocaleString()}</td>
-                <td>
+                <td className="align-middle">
+                  <strong>${subtotal.toLocaleString()}</strong>
+                </td>
+                <td className="align-middle">
                   <Button
-                    variant="danger"
+                    variant="outline-danger"
                     size="sm"
                     onClick={() => handleRemoveItem(index)}
                   >
-                    Eliminar
+                    🗑️ Eliminar
                   </Button>
                 </td>
               </tr>
@@ -144,34 +172,55 @@ const Carrito = ({ carrito, setCarrito }) => {
         </tbody>
       </Table>
 
-      <div className="text-end mt-4">
-        <h4>Total: ${getTotal().toLocaleString()}</h4>
-        
-        <div className="d-flex justify-content-end gap-3 mt-3">
-          <Button 
-            variant="outline-primary" 
-            onClick={() => navigate('/')}
-          >
-            Seguir Comprando
-          </Button>
-          
-          <Button 
-            variant="success" 
-            size="lg" 
-            onClick={handleProceedToPayment}
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <Spinner animation="border" size="sm" className="me-2" />
-                Procesando...
-              </>
-            ) : (
-              'Proceder al Pago'
-            )}
-          </Button>
-        </div>
-      </div>
+      <Row className="mt-4">
+        <Col md={8}></Col>
+        <Col md={4}>
+          <Card className="border-0 shadow-sm">
+            <Card.Body>
+              <div className="d-flex justify-content-between mb-2">
+                <span>Subtotal:</span>
+                <span>${getTotal().toLocaleString()}</span>
+              </div>
+              <div className="d-flex justify-content-between mb-2">
+                <span>Envío:</span>
+                <span>Gratis</span>
+              </div>
+              <hr />
+              <div className="d-flex justify-content-between mb-3">
+                <strong>Total:</strong>
+                <strong className="text-primary h5">
+                  ${getTotal().toLocaleString()}
+                </strong>
+              </div>
+              
+              <div className="d-grid gap-2">
+                <Button 
+                  variant="success" 
+                  size="lg" 
+                  onClick={handleProceedToPayment}
+                  disabled={loading || carrito.length === 0}
+                >
+                  {loading ? (
+                    <>
+                      <Spinner animation="border" size="sm" className="me-2" />
+                      Procesando...
+                    </>
+                  ) : (
+                    'Proceder al Pago'
+                  )}
+                </Button>
+                
+                <Button 
+                  variant="outline-primary" 
+                  onClick={() => navigate('/')}
+                >
+                  Seguir Comprando
+                </Button>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
     </Container>
   );
 };
