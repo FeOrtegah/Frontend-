@@ -109,6 +109,7 @@ class VentaService {
 
 const ventaServiceInstance = new VentaService();
 
+// Componentes de utilidad (Container, Card, Button, Alert, etc.)
 const Container = ({ children, className }) => <div className={`p-4 mx-auto ${className || ''}`}>{children}</div>;
 const Card = ({ children, className, ...props }) => <div className={`bg-white rounded-lg shadow-md ${className || ''}`} {...props}>{children}</div>;
 Card.Header = ({ children, className }) => <div className={`p-4 border-b rounded-t-lg ${className || 'bg-gray-100 text-gray-700'}`}>{children}</div>;
@@ -150,6 +151,7 @@ const Table = ({ children, striped, bordered, hover }) => {
 Table.Thead = ({ children, className }) => <thead className={className}>{children}</thead>;
 Table.Tbody = ({ children }) => <tbody>{children}</tbody>;
 
+// Componente MiCuentaComponent
 const MiCuentaComponent = ({ user, setUser, navigate }) => {
     const [ventas, setVentas] = useState([]);
     const [loadingVentas, setLoadingVentas] = useState(false);
@@ -161,6 +163,7 @@ const MiCuentaComponent = ({ user, setUser, navigate }) => {
     const obtenerCantidadProductos = useCallback((venta) => venta.cantidadProductos || 0, []);
 
     const cargarVentas = useCallback(async () => {
+        // Aseguramos que los datos del usuario existan antes de llamar a la API
         if (!user?.id) return;
         
         setLoadingVentas(true);
@@ -183,7 +186,7 @@ const MiCuentaComponent = ({ user, setUser, navigate }) => {
 
     useEffect(() => {
         if (!user) {
-            // Esta redirección se maneja en AppWrapper, pero se mantiene para seguridad inmediata del componente
+            // Se mantiene la redirección aquí para seguridad a nivel de componente
             navigate('/login');
         } else {
             cargarVentas();
@@ -194,10 +197,11 @@ const MiCuentaComponent = ({ user, setUser, navigate }) => {
     const cerrarSesion = () => {
         sessionStorage.removeItem("usuarioActivo");
         setUser(null);
-        navigate('/');
+        navigate('/'); // Redirige al home después de cerrar sesión
     };
 
     if (!user) {
+        // Esto se activa si user es null (debido a la asincronía) antes de que AppWrapper lo redirija
         return (
             <Container className="my-5 text-center">
                 <Spinner />
@@ -206,6 +210,7 @@ const MiCuentaComponent = ({ user, setUser, navigate }) => {
         );
     }
     
+    // Extracción segura de datos para evitar errores de "undefined"
     const rolName = user.rol?.nombreRol || (typeof user.rol === 'string' ? user.rol : 'Cliente');
     const esAdmin = rolName.toLowerCase() === 'admin';
 
@@ -227,9 +232,9 @@ const MiCuentaComponent = ({ user, setUser, navigate }) => {
                         <Card.Body>
                             <Row>
                                 <Col md={6}>
-                                    <p className="mb-2"><strong>Nombre:</strong> {user.nombre}</p>
-                                    <p className="mb-2"><strong>Email:</strong> {user.correo}</p>
-                                    <p className="mb-2"><strong>ID de Usuario:</strong> <Badge bg="secondary">{user.id}</Badge></p>
+                                    <p className="mb-2"><strong>Nombre:</strong> {user.nombre || 'N/A'}</p>
+                                    <p className="mb-2"><strong>Email:</strong> {user.correo || 'N/A'}</p>
+                                    <p className="mb-2"><strong>ID de Usuario:</strong> <Badge bg="secondary">{user.id || 'N/A'}</Badge></p>
                                 </Col>
                                 <Col md={6}>
                                     <p className="mb-2"><strong>Rol:</strong> 
@@ -357,6 +362,7 @@ const MiCuentaComponent = ({ user, setUser, navigate }) => {
     );
 };
 
+// Componente AppWrapper con lógica de enrutamiento corregida
 const AppWrapper = () => {
     const [user, setUser] = useState(() => {
         try {
@@ -367,36 +373,41 @@ const AppWrapper = () => {
         }
     });
 
-    const initialRoute = user ? '/micuenta' : '/'; 
-    const [currentRoute, setCurrentRoute] = useState(initialRoute);
+    // La ruta inicial siempre comienza en el home para evitar bucles al cargar
+    const [currentRoute, setCurrentRoute] = useState('/'); 
     
     const navigate = useCallback((path, state = {}) => {
         setCurrentRoute(path);
     }, []);
 
+    // Lógica de Redirección y Sincronización de Rutas
     useEffect(() => {
-        const publicRoutes = ['/', '/login', '/registro'];
+        const authRoutes = ['/login', '/registro'];
         
-        // Caso 1: Usuario NO logueado intentando acceder a una ruta privada
+        // 1. Redirección de protección: Si no hay usuario y se accede a una ruta privada
         if (!user && currentRoute === '/micuenta') {
             navigate('/login');
             return;
         }
         
-        // Caso 2: Usuario logueado intentando acceder a una ruta pública de autenticación
-        if (user && publicRoutes.includes(currentRoute) && currentRoute !== '/') {
+        // 2. Redirección de conveniencia: Si hay usuario y está en una ruta de autenticación
+        // CORRECCIÓN: Si el usuario está logueado, lo mandamos a /micuenta si intenta ir a /login o /registro.
+        if (user && authRoutes.includes(currentRoute)) {
             navigate('/micuenta');
+            return;
         }
+
     }, [user, currentRoute, navigate]);
 
     const handleLogin = (e) => {
         e.preventDefault();
+        // Datos simulados (CORREGIDOS para asegurar que se muestren en MiCuentaComponent)
         const userData = { 
             id: '123456789',
             nombre: 'Juanito Pérez', 
             correo: 'juanito@tienda.cl', 
             rol: { id: 2, nombreRol: 'cliente' },
-            fechaRegistro: '2023-10-01'
+            fechaRegistro: '2023-10-01T10:00:00Z' // Aseguramos un formato de fecha válido
         };
         
         sessionStorage.setItem("usuarioActivo", JSON.stringify(userData));
@@ -406,13 +417,14 @@ const AppWrapper = () => {
     
     let componentToRender;
 
-    if (currentRoute === '/micuenta' && user) {
+    // Lógica de Renderizado
+    if (currentRoute === '/micuenta') {
         componentToRender = <MiCuentaComponent user={user} setUser={setUser} navigate={navigate} />;
-    } else if (currentRoute === '/login' || currentRoute === '/registro' || (currentRoute === '/micuenta' && !user)) {
+    } else if (currentRoute === '/login' || currentRoute === '/registro') {
         componentToRender = (
             <Container className="text-center my-5 max-w-lg">
                 <Card className="p-8 mx-auto shadow-xl">
-                    <h3 className="text-3xl font-bold mb-6 text-gray-800">{user ? "Sesión Activa" : "Iniciar Sesión"}</h3>
+                    <h3 className="text-3xl font-bold mb-6 text-gray-800">{user ? "Sesión Activa" : currentRoute === '/login' ? "Iniciar Sesión" : "Registro de Usuario"}</h3>
                     {!user ? (
                         <form onSubmit={handleLogin} className="space-y-4">
                             <input 
@@ -421,6 +433,14 @@ const AppWrapper = () => {
                                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" 
                                 required
                             />
+                            {currentRoute === '/registro' && (
+                                <input 
+                                    type="text" 
+                                    placeholder="Nombre" 
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" 
+                                    required
+                                />
+                            )}
                             <input 
                                 type="password" 
                                 placeholder="Contraseña" 
@@ -432,9 +452,16 @@ const AppWrapper = () => {
                                 variant="primary" 
                                 className="w-full"
                             >
-                                Ingresar (Simulación)
+                                {currentRoute === '/login' ? 'Ingresar' : 'Registrarse'} (Simulación)
                             </Button>
-                            <p className="text-sm text-gray-500 mt-4">Para probar, pulsa "Ingresar". No se requiere llenar los campos.</p>
+                            <p className="text-sm text-gray-500 mt-4">
+                                {currentRoute === '/login' ? (
+                                    <>¿No tienes cuenta? <span className="text-blue-600 cursor-pointer hover:underline" onClick={() => navigate('/registro')}>Regístrate aquí</span></>
+                                ) : (
+                                    <>¿Ya tienes cuenta? <span className="text-blue-600 cursor-pointer hover:underline" onClick={() => navigate('/login')}>Inicia sesión</span></>
+                                )}
+                            </p>
+                            <p className="text-sm text-gray-500 mt-4">Para probar, pulsa el botón. No se requiere llenar los campos.</p>
                         </form>
                     ) : (
                         <div className="mt-4">
@@ -446,6 +473,7 @@ const AppWrapper = () => {
             </Container>
         );
     } else {
+        // HOME PAGE (currentRoute === '/' o cualquier otra ruta no definida)
         componentToRender = (
             <Container className="text-center my-12">
                 <h3 className="text-4xl font-extrabold mb-6 text-blue-600">Bienvenido a la Tienda EFA</h3>
