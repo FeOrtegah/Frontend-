@@ -15,7 +15,6 @@ const Pago = ({ carrito, setCarrito, user }) => {
     const [usuario, setUsuario] = useState(null);
     const navigate = useNavigate();
 
-    // 🔥🔥🔥 FUNCIONES DE UTILIDAD DIRECTAS EN EL COMPONENTE
     const isValidUserId = (userId) => {
         if (userId === null || userId === undefined) return false;
         if (typeof userId === 'string') {
@@ -23,138 +22,81 @@ const Pago = ({ carrito, setCarrito, user }) => {
                 return false;
             }
         }
-        
         const num = Number(userId);
         return !isNaN(num) && num > 0 && num < 1000000;
     };
 
     const extractUserId = (usuarioData) => {
-        console.log('🕵️‍♂️ BUSCANDO ID EN:', usuarioData);
-        
-        if (!usuarioData) {
-            console.error('❌ Datos de usuario son null/undefined');
-            return null;
-        }
-
-        // Buscar en TODAS las ubicaciones posibles
+        if (!usuarioData) return null;
         const posiblesIds = [
-            // Nivel raíz
             usuarioData.id,
             usuarioData.userId,
             usuarioData.usuarioId,
-            
-            // Nivel 1 anidado
             usuarioData?.usuario?.id,
             usuarioData?.user?.id,
             usuarioData?.data?.id,
-            
-            // Nivel 2 anidado
             usuarioData?.data?.usuario?.id,
             usuarioData?.data?.user?.id,
             usuarioData?.response?.data?.id,
-            
-            // Para respuestas de API
             usuarioData?.response?.id,
             usuarioData?.result?.id,
             usuarioData?.data?.data?.id,
-            
-            // Buscar en cualquier propiedad que tenga 'id'
-            (() => {
-                for (let key in usuarioData) {
-                    if (key.toLowerCase().includes('id') && usuarioData[key]) {
-                        console.log(`📌 Encontrado ID en propiedad: ${key} = ${usuarioData[key]}`);
-                        return usuarioData[key];
-                    }
-                }
-                return null;
-            })()
         ];
 
         for (let id of posiblesIds) {
             if (isValidUserId(id)) {
-                console.log('✅ ID ENCONTRADO:', id);
                 return Number(id);
             }
         }
-
-        console.error('❌ NO SE ENCONTRÓ ID VÁLIDO EN NINGUNA UBICACIÓN');
-        console.log('🔍 Estructura completa:', JSON.stringify(usuarioData, null, 2));
         return null;
     };
 
     const getUserFromAllSources = (userProp) => {
-        console.log('🔍 BUSCANDO USUARIO EN TODAS LAS FUENTES...');
-        
         const sources = [
             { name: 'Props', data: userProp },
             { name: 'LocalStorage', data: JSON.parse(localStorage.getItem('user') || 'null') },
             { name: 'SessionStorage', data: JSON.parse(sessionStorage.getItem('usuarioActivo') || 'null') },
-            { name: 'AuthStorage', data: JSON.parse(localStorage.getItem('authUser') || 'null') }
         ];
 
         for (let source of sources) {
-            console.log(`📦 Revisando ${source.name}:`, source.data);
             if (source.data && typeof source.data === 'object') {
                 const userId = extractUserId(source.data);
                 if (userId) {
-                    console.log(`✅ USUARIO ENCONTRADO en ${source.name} con ID: ${userId}`);
-                    return {
-                        ...source.data,
-                        id: userId
-                    };
+                    return { ...source.data, id: userId };
                 }
             }
         }
-
-        console.error('❌ NO SE ENCONTRÓ USUARIO EN NINGUNA FUENTE');
         return null;
     };
 
-    // 🔥🔥🔥 useEffect MEJORADO
     useEffect(() => {
-        console.log('🚀 INICIANDO CARGA DE USUARIO EN PAGO...');
-        
         const cargarUsuario = () => {
             try {
                 const usuarioEncontrado = getUserFromAllSources(user);
-                
                 if (!usuarioEncontrado) {
-                    console.error('💥 NO HAY USUARIO AUTENTICADO');
                     setError('❌ No estás autenticado. Por favor inicia sesión.');
-                    
                     localStorage.removeItem('user');
                     sessionStorage.removeItem('usuarioActivo');
-                    
                     setTimeout(() => navigate('/auth'), 2000);
                     return;
                 }
-
-                console.log('🎯 USUARIO CARGADO EXITOSAMENTE:', usuarioEncontrado);
                 setUsuario(usuarioEncontrado);
-                
                 setFormData(prev => ({
                     ...prev,
                     nombre: usuarioEncontrado.nombre || usuarioEncontrado.name || '',
                     email: usuarioEncontrado.correo || usuarioEncontrado.email || '',
                     telefono: usuarioEncontrado.telefono || usuarioEncontrado.phone || ''
                 }));
-
             } catch (error) {
-                console.error('💥 ERROR CATASTRÓFICO:', error);
                 setError('Error crítico al cargar usuario. Recarga la página.');
             }
         };
-
         cargarUsuario();
     }, [user, navigate]);
 
-    // 🔥🔥🔥 FUNCIONES DEL FORMULARIO
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const validarPaso1 = () => {
@@ -190,7 +132,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
         setPasoActual(pasoActual - 1);
     };
 
-    // 🔥🔥🔥 FUNCIÓN DE PAGO MEJORADA
+    // 🔥🔥🔥 FUNCIÓN DE PAGO CORREGIDA
     const procesarPago = async () => {
         console.log('💰 INICIANDO PROCESO DE PAGO...');
         
@@ -202,7 +144,6 @@ const Pago = ({ carrito, setCarrito, user }) => {
         const userId = extractUserId(usuario);
         if (!userId) {
             setError('💥 ID de usuario inválido. Contacta al soporte.');
-            console.error('ID INVALIDO EN USUARIO:', usuario);
             return;
         }
 
@@ -211,12 +152,33 @@ const Pago = ({ carrito, setCarrito, user }) => {
             return;
         }
 
+        // 🔥 VERIFICAR PRODUCTOS ANTES DE ENVIAR
+        console.log('🔍 VERIFICANDO PRODUCTOS EN CARRITO:');
+        carrito.forEach((item, index) => {
+            console.log(`Producto ${index}:`, {
+                id: item.id,
+                nombre: item.name || item.nombre,
+                tieneId: !!item.id,
+                idValido: item.id && item.id > 0
+            });
+        });
+
+        // 🔥 FILTRAR SOLO PRODUCTOS CON ID VÁLIDO
+        const productosValidos = carrito.filter(item => item.id && Number(item.id) > 0);
+        
+        if (productosValidos.length === 0) {
+            setError('❌ No hay productos válidos en el carrito. Algunos productos no tienen ID.');
+            return;
+        }
+
+        if (productosValidos.length !== carrito.length) {
+            console.warn(`⚠️ Se excluyeron ${carrito.length - productosValidos.length} productos sin ID válido`);
+        }
+
         setLoading(true);
         setError('');
 
         try {
-            console.log('📦 PREPARANDO DATOS DE VENTA...');
-            
             const ventaData = {
                 numeroVenta: `VEN-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
                 usuario: { id: userId },
@@ -228,7 +190,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
                 metodoEnvio: { 
                     id: formData.metodoEnvio === 'delivery' ? 1 : 2 
                 },
-                items: carrito.map(item => ({
+                items: productosValidos.map(item => ({
                     producto: { id: Number(item.id) },
                     cantidad: Number(item.cantidad || 1),
                     precioUnitario: Number(item.price || item.precio || 0),
@@ -250,21 +212,18 @@ const Pago = ({ carrito, setCarrito, user }) => {
 
             if (resultado.success) {
                 console.log('🎉 VENTA EXITOSA:', resultado.data);
-                
                 setCarrito([]);
                 localStorage.removeItem('carrito');
                 localStorage.removeItem('carritoParaPago');
-                
                 navigate('/confirmacion', { 
                     state: { 
                         venta: resultado.data,
-                        carrito: carrito,
+                        carrito: productosValidos,
                         total: total,
                         datosEnvio: formData
                     } 
                 });
             } else {
-                console.error('❌ ERROR EN VENTA:', resultado.error);
                 setError(resultado.error || 'Error al procesar el pago');
             }
 
@@ -276,12 +235,10 @@ const Pago = ({ carrito, setCarrito, user }) => {
         }
     };
 
-    // 🔥🔥🔥 CALCULAR TOTALES
     const subtotal = carrito.reduce((sum, item) => sum + ((item.price || item.precio || 0) * (item.cantidad || 1)), 0);
     const costoEnvio = formData.metodoEnvio === 'delivery' ? 3500 : 0;
     const total = subtotal + costoEnvio;
 
-    // 🔥🔥🔥 RENDERIZADO MEJORADO
     if (!usuario) {
         return (
             <div className="container py-5 text-center">
@@ -314,7 +271,6 @@ const Pago = ({ carrito, setCarrito, user }) => {
         );
     }
 
-    // 🔥🔥🔥 FUNCIÓN PARA IMÁGENES
     const getImageSrc = (imageUrl) => {
         if (!imageUrl || imageUrl.includes('placeholder.com')) {
             return '/images/placeholder-product.jpg';
@@ -330,31 +286,23 @@ const Pago = ({ carrito, setCarrito, user }) => {
                         <div className="card-header bg-white border-bottom">
                             <div className="d-flex justify-content-between align-items-center">
                                 <h4 className="mb-0">Finalizar Compra</h4>
-                                <div className="text-muted">
-                                    Paso {pasoActual} de 3
-                                </div>
+                                <div className="text-muted">Paso {pasoActual} de 3</div>
                             </div>
                         </div>
                         
                         <div className="card-body border-bottom">
                             <div className="progress mb-3" style={{ height: '8px' }}>
-                                <div 
-                                    className="progress-bar bg-success" 
-                                    style={{ width: `${(pasoActual / 3) * 100}%` }}
-                                ></div>
+                                <div className="progress-bar bg-success" style={{ width: `${(pasoActual / 3) * 100}%` }}></div>
                             </div>
                             <div className="d-flex justify-content-between">
                                 <div className={`text-center ${pasoActual >= 1 ? 'text-success fw-bold' : 'text-muted'}`}>
-                                    <div>1</div>
-                                    <small>Información</small>
+                                    <div>1</div><small>Información</small>
                                 </div>
                                 <div className={`text-center ${pasoActual >= 2 ? 'text-success fw-bold' : 'text-muted'}`}>
-                                    <div>2</div>
-                                    <small>Envío</small>
+                                    <div>2</div><small>Envío</small>
                                 </div>
                                 <div className={`text-center ${pasoActual >= 3 ? 'text-success fw-bold' : 'text-muted'}`}>
-                                    <div>3</div>
-                                    <small>Pago</small>
+                                    <div>3</div><small>Pago</small>
                                 </div>
                             </div>
                         </div>
@@ -367,7 +315,6 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                 </div>
                             )}
 
-                            {/* 🔥 INFO DEL USUARIO ENCONTRADO */}
                             {usuario && (
                                 <div className="alert alert-success d-flex align-items-center mb-4">
                                     <i className="bi bi-person-check me-2"></i>
@@ -380,45 +327,22 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                 </div>
                             )}
 
+                            {/* ... (el resto del JSX del formulario se mantiene igual) ... */}
                             {pasoActual === 1 && (
                                 <div className="fade-in">
                                     <h5 className="mb-4">Información Personal</h5>
                                     <div className="row g-3">
                                         <div className="col-md-6">
                                             <label className="form-label">Nombre completo *</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                name="nombre"
-                                                value={formData.nombre}
-                                                onChange={handleInputChange}
-                                                required
-                                                placeholder="Ej: Juan Pérez"
-                                            />
+                                            <input type="text" className="form-control" name="nombre" value={formData.nombre} onChange={handleInputChange} required placeholder="Ej: Juan Pérez" />
                                         </div>
                                         <div className="col-md-6">
                                             <label className="form-label">Email *</label>
-                                            <input
-                                                type="email"
-                                                className="form-control"
-                                                name="email"
-                                                value={formData.email}
-                                                onChange={handleInputChange}
-                                                required
-                                                placeholder="ejemplo@correo.com"
-                                            />
+                                            <input type="email" className="form-control" name="email" value={formData.email} onChange={handleInputChange} required placeholder="ejemplo@correo.com" />
                                         </div>
                                         <div className="col-md-6">
                                             <label className="form-label">Teléfono *</label>
-                                            <input
-                                                type="tel"
-                                                className="form-control"
-                                                name="telefono"
-                                                value={formData.telefono}
-                                                onChange={handleInputChange}
-                                                required
-                                                placeholder="+56 9 1234 5678"
-                                            />
+                                            <input type="tel" className="form-control" name="telefono" value={formData.telefono} onChange={handleInputChange} required placeholder="+56 9 1234 5678" />
                                         </div>
                                     </div>
                                 </div>
@@ -430,61 +354,23 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                     <div className="row g-3">
                                         <div className="col-12">
                                             <label className="form-label">Dirección *</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                name="direccion"
-                                                value={formData.direccion}
-                                                onChange={handleInputChange}
-                                                placeholder="Calle y número"
-                                                required
-                                            />
+                                            <input type="text" className="form-control" name="direccion" value={formData.direccion} onChange={handleInputChange} placeholder="Calle y número" required />
                                         </div>
                                         <div className="col-md-4">
                                             <label className="form-label">Ciudad *</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                name="ciudad"
-                                                value={formData.ciudad}
-                                                onChange={handleInputChange}
-                                                required
-                                                placeholder="Santiago"
-                                            />
+                                            <input type="text" className="form-control" name="ciudad" value={formData.ciudad} onChange={handleInputChange} required placeholder="Santiago" />
                                         </div>
                                         <div className="col-md-4">
                                             <label className="form-label">Comuna *</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                name="comuna"
-                                                value={formData.comuna}
-                                                onChange={handleInputChange}
-                                                required
-                                                placeholder="Providencia"
-                                            />
+                                            <input type="text" className="form-control" name="comuna" value={formData.comuna} onChange={handleInputChange} required placeholder="Providencia" />
                                         </div>
                                         <div className="col-md-4">
                                             <label className="form-label">Código Postal</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                name="codigoPostal"
-                                                value={formData.codigoPostal}
-                                                onChange={handleInputChange}
-                                                placeholder="7500000"
-                                            />
+                                            <input type="text" className="form-control" name="codigoPostal" value={formData.codigoPostal} onChange={handleInputChange} placeholder="7500000" />
                                         </div>
                                         <div className="col-12">
                                             <label className="form-label">Instrucciones especiales</label>
-                                            <textarea
-                                                className="form-control"
-                                                name="instruccionesEspeciales"
-                                                value={formData.instruccionesEspeciales}
-                                                onChange={handleInputChange}
-                                                rows="3"
-                                                placeholder="Ej: Timbre azul, dejar con portero, etc."
-                                            />
+                                            <textarea className="form-control" name="instruccionesEspeciales" value={formData.instruccionesEspeciales} onChange={handleInputChange} rows="3" placeholder="Ej: Timbre azul, dejar con portero, etc." />
                                         </div>
                                     </div>
                                 </div>
@@ -493,25 +379,15 @@ const Pago = ({ carrito, setCarrito, user }) => {
                             {pasoActual === 3 && (
                                 <div className="fade-in">
                                     <h5 className="mb-4">Método de Pago</h5>
-                                    
                                     <div className="mb-4">
                                         <label className="form-label">Selecciona método de pago *</label>
                                         <div className="row g-3">
                                             <div className="col-md-4">
                                                 <div className={`card border ${formData.metodoPago === 'tarjeta' ? 'border-primary' : ''}`}>
                                                     <div className="card-body text-center">
-                                                        <input
-                                                            type="radio"
-                                                            className="btn-check"
-                                                            name="metodoPago"
-                                                            value="tarjeta"
-                                                            id="tarjeta"
-                                                            checked={formData.metodoPago === 'tarjeta'}
-                                                            onChange={handleInputChange}
-                                                        />
+                                                        <input type="radio" className="btn-check" name="metodoPago" value="tarjeta" id="tarjeta" checked={formData.metodoPago === 'tarjeta'} onChange={handleInputChange} />
                                                         <label className="btn btn-outline-primary w-100" htmlFor="tarjeta">
-                                                            <i className="bi bi-credit-card me-2"></i>
-                                                            Tarjeta
+                                                            <i className="bi bi-credit-card me-2"></i>Tarjeta
                                                         </label>
                                                     </div>
                                                 </div>
@@ -519,18 +395,9 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                             <div className="col-md-4">
                                                 <div className={`card border ${formData.metodoPago === 'transferencia' ? 'border-primary' : ''}`}>
                                                     <div className="card-body text-center">
-                                                        <input
-                                                            type="radio"
-                                                            className="btn-check"
-                                                            name="metodoPago"
-                                                            value="transferencia"
-                                                            id="transferencia"
-                                                            checked={formData.metodoPago === 'transferencia'}
-                                                            onChange={handleInputChange}
-                                                        />
+                                                        <input type="radio" className="btn-check" name="metodoPago" value="transferencia" id="transferencia" checked={formData.metodoPago === 'transferencia'} onChange={handleInputChange} />
                                                         <label className="btn btn-outline-primary w-100" htmlFor="transferencia">
-                                                            <i className="bi bi-bank me-2"></i>
-                                                            Transferencia
+                                                            <i className="bi bi-bank me-2"></i>Transferencia
                                                         </label>
                                                     </div>
                                                 </div>
@@ -538,18 +405,9 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                             <div className="col-md-4">
                                                 <div className={`card border ${formData.metodoPago === 'efectivo' ? 'border-primary' : ''}`}>
                                                     <div className="card-body text-center">
-                                                        <input
-                                                            type="radio"
-                                                            className="btn-check"
-                                                            name="metodoPago"
-                                                            value="efectivo"
-                                                            id="efectivo"
-                                                            checked={formData.metodoPago === 'efectivo'}
-                                                            onChange={handleInputChange}
-                                                        />
+                                                        <input type="radio" className="btn-check" name="metodoPago" value="efectivo" id="efectivo" checked={formData.metodoPago === 'efectivo'} onChange={handleInputChange} />
                                                         <label className="btn btn-outline-primary w-100" htmlFor="efectivo">
-                                                            <i className="bi bi-cash-coin me-2"></i>
-                                                            Efectivo
+                                                            <i className="bi bi-cash-coin me-2"></i>Efectivo
                                                         </label>
                                                     </div>
                                                 </div>
@@ -561,50 +419,19 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                         <div className="row g-3">
                                             <div className="col-12">
                                                 <label className="form-label">Número de tarjeta *</label>
-                                                <input
-                                                    type="text"
-                                                    className="form-control"
-                                                    name="numeroTarjeta"
-                                                    value={formData.numeroTarjeta}
-                                                    onChange={handleInputChange}
-                                                    placeholder="1234 5678 9012 3456"
-                                                    maxLength="19"
-                                                />
+                                                <input type="text" className="form-control" name="numeroTarjeta" value={formData.numeroTarjeta} onChange={handleInputChange} placeholder="1234 5678 9012 3456" maxLength="19" />
                                             </div>
                                             <div className="col-md-6">
                                                 <label className="form-label">Nombre en la tarjeta *</label>
-                                                <input
-                                                    type="text"
-                                                    className="form-control"
-                                                    name="nombreTarjeta"
-                                                    value={formData.nombreTarjeta}
-                                                    onChange={handleInputChange}
-                                                    placeholder="Como aparece en la tarjeta"
-                                                />
+                                                <input type="text" className="form-control" name="nombreTarjeta" value={formData.nombreTarjeta} onChange={handleInputChange} placeholder="Como aparece en la tarjeta" />
                                             </div>
                                             <div className="col-md-3">
                                                 <label className="form-label">Expira *</label>
-                                                <input
-                                                    type="text"
-                                                    className="form-control"
-                                                    name="fechaExpiracion"
-                                                    value={formData.fechaExpiracion}
-                                                    onChange={handleInputChange}
-                                                    placeholder="MM/AA"
-                                                    maxLength="5"
-                                                />
+                                                <input type="text" className="form-control" name="fechaExpiracion" value={formData.fechaExpiracion} onChange={handleInputChange} placeholder="MM/AA" maxLength="5" />
                                             </div>
                                             <div className="col-md-3">
                                                 <label className="form-label">CVV *</label>
-                                                <input
-                                                    type="text"
-                                                    className="form-control"
-                                                    name="cvv"
-                                                    value={formData.cvv}
-                                                    onChange={handleInputChange}
-                                                    placeholder="123"
-                                                    maxLength="3"
-                                                />
+                                                <input type="text" className="form-control" name="cvv" value={formData.cvv} onChange={handleInputChange} placeholder="123" maxLength="3" />
                                             </div>
                                         </div>
                                     )}
@@ -630,42 +457,21 @@ const Pago = ({ carrito, setCarrito, user }) => {
 
                             <div className="d-flex justify-content-between mt-4">
                                 {pasoActual > 1 ? (
-                                    <button 
-                                        type="button" 
-                                        className="btn btn-outline-secondary"
-                                        onClick={pasoAnterior}
-                                        disabled={loading}
-                                    >
-                                        <i className="bi bi-arrow-left me-2"></i>
-                                        Anterior
+                                    <button type="button" className="btn btn-outline-secondary" onClick={pasoAnterior} disabled={loading}>
+                                        <i className="bi bi-arrow-left me-2"></i>Anterior
                                     </button>
                                 ) : (
-                                    <button 
-                                        type="button" 
-                                        className="btn btn-outline-secondary"
-                                        onClick={() => navigate('/carrito')}
-                                    >
-                                        <i className="bi bi-arrow-left me-2"></i>
-                                        Volver al Carrito
+                                    <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/carrito')}>
+                                        <i className="bi bi-arrow-left me-2"></i>Volver al Carrito
                                     </button>
                                 )}
                                 
                                 {pasoActual < 3 ? (
-                                    <button 
-                                        type="button" 
-                                        className="btn btn-primary"
-                                        onClick={siguientePaso}
-                                    >
-                                        Siguiente
-                                        <i className="bi bi-arrow-right ms-2"></i>
+                                    <button type="button" className="btn btn-primary" onClick={siguientePaso}>
+                                        Siguiente<i className="bi bi-arrow-right ms-2"></i>
                                     </button>
                                 ) : (
-                                    <button 
-                                        type="button" 
-                                        className="btn btn-success btn-lg"
-                                        onClick={procesarPago}
-                                        disabled={loading}
-                                    >
+                                    <button type="button" className="btn btn-success btn-lg" onClick={procesarPago} disabled={loading}>
                                         {loading ? (
                                             <>
                                                 <span className="spinner-border spinner-border-sm me-2" role="status"></span>
@@ -703,15 +509,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                 <h6>Productos ({carrito.length})</h6>
                                 {carrito.map(item => (
                                     <div key={item.id} className="d-flex align-items-center mb-2 pb-2 border-bottom">
-                                        <img 
-                                            src={getImageSrc(item.image || item.imagen)} 
-                                            alt={item.name || item.nombre}
-                                            className="rounded me-3"
-                                            style={{ width: '50px', height: '50px', objectFit: 'cover' }}
-                                            onError={(e) => {
-                                                e.target.src = '/images/placeholder-product.jpg';
-                                            }}
-                                        />
+                                        <img src={getImageSrc(item.image || item.imagen)} alt={item.name || item.nombre} className="rounded me-3" style={{ width: '50px', height: '50px', objectFit: 'cover' }} onError={(e) => { e.target.src = '/images/placeholder-product.jpg'; }} />
                                         <div className="flex-grow-1">
                                             <div className="fw-semibold small">{item.name || item.nombre}</div>
                                             <div className="text-muted small">
@@ -733,26 +531,4 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                 </div>
                             </div>
 
-                            <div className="border-top pt-3">
-                                <div className="d-flex justify-content-between mb-2">
-                                    <span>Subtotal</span>
-                                    <span>${subtotal.toLocaleString()}</span>
-                                </div>
-                                <div className="d-flex justify-content-between mb-2">
-                                    <span>Envío</span>
-                                    <span>{costoEnvio === 0 ? 'Gratis' : `$${costoEnvio.toLocaleString()}`}</span>
-                                </div>
-                                <div className="d-flex justify-content-between fw-bold fs-5 text-success">
-                                    <span>Total</span>
-                                    <span>${total.toLocaleString()}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-export default Pago;
+                            <div className="border-top pt-
