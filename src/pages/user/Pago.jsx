@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import VentaService from '../../services/VentaService';
 
-
-const Pago = ({ carrito, setCarrito }) => {
+const Pago = ({ carrito, setCarrito, user }) => {
     const [formData, setFormData] = useState({
         nombre: '',
         email: '',
@@ -26,9 +25,10 @@ const Pago = ({ carrito, setCarrito }) => {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const usuario = JSON.parse(sessionStorage.getItem('usuarioActivo'));
+    // 🔥 CORREGIDO: Usar user de props en lugar de sessionStorage
+    const usuario = user || JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('usuarioActivo'));
 
-    const subtotal = carrito.reduce((sum, item) => sum + (item.price * item.cantidad), 0);
+    const subtotal = carrito.reduce((sum, item) => sum + ((item.price || item.precio || 0) * (item.cantidad || 1)), 0);
     const costoEnvio = formData.metodoEnvio === 'delivery' ? 3500 : 0;
     const total = subtotal + costoEnvio;
 
@@ -79,14 +79,39 @@ const Pago = ({ carrito, setCarrito }) => {
             return;
         }
 
+        // 🔥 VALIDACIÓN CRÍTICA: Verificar que el usuario esté autenticado
+        if (!usuario || !usuario.id) {
+            setError('Debes iniciar sesión para realizar una compra');
+            setTimeout(() => navigate('/auth'), 2000);
+            return;
+        }
+
+        // 🔥 VALIDACIÓN: Verificar que el carrito tenga productos válidos
+        const carritoValido = carrito.every(item => item && item.id && (item.price || item.precio));
+        if (!carritoValido) {
+            setError('El carrito contiene productos inválidos');
+            return;
+        }
+
         setLoading(true);
         setError('');
 
         try {
+            console.log('🔍 DEBUG - Datos antes de crear venta:');
+            console.log('- Usuario:', usuario);
+            console.log('- Carrito:', carrito);
+            console.log('- Método pago seleccionado:', formData.metodoPago);
+            console.log('- Método envío seleccionado:', formData.metodoEnvio);
+
+            // 🔥 CORREGIDO: Estructura de datos validada
             const ventaData = {
                 numeroVenta: `VEN-${Date.now()}`,
-                usuario: { id: usuario.id },
-                estado: { id: 1 },
+                usuario: { 
+                    id: parseInt(usuario.id) // 🔥 Asegurar que sea número
+                },
+                estado: { 
+                    id: 1 // PENDIENTE
+                },
                 metodoPago: { 
                     id: formData.metodoPago === 'tarjeta' ? 1 : 
                         formData.metodoPago === 'transferencia' ? 2 : 3 
@@ -95,19 +120,37 @@ const Pago = ({ carrito, setCarrito }) => {
                     id: formData.metodoEnvio === 'delivery' ? 1 : 2 
                 },
                 items: carrito.map(item => ({
-                    producto: { id: item.id },
-                    cantidad: item.cantidad,
-                    precioUnitario: item.price,
-                    subtotal: item.price * item.cantidad
-                }))
+                    producto: { 
+                        id: parseInt(item.id) // 🔥 Asegurar que sea número
+                    },
+                    cantidad: parseInt(item.cantidad || 1),
+                    precioUnitario: parseFloat(item.price || item.precio || 0),
+                    subtotal: parseFloat((item.price || item.precio || 0) * (item.cantidad || 1))
+                })),
+                total: parseFloat(total),
+                direccionEnvio: {
+                    direccion: formData.direccion,
+                    ciudad: formData.ciudad,
+                    comuna: formData.comuna,
+                    codigoPostal: formData.codigoPostal,
+                    instrucciones: formData.instruccionesEspeciales
+                }
             };
+
+            console.log('📤 Enviando datos de venta validados:', ventaData);
 
             const resultado = await VentaService.crearVenta(ventaData);
 
             if (resultado.success) {
+                console.log('✅ Venta creada exitosamente:', resultado.data);
+                
+                // Limpiar carrito
                 setCarrito([]);
                 localStorage.removeItem('carrito');
+                localStorage.removeItem('carritoParaPago');
+                localStorage.removeItem('totalParaPago');
                 
+                // Redirigir a confirmación
                 navigate('/confirmacion', { 
                     state: { 
                         venta: resultado.data,
@@ -117,10 +160,12 @@ const Pago = ({ carrito, setCarrito }) => {
                     } 
                 });
             } else {
+                console.error('❌ Error del servicio:', resultado.error);
                 setError(resultado.error || 'Error al procesar el pago');
             }
 
         } catch (err) {
+            console.error('💥 Error en procesarPago:', err);
             setError('Error de conexión. Intenta nuevamente.');
         } finally {
             setLoading(false);
@@ -140,6 +185,30 @@ const Pago = ({ carrito, setCarrito }) => {
                         <button className="btn btn-primary btn-lg" onClick={() => navigate('/hombre')}>
                             <i className="bi bi-arrow-left me-2"></i>
                             Seguir Comprando
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // 🔥 VALIDACIÓN: Si no hay usuario, mostrar mensaje
+    if (!usuario || !usuario.id) {
+        return (
+            <div className="container py-5 text-center">
+                <div className="card shadow">
+                    <div className="card-body py-5">
+                        <div className="mb-4">
+                            <i className="bi bi-exclamation-triangle" style={{ fontSize: '4rem', color: '#dc3545' }}></i>
+                        </div>
+                        <h2>Acceso Requerido</h2>
+                        <p className="text-muted mb-4">Debes iniciar sesión para realizar una compra</p>
+                        <button 
+                            className="btn btn-primary btn-lg" 
+                            onClick={() => navigate('/auth')}
+                        >
+                            <i className="bi bi-box-arrow-in-right me-2"></i>
+                            Iniciar Sesión
                         </button>
                     </div>
                 </div>
@@ -192,6 +261,16 @@ const Pago = ({ carrito, setCarrito }) => {
                                 </div>
                             )}
 
+                            {/* Información del usuario actual */}
+                            {usuario && (
+                                <div className="alert alert-info d-flex align-items-center mb-4">
+                                    <i className="bi bi-person-check me-2"></i>
+                                    <div>
+                                        <strong>Comprador:</strong> {usuario.nombre} ({usuario.correo || usuario.email})
+                                    </div>
+                                </div>
+                            )}
+
                             {pasoActual === 1 && (
                                 <div className="animate__animated animate__fadeIn">
                                     <h5 className="mb-4">Información Personal</h5>
@@ -205,6 +284,7 @@ const Pago = ({ carrito, setCarrito }) => {
                                                 value={formData.nombre}
                                                 onChange={handleInputChange}
                                                 required
+                                                placeholder="Ej: Juan Pérez"
                                             />
                                         </div>
                                         <div className="col-md-6">
@@ -216,6 +296,7 @@ const Pago = ({ carrito, setCarrito }) => {
                                                 value={formData.email}
                                                 onChange={handleInputChange}
                                                 required
+                                                placeholder="ejemplo@correo.com"
                                             />
                                         </div>
                                         <div className="col-md-6">
@@ -227,6 +308,7 @@ const Pago = ({ carrito, setCarrito }) => {
                                                 value={formData.telefono}
                                                 onChange={handleInputChange}
                                                 required
+                                                placeholder="+56 9 1234 5678"
                                             />
                                         </div>
                                     </div>
@@ -258,6 +340,7 @@ const Pago = ({ carrito, setCarrito }) => {
                                                 value={formData.ciudad}
                                                 onChange={handleInputChange}
                                                 required
+                                                placeholder="Santiago"
                                             />
                                         </div>
                                         <div className="col-md-4">
@@ -269,6 +352,7 @@ const Pago = ({ carrito, setCarrito }) => {
                                                 value={formData.comuna}
                                                 onChange={handleInputChange}
                                                 required
+                                                placeholder="Providencia"
                                             />
                                         </div>
                                         <div className="col-md-4">
@@ -279,6 +363,7 @@ const Pago = ({ carrito, setCarrito }) => {
                                                 name="codigoPostal"
                                                 value={formData.codigoPostal}
                                                 onChange={handleInputChange}
+                                                placeholder="7500000"
                                             />
                                         </div>
                                         <div className="col-12">
@@ -510,8 +595,8 @@ const Pago = ({ carrito, setCarrito }) => {
                                 {carrito.map(item => (
                                     <div key={item.id} className="d-flex align-items-center mb-2 pb-2 border-bottom">
                                         <img 
-                                            src={item.image} 
-                                            alt={item.name}
+                                            src={item.image || item.imagen} 
+                                            alt={item.name || item.nombre}
                                             className="rounded me-3"
                                             style={{ width: '50px', height: '50px', objectFit: 'cover' }}
                                             onError={(e) => {
@@ -519,13 +604,13 @@ const Pago = ({ carrito, setCarrito }) => {
                                             }}
                                         />
                                         <div className="flex-grow-1">
-                                            <div className="fw-semibold small">{item.name}</div>
+                                            <div className="fw-semibold small">{item.name || item.nombre}</div>
                                             <div className="text-muted small">
-                                                {item.cantidad} x ${item.price.toLocaleString()}
+                                                {item.cantidad || 1} x ${(item.price || item.precio || 0).toLocaleString()}
                                             </div>
                                         </div>
                                         <div className="fw-semibold">
-                                            ${(item.price * item.cantidad).toLocaleString()}
+                                            ${((item.price || item.precio || 0) * (item.cantidad || 1)).toLocaleString()}
                                         </div>
                                     </div>
                                 ))}
