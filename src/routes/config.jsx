@@ -1,7 +1,5 @@
 import { lazy } from "react";
 
-import { lazy } from "react";
-
 const Home = lazy(() => import("../pages/user/Home"));
 const RopaHombre = lazy(() => import("../pages/user/RopaHombre"));
 const RopaMujer = lazy(() => import("../pages/user/RopaMujer"));
