@@ -12,6 +12,7 @@ import {
   Tabs,
   Tab
 } from "react-bootstrap";
+// RUTA CORREGIDA: Subir dos niveles y usar la extensión .jsx
 import UserService from '../../services/UserService.jsx';
 
 const Auth = () => {
@@ -30,8 +31,8 @@ const Auth = () => {
       email: "",
       password: "",
       confirmarPassword: "",
-      telefono: "",
-      direccion: ""
+      telefono: "", // Estos campos no se envían al backend, pero se mantienen aquí
+      direccion: "" // Estos campos no se envían al backend, pero se mantienen aquí
     }
   });
 
@@ -112,7 +113,7 @@ const Auth = () => {
       setLoading(true);
       setError(null);
 
-
+      // LLAMADA AL REGISTRO
       const registerResult = await UserService.createUser({
         nombre,
         correo: email,
@@ -135,14 +136,17 @@ const Auth = () => {
         return;
       }
 
+      // LLAMADA AL AUTOLOGIN
       const autoLoginResult = await UserService.login({ 
         correo: email, 
         contrasena: password 
       });
 
       if (!autoLoginResult.success) {
-
-        setError("Cuenta creada, pero el inicio de sesión automático falló. Intenta iniciar sesión manualmente.");
+        // El auto login FALLÓ: muestra el mensaje de error del login si está disponible
+        const loginErrorData = autoLoginResult.error;
+        const loginMensaje = loginErrorData?.msg || "Cuenta creada, pero el inicio de sesión automático falló. Intenta iniciar sesión manualmente.";
+        setError(loginMensaje);
         return;
       }
 
@@ -154,6 +158,7 @@ const Auth = () => {
       sessionStorage.setItem("usuarioActivo", JSON.stringify(userData));
       localStorage.setItem("userToken", userData.token);
 
+      // Limpiar formulario de registro
       setFormData((prev) => ({
         ...prev,
         registro: { 
@@ -176,6 +181,7 @@ const Auth = () => {
     }
   };
 
+  // --- El resto del JSX no se modifica ---
   return (
     <Container className="my-5">
       <Row className="justify-content-center">
