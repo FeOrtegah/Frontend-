@@ -8,7 +8,7 @@ const MiCuenta = ({ user, setUser }) => {
   const [ventas, setVentas] = useState([]);
   const [loadingVentas, setLoadingVentas] = useState(false);
   const [error, setError] = useState("");
-  const [checkingSession, setCheckingSession] = useState(true); // ✅ NUEVO
+  const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
     if (checkingSession) {
