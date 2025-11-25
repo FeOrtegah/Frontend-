@@ -1,123 +1,115 @@
 import { useState } from "react";
 import axios from "axios";
-import "./Auth.css"; // <-- si quieres estilos separados
 
-const API_URL = "https://backend-fullstackv1.onrender.com/api/v1/usuarios";
+const Auth = () => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [form, setForm] = useState({
+    nombre: "",
+    correo: "",
+    contrasena: "",
+  });
 
-export default function Auth({ setUsuarioLogeado }) {
-    const [isLogin, setIsLogin] = useState(true);
+  const toggleMode = () => setIsLogin(!isLogin);
 
-    const [formData, setFormData] = useState({
-        nombre: "",
-        correo: "",
-        contrasena: "",
-    });
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
-    const [error, setError] = useState("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-        setError("");
-    };
+    try {
+      if (isLogin) {
+        const res = await axios.post(
+          "https://backend-fullstackv1.onrender.com/api/v1/usuarios/login",
+          {
+            correo: form.correo,
+            contrasena: form.contrasena,
+          }
+        );
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError("");
+        localStorage.setItem("usuario", JSON.stringify(res.data));
 
-        try {
-            if (!isLogin) {
-                // ============ REGISTRO ============
-                await axios.post(API_URL, formData);
+        window.location.href = "/micuenta";
+      } else {
+        await axios.post(
+          "https://backend-fullstackv1.onrender.com/api/v1/usuarios",
+          form
+        );
 
-                const loginRes = await axios.post(`${API_URL}/login`, {
-                    correo: formData.correo,
-                    contrasena: formData.contrasena,
-                });
+        alert("Cuenta creada correctamente");
+        setIsLogin(true);
+      }
+    } catch {
+      alert(isLogin ? "Correo o contraseña incorrectos" : "Error al crear la cuenta");
+    }
+  };
 
-                localStorage.setItem("usuario", JSON.stringify(loginRes.data));
-                setUsuarioLogeado(loginRes.data);
-                return;
-            }
+  return (
+    <div className="container d-flex justify-content-center align-items-center py-5">
+      <div className="card p-4 shadow" style={{ maxWidth: "420px", width: "100%" }}>
+        <h2 className="text-center mb-3">{isLogin ? "Iniciar Sesión" : "Crear Cuenta"}</h2>
 
-            // ============ LOGIN ============
-            const loginRes = await axios.post(`${API_URL}/login`, {
-                correo: formData.correo,
-                contrasena: formData.contrasena,
-            });
-
-            localStorage.setItem("usuario", JSON.stringify(loginRes.data));
-            setUsuarioLogeado(loginRes.data);
-
-        } catch (err) {
-            setError(
-                isLogin
-                    ? "Correo o contraseña incorrectos."
-                    : "No se pudo crear la cuenta. El correo podría estar en uso."
-            );
-        }
-    };
-
-    return (
-        <div className="auth-wrapper">
-            <div className="auth-card">
-                <div className="auth-tabs">
-                    <button
-                        className={isLogin ? "active" : ""}
-                        onClick={() => setIsLogin(true)}
-                    >
-                        Iniciar sesión
-                    </button>
-                    <button
-                        className={!isLogin ? "active" : ""}
-                        onClick={() => setIsLogin(false)}
-                    >
-                        Crear cuenta
-                    </button>
-                </div>
-
-                <form onSubmit={handleSubmit} className="auth-form">
-                    {!isLogin && (
-                        <div className="auth-group">
-                            <label>Nombre completo</label>
-                            <input
-                                type="text"
-                                name="nombre"
-                                placeholder="Juan Pérez"
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-                    )}
-
-                    <div className="auth-group">
-                        <label>Correo electrónico</label>
-                        <input
-                            type="email"
-                            name="correo"
-                            placeholder="correo@ejemplo.com"
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    <div className="auth-group">
-                        <label>Contraseña</label>
-                        <input
-                            type="password"
-                            name="contrasena"
-                            placeholder="******"
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    {error && <p className="auth-error">{error}</p>}
-
-                    <button type="submit" className="auth-btn">
-                        {isLogin ? "Entrar" : "Crear cuenta"}
-                    </button>
-                </form>
+        <form onSubmit={handleSubmit}>
+          {!isLogin && (
+            <div className="mb-3">
+              <label className="form-label">Nombre</label>
+              <input
+                className="form-control"
+                type="text"
+                name="nombre"
+                value={form.nombre}
+                onChange={handleChange}
+                required
+              />
             </div>
+          )}
+
+          <div className="mb-3">
+            <label className="form-label">Correo</label>
+            <input
+              className="form-control"
+              type="email"
+              name="correo"
+              value={form.correo}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label">Contraseña</label>
+            <input
+              className="form-control"
+              type="password"
+              name="contrasena"
+              value={form.contrasena}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="btn w-100"
+            style={{
+              backgroundColor: "#d60000",
+              color: "white",
+              fontWeight: "bold",
+            }}
+          >
+            {isLogin ? "Ingresar" : "Registrarme"}
+          </button>
+        </form>
+
+        <div className="text-center mt-3">
+          <button className="btn btn-link" onClick={toggleMode}>
+            {isLogin ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
+          </button>
         </div>
-    );
-}
+      </div>
+    </div>
+  );
+};
+
+export default Auth;
