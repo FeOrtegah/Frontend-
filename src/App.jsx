@@ -52,19 +52,19 @@ function App() {
 
   const navbarHidden = ["/admin"].includes(location.pathname);
 
-  // 🔥 MEJORADO: Función para manejar props específicas
+  // 🔥 CORREGIDO: Función para manejar props específicas
   const getRouteElement = (route) => {
     const baseProps = { user, setUser };
     
     const routeSpecificProps = {};
     
-    // Rutas que necesitan carrito
-    if (route.path === "/carrito" || route.path === "/pago" || route.path === "/confirmacion") {
+    // 🔥 CORRECCIÓN: Incluir /producto/:id en las rutas que necesitan carrito
+    if (route.path === "/carrito" || route.path === "/pago" || route.path === "/confirmacion" || route.path === "/producto/:id") {
       routeSpecificProps.carrito = carrito;
       routeSpecificProps.setCarrito = setCarrito;
     }
     
-    // ProductDetail podría necesitar products
+    // ProductDetail podría necesitar products (opcional)
     if (route.path === "/producto/:id") {
       routeSpecificProps.products = products;
     }
@@ -78,7 +78,8 @@ function App() {
     console.log(`🛣️ Ruta ${route.path} - Props:`, { 
       hasUser: !!user, 
       hasSetUser: !!routeSpecificProps.setUser,
-      hasCarrito: !!routeSpecificProps.carrito 
+      hasCarrito: !!routeSpecificProps.carrito,
+      hasProducts: !!routeSpecificProps.products
     });
 
     return React.cloneElement(route.element, {
