@@ -37,6 +37,10 @@ class UserService {
             
             const response = await axios.post(BASE_URL, usuario);
             console.log('✅ Usuario creado exitosamente:', response.data);
+
+            console.log('⏳ Esperando 300ms antes de proceder al autologin...');
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
             return { success: true, data: response.data };
             
         } catch (error) {
