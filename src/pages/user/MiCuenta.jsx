@@ -8,6 +8,7 @@ const MiCuenta = ({ user, setUser }) => {
   const [ventas, setVentas] = useState([]);
   const [loadingVentas, setLoadingVentas] = useState(false);
   const [error, setError] = useState("");
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // 🔥 NUEVO: estado para controlar la verificación
 
   // Funciones de utilidad
   const formatClp = (value) => (value || 0).toLocaleString("es-CL");
@@ -36,58 +37,79 @@ const MiCuenta = ({ user, setUser }) => {
     }
   };
 
-  // 1. Efecto para VALIDACIÓN y SINCRONIZACIÓN del usuario
+  // 🔥 CORREGIDO: Efecto para VALIDACIÓN - SIN BUCLE INFINITO
   useEffect(() => {
-    // Si el usuario ya está cargado en el estado global (prop 'user'), no hacemos nada más
-    if (user && user.id) {
-      return; 
-    }
-
-    // Intentar obtener de sessionStorage
-    const stored = sessionStorage.getItem("usuarioActivo");
-    if (stored) {
-      try {
-        const usuarioActivo = JSON.parse(stored);
-        if (usuarioActivo && usuarioActivo.id) {
-          // Si encontramos el usuario, lo seteamos en el estado del componente padre
-          // Esto es lo que rompe el bucle, ya que la próxima vez, 'user' ya no será null
-          setUser(usuarioActivo); 
-          return;
-        }
-      } catch (err) {
-        console.error("Error parseando usuarioActivo:", err);
+    const checkAuthentication = () => {
+      // Si ya tenemos usuario válido, no hacer nada
+      if (user && user.id) {
+        setIsCheckingAuth(false);
+        return;
       }
-    }
-    
-    // Si llegamos aquí, NO hay un usuario válido en estado o sessionStorage, redirigir
-    navigate("/auth", { replace: true });
-  }, [user, navigate, setUser]); // user como dependencia es vital para la sincronización
 
-  // 2. Efecto para CARGAR VENTAS (se ejecuta SOLO cuando 'user' tiene un ID válido)
+      // Intentar obtener de sessionStorage
+      const stored = sessionStorage.getItem("usuarioActivo");
+      if (stored) {
+        try {
+          const usuarioActivo = JSON.parse(stored);
+          if (usuarioActivo && usuarioActivo.id) {
+            setUser(usuarioActivo);
+            setIsCheckingAuth(false);
+            return;
+          }
+        } catch (err) {
+          console.error("Error parseando usuarioActivo:", err);
+        }
+      }
+      
+      // Si llegamos aquí, NO hay usuario válido
+      setIsCheckingAuth(false);
+      navigate("/auth", { replace: true });
+    };
+
+    checkAuthentication();
+  }, []); // 🔥 IMPORTANTE: dependencias vacías para que solo se ejecute una vez
+
+  // 🔥 CORREGIDO: Efecto para CARGAR VENTAS
   useEffect(() => {
-    if (user && user.id) {
+    if (user && user.id && !isCheckingAuth) {
       cargarVentas(user);
     }
-  }, [user]); // Depende únicamente del objeto 'user'
+  }, [user, isCheckingAuth]);
 
   // Cerrar sesión
   const cerrarSesion = () => {
     sessionStorage.removeItem("usuarioActivo");
+    localStorage.removeItem("user"); // 🔥 También limpiar localStorage
     setUser(null);
     navigate('/');
   };
 
-  // Mientras se verifica sesión o carga datos
-  if (!user || !user.id) {
+  // 🔥 CORREGIDO: Mientras se verifica la autenticación
+  if (isCheckingAuth) {
     return (
       <Container className="my-5 text-center">
         <Spinner animation="border" />
-        <p className="mt-2">Verificando sesión. Redirigiendo si es necesario...</p>
+        <p className="mt-2">Verificando sesión...</p>
       </Container>
     );
   }
 
-  // El resto del componente permanece igual, ahora sabemos que 'user' está cargado y validado.
+  // 🔥 CORREGIDO: Si no hay usuario después de la verificación
+  if (!user || !user.id) {
+    return (
+      <Container className="my-5 text-center">
+        <Alert variant="warning">
+          <h4>No has iniciado sesión</h4>
+          <p>Serás redirigido a la página de autenticación.</p>
+          <Button variant="primary" onClick={() => navigate("/auth")}>
+            Ir a Iniciar Sesión
+          </Button>
+        </Alert>
+      </Container>
+    );
+  }
+
+  // El resto del componente permanece igual
   const rolName = user.rol?.nombreRol || user.rol || 'Cliente';
   const esAdmin = rolName.toLowerCase() === 'admin';
 
@@ -99,8 +121,6 @@ const MiCuenta = ({ user, setUser }) => {
       </div>
 
       {error && <Alert variant="danger">{error}</Alert>}
-      
-      {/* ... (Resto del código de renderizado de la cuenta, que no necesita cambios) ... */}
       
       <Row className="justify-content-center">
         <Col md={10}>
