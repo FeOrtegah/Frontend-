@@ -9,19 +9,14 @@ const MiCuenta = ({ user, setUser }) => {
   const [loadingVentas, setLoadingVentas] = useState(false);
   const [error, setError] = useState("");
 
-  const normalizedUser = user ? {
-    id: user.id || user._id || user.usuarioId || 'N/A',
-    nombre: user.nombre || user.name || user.nombreCompleto || 'N/A',
-    correo: user.correo || user.email || user.mail || 'N/A',
-    rol: user.rol || user.role || user.tipo || 'Cliente'
-  } : null;
+  console.log("🔍 User en MiCuenta:", user);
 
   const formatClp = (value) => (value || 0).toLocaleString("es-CL");
   const obtenerTotalVenta = useCallback((venta) => venta.totalCalculado || 0, []);
   const obtenerCantidadProductos = useCallback((venta) => venta.cantidadProductos || 0, []);
 
   const cargarVentas = async (usuario) => {
-    if (!usuario?.id || usuario.id === 'N/A') return;
+    if (!usuario?.id) return;
 
     setLoadingVentas(true);
     setError("");
@@ -42,10 +37,10 @@ const MiCuenta = ({ user, setUser }) => {
   };
 
   useEffect(() => {
-    if (normalizedUser && normalizedUser.id && normalizedUser.id !== 'N/A') {
-      cargarVentas(normalizedUser);
+    if (user && user.id) {
+      cargarVentas(user);
     }
-  }, [normalizedUser]);
+  }, [user]);
 
   const cerrarSesion = () => {
     sessionStorage.removeItem("usuarioActivo");
@@ -55,7 +50,7 @@ const MiCuenta = ({ user, setUser }) => {
     navigate('/');
   };
 
-  if (!normalizedUser) {
+  if (!user) {
     return (
       <Container className="my-5 text-center">
         <Spinner animation="border" />
@@ -64,7 +59,7 @@ const MiCuenta = ({ user, setUser }) => {
     );
   }
 
-  const rolName = normalizedUser.rol?.nombreRol || normalizedUser.rol || 'Cliente';
+  const rolName = user.rol?.nombreRol || user.rol || 'Cliente';
   const esAdmin = rolName.toLowerCase() === 'admin';
 
   return (
@@ -75,6 +70,15 @@ const MiCuenta = ({ user, setUser }) => {
       </div>
 
       {error && <Alert variant="danger">{error}</Alert>}
+
+      {/* DEBUG INFO */}
+      <Alert variant="info">
+        <strong>Debug Info:</strong><br/>
+        User object: {JSON.stringify(user)}<br/>
+        Tiene correo: {user.correo ? 'SÍ' : 'NO'}<br/>
+        Tiene email: {user.email ? 'SÍ' : 'NO'}<br/>
+        Propiedades: {user ? Object.keys(user).join(', ') : 'No user'}
+      </Alert>
       
       <Row className="justify-content-center">
         <Col md={10}>
@@ -85,9 +89,9 @@ const MiCuenta = ({ user, setUser }) => {
             <Card.Body>
               <Row>
                 <Col md={6}>
-                  <p><strong>Nombre:</strong> {normalizedUser.nombre || 'N/A'}</p>
-                  <p><strong>Email:</strong> {normalizedUser.correo || 'N/A'}</p>
-                  <p><strong>ID:</strong> <Badge bg="secondary">{normalizedUser.id || 'N/A'}</Badge></p>
+                  <p><strong>Nombre:</strong> {user.nombre || user.name || 'N/A'}</p>
+                  <p><strong>Email:</strong> {user.correo || user.email || user.mail || 'N/A'}</p>
+                  <p><strong>ID:</strong> <Badge bg="secondary">{user.id || user._id || 'N/A'}</Badge></p>
                 </Col>
                 <Col md={6}>
                   <p>
