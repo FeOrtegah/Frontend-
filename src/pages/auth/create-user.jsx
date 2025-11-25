@@ -4,8 +4,8 @@ import Forms from '../../components/templates/Forms';
 import { generarMensaje } from '../../utils/GenerarMensaje';
 import UserService from '../../services/UserService';
 
-const CreateUser = () => {
-    const [form, setForm] = useState({ nombre:"" ,correo: "", contrasena: "" });
+const CreateUser = ({ setUser }) => { // 🔥 Agregar setUser como prop
+    const [form, setForm] = useState({ nombre: "", correo: "", contrasena: "" });
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
@@ -17,6 +17,20 @@ const CreateUser = () => {
         e.preventDefault();
         if (!form.nombre || !form.correo || !form.contrasena) {
             generarMensaje('Completa todos los campos', 'warning');
+            return;
+        }
+
+        // Validar email
+        const dominiosPermitidos = ["gmail.com", "duocuc.cl", "profesor.duoc.cl"];
+        const dominio = form.correo.split("@")[1];
+        if (!dominiosPermitidos.includes(dominio)) {
+            generarMensaje('Solo se permiten correos @gmail.com, @duocuc.cl o @profesor.duoc.cl', 'warning');
+            return;
+        }
+
+        // Validar contraseña
+        if (form.contrasena.length < 6) {
+            generarMensaje('La contraseña debe tener al menos 6 caracteres', 'warning');
             return;
         }
 
@@ -35,7 +49,6 @@ const CreateUser = () => {
             console.log('📤 Creando usuario...');
             const response = await UserService.createUser(usuario);
             
-            // VERIFICAR SI LA RESPUESTA FUE EXITOSA
             if (!response.success) {
                 throw new Error(response.error?.message || response.error || 'Error al crear usuario');
             }
@@ -43,10 +56,43 @@ const CreateUser = () => {
             console.log('✅ Usuario creado exitosamente:', response.data);
             generarMensaje('¡Usuario creado exitosamente!', 'success');
 
-            // Redirigir al login después de crear cuenta
-            setTimeout(() => {
-                navigate('/login');
-            }, 1500);
+            // 🔥 NUEVO: Intentar login automático después del registro
+            try {
+                console.log('🚀 Intentando login automático...');
+                const loginResponse = await UserService.login({
+                    correo: form.correo,
+                    contrasena: form.contrasena
+                });
+
+                if (loginResponse.success) {
+                    const usuarioData = loginResponse.data;
+                    
+                    // Guardar en sessionStorage y localStorage
+                    sessionStorage.setItem("usuarioActivo", JSON.stringify(usuarioData));
+                    localStorage.setItem("user", JSON.stringify(usuarioData)); // 🔥 IMPORTANTE: Guardar también en localStorage
+                    
+                    // 🔥 ACTUALIZAR ESTADO GLOBAL
+                    if (setUser) {
+                        setUser(usuarioData);
+                        console.log('✅ Estado global actualizado:', usuarioData);
+                    }
+                    
+                    console.log('✅ Login automático exitoso:', usuarioData);
+                    generarMensaje(`¡Bienvenido ${usuarioData.nombre}!`, 'success');
+
+                    setTimeout(() => {
+                        navigate('/');
+                    }, 1500);
+                } else {
+                    throw new Error('Error en login automático');
+                }
+            } catch (loginError) {
+                console.log('⚠️ Login automático falló, redirigiendo a login');
+                generarMensaje('Cuenta creada. Por favor inicia sesión manualmente.', 'success');
+                setTimeout(() => {
+                    navigate('/auth');
+                }, 1500);
+            }
 
         } catch (error) {
             console.error('💥 Error completo:', error);
@@ -119,7 +165,7 @@ const CreateUser = () => {
                 {
                     content: (
                         <Link
-                            to="/login"
+                            to="/auth"
                             className="text-indigo-400 hover:text-indigo-300 underline transition"
                         >
                             Ya tengo un usuario
