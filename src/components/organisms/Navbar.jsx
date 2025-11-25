@@ -27,10 +27,9 @@ const Navbar = ({ carrito }) => {
           </Link>
 
           <div className="iconos-derecha d-flex align-items-center">
-            <Link to="/auth" className="btn me-3">
+            <Link to="/auth">
               <span className="material-icons">perm_identity</span>
             </Link>
-
             <Link to="/carrito" className="btn position-relative">
               <span className="material-icons">shopping_cart</span>
               {carrito.length > 0 && (
