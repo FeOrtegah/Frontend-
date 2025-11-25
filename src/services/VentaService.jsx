@@ -151,209 +151,209 @@ Table.Thead = ({ children, className }) => <thead className={className}>{childre
 Table.Tbody = ({ children }) => <tbody>{children}</tbody>;
 
 const MiCuentaComponent = ({ user, setUser, navigate }) => {
-  const [ventas, setVentas] = useState([]);
-  const [loadingVentas, setLoadingVentas] = useState(false);
-  const [error, setError] = useState("");
+    const [ventas, setVentas] = useState([]);
+    const [loadingVentas, setLoadingVentas] = useState(false);
+    const [error, setError] = useState("");
 
-  const formatClp = (value) => (value || 0).toLocaleString("es-CL");
+    const formatClp = (value) => (value || 0).toLocaleString("es-CL");
 
-  const obtenerTotalVenta = useCallback((venta) => venta.totalCalculado || 0, []);
-  const obtenerCantidadProductos = useCallback((venta) => venta.cantidadProductos || 0, []);
+    const obtenerTotalVenta = useCallback((venta) => venta.totalCalculado || 0, []);
+    const obtenerCantidadProductos = useCallback((venta) => venta.cantidadProductos || 0, []);
 
-  const cargarVentas = useCallback(async () => {
-    if (!user?.id) return;
-    
-    setLoadingVentas(true);
-    setError("");
-    try {
-      const resultado = await ventaServiceInstance.obtenerVentasPorUsuario(user.id);
-      
-      if (resultado.success) {
-        const ventasProcesadas = ventaServiceInstance.procesarVentas(resultado.data);
-        setVentas(ventasProcesadas);
-      } else {
-        setError(resultado.error || "Error al cargar las ventas desde el servidor.");
-      }
-    } catch (err) {
-      setError("No se pudieron conectar con el servicio de ventas.");
-    } finally {
-      setLoadingVentas(false);
-    }
-  }, [user]);
+    const cargarVentas = useCallback(async () => {
+        if (!user?.id) return;
+        
+        setLoadingVentas(true);
+        setError("");
+        try {
+            const resultado = await ventaServiceInstance.obtenerVentasPorUsuario(user.id);
+            
+            if (resultado.success) {
+                const ventasProcesadas = ventaServiceInstance.procesarVentas(resultado.data);
+                setVentas(ventasProcesadas);
+            } else {
+                setError(resultado.error || "Error al cargar las ventas desde el servidor.");
+            }
+        } catch (err) {
+            setError("No se pudieron conectar con el servicio de ventas.");
+        } finally {
+            setLoadingVentas(false);
+        }
+    }, [user]);
 
-  useEffect(() => {
+    useEffect(() => {
+        if (!user) {
+            navigate('/login');
+        } else {
+            cargarVentas();
+        }
+    }, [user, navigate, cargarVentas]);
+
+
+    const cerrarSesion = () => {
+        sessionStorage.removeItem("usuarioActivo");
+        setUser(null);
+        navigate('/');
+    };
+
     if (!user) {
-      navigate('/login');
-    } else {
-      cargarVentas();
+        return (
+            <Container className="my-5 text-center">
+                <Spinner />
+                <p className="mt-2 text-gray-600">Cargando datos de sesión...</p>
+            </Container>
+        );
     }
-  }, [user, navigate, cargarVentas]);
+    
+    const rolName = user.rol?.nombreRol || (typeof user.rol === 'string' ? user.rol : 'Cliente');
+    const esAdmin = rolName.toLowerCase() === 'admin';
 
-
-  const cerrarSesion = () => {
-    sessionStorage.removeItem("usuarioActivo");
-    setUser(null);
-    navigate('/');
-  };
-
-  if (!user) {
     return (
-      <Container className="my-5 text-center">
-        <Spinner />
-        <p className="mt-2 text-gray-600">Cargando datos de sesión...</p>
-      </Container>
-    );
-  }
-  
-  const rolName = user.rol?.nombreRol || (typeof user.rol === 'string' ? user.rol : 'Cliente');
-  const esAdmin = rolName.toLowerCase() === 'admin';
+        <Container className="max-w-6xl my-5 font-sans">
+            <div className="text-center mb-6">
+                <h2 className="text-3xl font-bold text-gray-800">Mi Cuenta</h2>
+                <p className="text-gray-500">Gestiona tu información personal y revisa tu historial de compras</p>
+            </div>
 
-  return (
-    <Container className="max-w-6xl my-5 font-sans">
-      <div className="text-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800">Mi Cuenta</h2>
-        <p className="text-gray-500">Gestiona tu información personal y revisa tu historial de compras</p>
-      </div>
+            {error && <Alert variant="danger">{error}</Alert>}
 
-      {error && <Alert variant="danger">{error}</Alert>}
-
-      <Row className="justify-center">
-        <Col md={10} className="mx-auto">
-          <Card className="shadow-lg mb-6 border-t-4 border-blue-600">
-            <Card.Header className="bg-blue-600 text-white">
-              <h5 className="mb-0 text-xl font-semibold">Información Personal</h5>
-            </Card.Header>
-            <Card.Body>
-              <Row>
-                <Col md={6}>
-                  <p className="mb-2"><strong>Nombre:</strong> {user.nombre}</p>
-                  <p className="mb-2"><strong>Email:</strong> {user.correo}</p>
-                  <p className="mb-2"><strong>ID de Usuario:</strong> <Badge bg="secondary">{user.id}</Badge></p>
-                </Col>
-                <Col md={6}>
-                  <p className="mb-2"><strong>Rol:</strong> 
-                    <Badge bg={esAdmin ? 'danger' : 'success'}>
-                      {rolName}
-                    </Badge>
-                  </p>
-                  <p className="mb-2"><strong>Fecha de Registro:</strong> 
-                      {user.fechaRegistro ? new Date(user.fechaRegistro).toLocaleDateString() : 'N/A'}
-                  </p>
-                  <p className="mb-2"><strong>Total Compras:</strong> <Badge bg="info">{ventas.length}</Badge></p>
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
-
-          <Card className="shadow-lg mb-6">
-            <Card.Header className="bg-gray-100">
-              <div className="flex justify-between items-center">
-                <h5 className="mb-0 text-lg font-semibold text-gray-700">Historial de Compras</h5>
-                <Badge bg="primary">{ventas.length} compras</Badge>
-              </div>
-            </Card.Header>
-            <Card.Body>
-              {loadingVentas ? (
-                <div className="text-center py-8">
-                  <Spinner />
-                  <p className="text-gray-500 mt-2">Cargando tus compras...</p>
-                </div>
-              ) : ventas.length > 0 ? (
-                <>
-                  <div className="overflow-x-auto">
-                    <Table striped bordered hover>
-                      <Table.Thead className="bg-gray-800 text-white">
-                        <tr>
-                          <th className="p-3 text-left">N° Venta</th>
-                          <th className="p-3 text-left">Fecha</th>
-                          <th className="p-3 text-left">Estado</th>
-                          <th className="p-3 text-left">Método Pago</th>
-                          <th className="p-3 text-right">Productos</th>
-                          <th className="p-3 text-right">Total</th>
-                          <th className="p-3"></th>
-                        </tr>
-                      </Table.Thead>
-                      <Table.Tbody>
-                        {ventas.map((venta, index) => {
-                          const total = obtenerTotalVenta(venta);
-                          const cantidad = obtenerCantidadProductos(venta);
-
-                          return (
-                            <tr key={venta.id || index} className="border-b border-gray-200">
-                              <td className="p-3">{venta.id || `VEN-${index + 1}`}</td>
-                              <td className="p-3">{venta.fecha ? new Date(venta.fecha).toLocaleDateString() : "-"}</td>
-                              <td className="p-3">
-                                <Badge 
-                                  bg={venta.estado?.nombre === "Completada" ? "success" : venta.estado?.nombre === "Cancelada" ? "danger" : "info"}
-                                >
-                                  {venta.estado?.nombre || "PENDIENTE"}
-                                </Badge>
-                              </td>
-                              <td className="p-3">{venta.metodoPago?.nombre || "No especificado"}</td>
-                              <td className="p-3 text-right">{cantidad}</td>
-                              <td className="p-3 text-right font-semibold text-green-600">{formatClp(total)}</td>
-                              <td className="p-3">
-                                <Button 
-                                  size="sm"
-                                  variant="primary"
-                                  onClick={() => console.log('Ver detalles de venta:', venta.id)}
-                                >
-                                  Ver detalles
-                                </Button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </Table.Tbody>
-                    </Table>
-                  </div>
-
-                  <Row className="mt-4 justify-end">
-                    <Col md={6}>
-                      <Card className="bg-gray-50 border border-gray-300">
+            <Row className="justify-center">
+                <Col md={10} className="mx-auto">
+                    <Card className="shadow-lg mb-6 border-t-4 border-blue-600">
+                        <Card.Header className="bg-blue-600 text-white">
+                            <h5 className="mb-0 text-xl font-semibold">Información Personal</h5>
+                        </Card.Header>
                         <Card.Body>
-                          <h6 className="font-bold text-lg mb-3 border-b pb-1 text-gray-700">Resumen de Compras</h6>
-                          <div className="flex justify-between mb-2">
-                            <span className="text-gray-600">Total de compras:</span>
-                            <strong className="text-gray-800">{ventas.length}</strong>
-                          </div>
-                          <div className="flex justify-between mb-2">
-                            <span className="text-gray-600">Total de productos comprados:</span>
-                            <strong className="text-gray-800">
-                              {ventas.reduce((t, v) => t + obtenerCantidadProductos(v), 0)}
-                            </strong>
-                          </div>
-                          <div className="flex justify-between pt-3 border-t border-gray-300">
-                            <span className="text-lg font-bold">Total gastado:</span>
-                            <strong className="text-blue-600 text-xl font-extrabold">
-                              {formatClp(ventas.reduce((t, v) => t + obtenerTotalVenta(v), 0))}
-                            </strong>
-                          </div>
+                            <Row>
+                                <Col md={6}>
+                                    <p className="mb-2"><strong>Nombre:</strong> {user.nombre}</p>
+                                    <p className="mb-2"><strong>Email:</strong> {user.correo}</p>
+                                    <p className="mb-2"><strong>ID de Usuario:</strong> <Badge bg="secondary">{user.id}</Badge></p>
+                                </Col>
+                                <Col md={6}>
+                                    <p className="mb-2"><strong>Rol:</strong> 
+                                        <Badge bg={esAdmin ? 'danger' : 'success'}>
+                                            {rolName}
+                                        </Badge>
+                                    </p>
+                                    <p className="mb-2"><strong>Fecha de Registro:</strong> 
+                                        {user.fechaRegistro ? new Date(user.fechaRegistro).toLocaleDateString() : 'N/A'}
+                                    </p>
+                                    <p className="mb-2"><strong>Total Compras:</strong> <Badge bg="info">{ventas.length}</Badge></p>
+                                </Col>
+                            </Row>
                         </Card.Body>
-                      </Card>
-                    </Col>
-                  </Row>
-                </>
-              ) : (
-                <div className="text-center py-10">
-                  <h5 className="text-gray-500 mb-4 text-xl">Aún no has realizado compras</h5>
-                  <Button variant="primary" size="lg" onClick={() => navigate('/productos')}>
-                    Comenzar a Comprar
-                  </Button>
-                </div>
-              )}
-            </Card.Body>
-          </Card>
+                    </Card>
 
-          <div className="text-center mt-6">
-            <Button variant="outline-danger" onClick={cerrarSesion}>
-              Cerrar Sesión
-            </Button>
-          </div>
-        </Col>
-      </Row>
-    </Container>
-  );
+                    <Card className="shadow-lg mb-6">
+                        <Card.Header className="bg-gray-100">
+                            <div className="flex justify-between items-center">
+                                <h5 className="mb-0 text-lg font-semibold text-gray-700">Historial de Compras</h5>
+                                <Badge bg="primary">{ventas.length} compras</Badge>
+                            </div>
+                        </Card.Header>
+                        <Card.Body>
+                            {loadingVentas ? (
+                                <div className="text-center py-8">
+                                    <Spinner />
+                                    <p className="text-gray-500 mt-2">Cargando tus compras...</p>
+                                </div>
+                            ) : ventas.length > 0 ? (
+                                <>
+                                    <div className="overflow-x-auto">
+                                        <Table striped bordered hover>
+                                            <Table.Thead className="bg-gray-800 text-white">
+                                                <tr>
+                                                    <th className="p-3 text-left">N° Venta</th>
+                                                    <th className="p-3 text-left">Fecha</th>
+                                                    <th className="p-3 text-left">Estado</th>
+                                                    <th className="p-3 text-left">Método Pago</th>
+                                                    <th className="p-3 text-right">Productos</th>
+                                                    <th className="p-3 text-right">Total</th>
+                                                    <th className="p-3"></th>
+                                                </tr>
+                                            </Table.Thead>
+                                            <Table.Tbody>
+                                                {ventas.map((venta, index) => {
+                                                    const total = obtenerTotalVenta(venta);
+                                                    const cantidad = obtenerCantidadProductos(venta);
+
+                                                    return (
+                                                        <tr key={venta.id || index} className="border-b border-gray-200">
+                                                            <td className="p-3">{venta.id || `VEN-${index + 1}`}</td>
+                                                            <td className="p-3">{venta.fecha ? new Date(venta.fecha).toLocaleDateString() : "-"}</td>
+                                                            <td className="p-3">
+                                                                <Badge 
+                                                                    bg={venta.estado?.nombre === "Completada" ? "success" : venta.estado?.nombre === "Cancelada" ? "danger" : "info"}
+                                                                >
+                                                                    {venta.estado?.nombre || "PENDIENTE"}
+                                                                </Badge>
+                                                            </td>
+                                                            <td className="p-3">{venta.metodoPago?.nombre || "No especificado"}</td>
+                                                            <td className="p-3 text-right">{cantidad}</td>
+                                                            <td className="p-3 text-right font-semibold text-green-600">{formatClp(total)}</td>
+                                                            <td className="p-3">
+                                                                <Button 
+                                                                    size="sm"
+                                                                    variant="primary"
+                                                                    onClick={() => console.log('Ver detalles de venta:', venta.id)}
+                                                                >
+                                                                    Ver detalles
+                                                                </Button>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </Table.Tbody>
+                                        </Table>
+                                    </div>
+
+                                    <Row className="mt-4 justify-end">
+                                        <Col md={6}>
+                                            <Card className="bg-gray-50 border border-gray-300">
+                                                <Card.Body>
+                                                    <h6 className="font-bold text-lg mb-3 border-b pb-1 text-gray-700">Resumen de Compras</h6>
+                                                    <div className="flex justify-between mb-2">
+                                                        <span className="text-gray-600">Total de compras:</span>
+                                                        <strong className="text-gray-800">{ventas.length}</strong>
+                                                    </div>
+                                                    <div className="flex justify-between mb-2">
+                                                        <span className="text-gray-600">Total de productos comprados:</span>
+                                                        <strong className="text-gray-800">
+                                                            {ventas.reduce((t, v) => t + obtenerCantidadProductos(v), 0)}
+                                                        </strong>
+                                                    </div>
+                                                    <div className="flex justify-between pt-3 border-t border-gray-300">
+                                                        <span className="text-lg font-bold">Total gastado:</span>
+                                                        <strong className="text-blue-600 text-xl font-extrabold">
+                                                            {formatClp(ventas.reduce((t, v) => t + obtenerTotalVenta(v), 0))}
+                                                        </strong>
+                                                    </div>
+                                                </Card.Body>
+                                            </Card>
+                                        </Col>
+                                    </Row>
+                                </>
+                            ) : (
+                                <div className="text-center py-10">
+                                    <h5 className="text-gray-500 mb-4 text-xl">Aún no has realizado compras</h5>
+                                    <Button variant="primary" size="lg" onClick={() => console.log('Simular navegación a /productos')}>
+                                        Comenzar a Comprar
+                                    </Button>
+                                </div>
+                            )}
+                        </Card.Body>
+                    </Card>
+
+                    <div className="text-center mt-6">
+                        <Button variant="outline-danger" onClick={cerrarSesion}>
+                            Cerrar Sesión
+                        </Button>
+                    </div>
+                </Col>
+            </Row>
+        </Container>
+    );
 };
 
 const AppWrapper = () => {
@@ -377,7 +377,7 @@ const AppWrapper = () => {
             navigate('/micuenta');
         }
         if (!user && currentRoute === '/micuenta') {
-             navigate('/login');
+            navigate('/login');
         }
     }, [user, currentRoute, navigate]);
 
@@ -426,10 +426,10 @@ const AppWrapper = () => {
                             >
                                 Ingresar (Simulación)
                             </Button>
-                             <p className="text-sm text-gray-500 mt-4">Para probar, pulsa "Ingresar". No se requiere llenar los campos.</p>
+                            <p className="text-sm text-gray-500 mt-4">Para probar, pulsa "Ingresar". No se requiere llenar los campos.</p>
                         </form>
                     ) : (
-                         <div className="mt-4">
+                        <div className="mt-4">
                             <Alert variant="success">Ya has iniciado sesión como **{user.nombre}**</Alert>
                             <Button variant="primary" onClick={() => navigate('/micuenta')}>Ir a Mi Cuenta</Button>
                         </div>
@@ -439,7 +439,7 @@ const AppWrapper = () => {
         );
     } else {
         componentToRender = (
-             <Container className="text-center my-12">
+            <Container className="text-center my-12">
                 <h3 className="text-4xl font-extrabold mb-6 text-blue-600">Bienvenido a la Tienda EFA</h3>
                 <p className="text-xl text-gray-600 mb-8">Esta es la página principal.</p>
                 {user ? (
@@ -457,15 +457,12 @@ const AppWrapper = () => {
                 <span className="font-extrabold text-2xl text-blue-600 cursor-pointer" onClick={() => navigate('/')}>EFA Store</span>
                 <nav className="space-x-4 flex items-center">
                     {user && <span className="text-gray-700 font-medium hidden sm:inline">Hola, {user.nombre}!</span>}
-                    {user ? (
-                        <Button variant="primary" onClick={() => navigate('/micuenta')}>
-                            Mi Cuenta
-                        </Button>
-                    ) : (
-                        <Button variant="primary" onClick={() => navigate('/login')}>
-                            Ingresar
-                        </Button>
-                    )}
+                    <Button 
+                        variant="primary" 
+                        onClick={() => navigate(user ? '/micuenta' : '/login')}
+                    >
+                        {user ? 'Mi Cuenta' : 'Ingresar'}
+                    </Button>
                 </nav>
             </header>
             <main>{componentToRender}</main>
