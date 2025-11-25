@@ -53,7 +53,7 @@ export const notFoundRoute = {
   showNavbar: false,
 };
 
-export const Config = [
+export const Approute = [
   ...publicRoutes,
   ...privateRoutes,
   ...adminRoutes,
