@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Container, Card, Button, Alert, Spinner, Row, Col, Badge, Table } from "react-bootstrap";
-import ventaService from "../../services/VentaService"; // Importación por defecto
+import ventaService from "../../services/VentaService";
 
 const MiCuenta = ({ user, setUser }) => {
   const navigate = useNavigate();
@@ -36,29 +36,39 @@ const MiCuenta = ({ user, setUser }) => {
     }
   };
 
-  // Verificación de sesión y carga de usuario
+  // 1. Efecto para VALIDACIÓN y SINCRONIZACIÓN del usuario
   useEffect(() => {
-    let usuarioActivo = user;
+    // Si el usuario ya está cargado en el estado global (prop 'user'), no hacemos nada más
+    if (user && user.id) {
+      return; 
+    }
 
-    if (!usuarioActivo) {
-      const stored = sessionStorage.getItem("usuarioActivo");
-      if (stored) {
-        try {
-          usuarioActivo = JSON.parse(stored);
-        } catch (err) {
-          console.error("Error parseando usuarioActivo:", err);
+    // Intentar obtener de sessionStorage
+    const stored = sessionStorage.getItem("usuarioActivo");
+    if (stored) {
+      try {
+        const usuarioActivo = JSON.parse(stored);
+        if (usuarioActivo && usuarioActivo.id) {
+          // Si encontramos el usuario, lo seteamos en el estado del componente padre
+          // Esto es lo que rompe el bucle, ya que la próxima vez, 'user' ya no será null
+          setUser(usuarioActivo); 
+          return;
         }
+      } catch (err) {
+        console.error("Error parseando usuarioActivo:", err);
       }
     }
+    
+    // Si llegamos aquí, NO hay un usuario válido en estado o sessionStorage, redirigir
+    navigate("/auth", { replace: true });
+  }, [user, navigate, setUser]); // user como dependencia es vital para la sincronización
 
-    if (!usuarioActivo || !usuarioActivo.id) {
-      navigate("/auth", { replace: true });
-      return;
+  // 2. Efecto para CARGAR VENTAS (se ejecuta SOLO cuando 'user' tiene un ID válido)
+  useEffect(() => {
+    if (user && user.id) {
+      cargarVentas(user);
     }
-
-    setUser(usuarioActivo);
-    cargarVentas(usuarioActivo);
-  }, [user, navigate, setUser]);
+  }, [user]); // Depende únicamente del objeto 'user'
 
   // Cerrar sesión
   const cerrarSesion = () => {
@@ -68,15 +78,16 @@ const MiCuenta = ({ user, setUser }) => {
   };
 
   // Mientras se verifica sesión o carga datos
-  if (!user) {
+  if (!user || !user.id) {
     return (
       <Container className="my-5 text-center">
         <Spinner animation="border" />
-        <p className="mt-2">Redirigiendo a inicio de sesión...</p>
+        <p className="mt-2">Verificando sesión. Redirigiendo si es necesario...</p>
       </Container>
     );
   }
 
+  // El resto del componente permanece igual, ahora sabemos que 'user' está cargado y validado.
   const rolName = user.rol?.nombreRol || user.rol || 'Cliente';
   const esAdmin = rolName.toLowerCase() === 'admin';
 
@@ -88,7 +99,9 @@ const MiCuenta = ({ user, setUser }) => {
       </div>
 
       {error && <Alert variant="danger">{error}</Alert>}
-
+      
+      {/* ... (Resto del código de renderizado de la cuenta, que no necesita cambios) ... */}
+      
       <Row className="justify-content-center">
         <Col md={10}>
           {/* Información Personal */}
