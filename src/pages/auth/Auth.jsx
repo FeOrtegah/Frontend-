@@ -1,114 +1,333 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  Alert,
+  Spinner,
+  Tabs,
+  Tab
+} from "react-bootstrap";
 import axios from "axios";
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [form, setForm] = useState({
-    nombre: "",
-    correo: "",
-    contrasena: "",
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("login");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+
+  const dominiosPermitidos = ["gmail.com", "duocuc.cl", "profesor.duoc.cl"];
+
+  const [formData, setFormData] = useState({
+    login: { email: "", password: "" },
+    registro: {
+      nombre: "",
+      email: "",
+      password: "",
+      confirmarPassword: "",
+      telefono: "",
+      direccion: ""
+    }
   });
 
-  const toggleMode = () => setIsLogin(!isLogin);
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const validarEmail = (email) => {
+    const dominio = email.split("@")[1];
+    return dominiosPermitidos.includes(dominio);
   };
 
-  const handleSubmit = async (e) => {
+  const handleInputChange = (tab, field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [tab]: { ...prev[tab], [field]: value }
+    }));
+    setError(null);
+    setSuccess(null);
+  };
+
+  // 🔥 LOGIN
+  const handleLogin = async (e) => {
     e.preventDefault();
+    const { email, password } = formData.login;
 
     try {
-      if (isLogin) {
-        const res = await axios.post(
-          "https://backend-fullstackv1.onrender.com/api/v1/usuarios/login",
-          {
-            correo: form.correo,
-            contrasena: form.contrasena,
-          }
-        );
+      setLoading(true);
+      setError(null);
 
-        localStorage.setItem("usuario", JSON.stringify(res.data));
+      const response = await axios.post(
+        "https://backend-fullstackv1.onrender.com/auth/login",
+        { email, password }
+      );
 
-        window.location.href = "/micuenta";
-      } else {
-        await axios.post(
-          "https://backend-fullstackv1.onrender.com/api/v1/usuarios",
-          form
-        );
+      const userData = {
+        ...response.data.usuario,
+        token: response.data.token
+      };
 
-        alert("Cuenta creada correctamente");
-        setIsLogin(true);
-      }
-    } catch {
-      alert(isLogin ? "Correo o contraseña incorrectos" : "Error al crear la cuenta");
+      sessionStorage.setItem("usuarioActivo", JSON.stringify(userData));
+      localStorage.setItem("userToken", response.data.token);
+
+      setSuccess("Has iniciado sesión correctamente");
+
+      setTimeout(() => navigate("/"), 1200);
+    } catch (err) {
+      setError("Correo o contraseña incorrectos");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔥 REGISTRO
+  const handleRegistro = async (e) => {
+    e.preventDefault();
+
+    const { nombre, email, password, confirmarPassword, telefono, direccion } =
+      formData.registro;
+
+    if (!validarEmail(email)) {
+      setError("Solo se permiten correos @gmail.com, @duocuc.cl o @profesor.duoc.cl");
+      return;
+    }
+
+    if (password !== confirmarPassword) {
+      setError("Las contraseñas no coinciden");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await axios.post(
+        "https://backend-fullstackv1.onrender.com/auth/register",
+        {
+          nombre,
+          email,
+          password
+        }
+      );
+
+      // 🔥 Iniciar sesión automáticamente
+      const autoLogin = await axios.post(
+        "https://backend-fullstackv1.onrender.com/auth/login",
+        { email, password }
+      );
+
+      const userData = {
+        ...autoLogin.data.usuario,
+        token: autoLogin.data.token
+      };
+
+      sessionStorage.setItem("usuarioActivo", JSON.stringify(userData));
+      localStorage.setItem("userToken", autoLogin.data.token);
+
+      setSuccess("Cuenta creada exitosamente");
+      setTimeout(() => navigate("/"), 1200);
+    } catch (err) {
+      setError("El correo ya puede estar en uso");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="container d-flex justify-content-center align-items-center py-5">
-      <div className="card p-4 shadow" style={{ maxWidth: "420px", width: "100%" }}>
-        <h2 className="text-center mb-3">{isLogin ? "Iniciar Sesión" : "Crear Cuenta"}</h2>
-
-        <form onSubmit={handleSubmit}>
-          {!isLogin && (
-            <div className="mb-3">
-              <label className="form-label">Nombre</label>
-              <input
-                className="form-control"
-                type="text"
-                name="nombre"
-                value={form.nombre}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          )}
-
-          <div className="mb-3">
-            <label className="form-label">Correo</label>
-            <input
-              className="form-control"
-              type="email"
-              name="correo"
-              value={form.correo}
-              onChange={handleChange}
-              required
+    <Container className="my-5">
+      <Row className="justify-content-center">
+        <Col md={8} lg={6}>
+          <div className="text-center mb-4">
+            <img
+              src="/img/logo.png"
+              alt="EFA"
+              style={{
+                height: "80px",
+                cursor: "pointer",
+                marginBottom: "1rem"
+              }}
+              onClick={() => navigate("/")}
             />
+            <h2>
+              Bienvenido a <strong style={{ color: "red" }}>EFA</strong>
+            </h2>
+            <p className="text-muted">Tu tienda de moda preferida</p>
           </div>
 
-          <div className="mb-3">
-            <label className="form-label">Contraseña</label>
-            <input
-              className="form-control"
-              type="password"
-              name="contrasena"
-              value={form.contrasena}
-              onChange={handleChange}
-              required
-            />
-          </div>
+          <Card className="shadow-lg">
+            <Card.Body>
+              <Tabs
+                activeKey={activeTab}
+                onSelect={(tab) => {
+                  setActiveTab(tab);
+                  setError(null);
+                  setSuccess(null);
+                }}
+                className="mb-4"
+                justify
+              >
+                {/* --- LOGIN TAB --- */}
+                <Tab eventKey="login" title="Iniciar Sesión">
+                  {error && <Alert variant="danger">{error}</Alert>}
+                  {success && <Alert variant="success">{success}</Alert>}
 
-          <button
-            type="submit"
-            className="btn w-100"
-            style={{
-              backgroundColor: "#d60000",
-              color: "white",
-              fontWeight: "bold",
-            }}
-          >
-            {isLogin ? "Ingresar" : "Registrarme"}
-          </button>
-        </form>
+                  <Form onSubmit={handleLogin}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Correo electrónico</Form.Label>
+                      <Form.Control
+                        type="email"
+                        value={formData.login.email}
+                        required
+                        onChange={(e) =>
+                          handleInputChange("login", "email", e.target.value)
+                        }
+                      />
+                    </Form.Group>
 
-        <div className="text-center mt-3">
-          <button className="btn btn-link" onClick={toggleMode}>
-            {isLogin ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
-          </button>
-        </div>
-      </div>
-    </div>
+                    <Form.Group className="mb-4">
+                      <Form.Label>Contraseña</Form.Label>
+                      <Form.Control
+                        type="password"
+                        value={formData.login.password}
+                        required
+                        onChange={(e) =>
+                          handleInputChange("login", "password", e.target.value)
+                        }
+                      />
+                    </Form.Group>
+
+                    <Button
+                      style={{
+                        backgroundColor: "red",
+                        border: "none",
+                        fontWeight: "bold"
+                      }}
+                      type="submit"
+                      className="w-100 py-2"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <Spinner animation="border" size="sm" className="me-2" />
+                          Iniciando...
+                        </>
+                      ) : (
+                        "Iniciar Sesión"
+                      )}
+                    </Button>
+                  </Form>
+                </Tab>
+
+                {/* --- REGISTRO TAB --- */}
+                <Tab eventKey="registro" title="Crear Cuenta">
+                  {error && <Alert variant="danger">{error}</Alert>}
+                  {success && <Alert variant="success">{success}</Alert>}
+
+                  <Form onSubmit={handleRegistro}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Nombre completo</Form.Label>
+                      <Form.Control
+                        type="text"
+                        required
+                        value={formData.registro.nombre}
+                        onChange={(e) =>
+                          handleInputChange("registro", "nombre", e.target.value)
+                        }
+                      />
+                    </Form.Group>
+
+                    <Form.Group className="mb-3">
+                      <Form.Label>Correo electrónico</Form.Label>
+                      <Form.Control
+                        type="email"
+                        required
+                        value={formData.registro.email}
+                        onChange={(e) =>
+                          handleInputChange("registro", "email", e.target.value)
+                        }
+                      />
+                    </Form.Group>
+
+                    <Row>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Contraseña</Form.Label>
+                          <Form.Control
+                            type="password"
+                            required
+                            minLength="6"
+                            value={formData.registro.password}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "registro",
+                                "password",
+                                e.target.value
+                              )
+                            }
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Confirmar</Form.Label>
+                          <Form.Control
+                            type="password"
+                            required
+                            value={formData.registro.confirmarPassword}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "registro",
+                                "confirmarPassword",
+                                e.target.value
+                              )
+                            }
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+
+                    <Button
+                      style={{
+                        backgroundColor: "red",
+                        border: "none",
+                        fontWeight: "bold"
+                      }}
+                      type="submit"
+                      className="w-100 py-2"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <Spinner animation="border" size="sm" className="me-2" />
+                          Creando...
+                        </>
+                      ) : (
+                        "Crear Cuenta"
+                      )}
+                    </Button>
+                  </Form>
+                </Tab>
+              </Tabs>
+
+              <div className="text-center mt-3">
+                <small className="text-muted">
+                  Al registrarte aceptas nuestros{" "}
+                  <a href="/terminos">Términos</a> y{" "}
+                  <a href="/privacidad">Privacidad</a>
+                </small>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 
