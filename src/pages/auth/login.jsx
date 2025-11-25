@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Forms from '../../components/templates/Forms';
@@ -18,7 +19,6 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         if (!form.correo || !form.contrasena) {
             generarMensaje('Completa todos los campos', 'warning');
             return;
@@ -27,15 +27,25 @@ const Login = () => {
         setLoading(true);
 
         try {
+            console.log('🚀 Iniciando proceso de login...');
             const response = await UserService.login(form);
-            const usuario = response.data;
+            
+            // VERIFICAR SI LA RESPUESTA FUE EXITOSA
+            if (!response.success) {
+                throw new Error(response.error?.message || response.error || 'Error en el login');
+            }
 
+            const usuario = response.data;
+            console.log('👤 Usuario recibido:', usuario);
+
+            // GUARDA EN LOCALSTORAGE
             localStorage.setItem('user', JSON.stringify({
                 id: usuario.id,
                 nombre: usuario.nombre,
                 rol: usuario.rol
             }));
 
+            // USA EL CONTEXTO
             login({
                 id: usuario.id,
                 nombre: usuario.nombre,
@@ -53,8 +63,9 @@ const Login = () => {
             }, 1500);
 
         } catch (error) {
-            const msg = error.response?.data || 'Credenciales inválidas';
-            generarMensaje(msg, 'error');
+            console.error('💥 Error completo en login:', error);
+            const errorMessage = error.message;
+            generarMensaje(errorMessage, 'error');
         } finally {
             setLoading(false);
             setForm({ correo: "", contrasena: "" });
