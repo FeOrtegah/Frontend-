@@ -59,7 +59,7 @@ const Navbar = ({ carrito }) => {
         </div>
       </nav>
 
-      {/* OFFCANVAS - BOTONES MÁS COMPACTOS */}
+      {/* OFFCANVAS - BOTONES DELGADOS EN ROJO CLARO */}
       <div
         className="offcanvas offcanvas-start"
         tabIndex="-1"
@@ -80,23 +80,41 @@ const Navbar = ({ carrito }) => {
         
         <div className="offcanvas-body d-grid gap-1 p-3">
           
-          {/* BOTONES MÁS COMPACTOS */}
+          {/* BOTONES DELGADOS EN ROJO CLARO */}
           <button
-            className="btn btn-outline-secondary text-start py-1 px-2 fs-6"
+            className="btn text-start py-1 px-2 fs-6 border-0"
+            style={{ 
+              backgroundColor: '#ff6b6b', 
+              color: 'white',
+              fontWeight: '500',
+              borderRadius: '4px'
+            }}
             onClick={() => handleNavigation("/hombre")}
           >
             Hombre
           </button>
 
           <button
-            className="btn btn-outline-secondary text-start py-1 px-2 fs-6"
+            className="btn text-start py-1 px-2 fs-6 border-0"
+            style={{ 
+              backgroundColor: '#ff6b6b', 
+              color: 'white',
+              fontWeight: '500',
+              borderRadius: '4px'
+            }}
             onClick={() => handleNavigation("/mujer")}
           >
             Mujer
           </button>
 
           <button
-            className="btn btn-outline-secondary text-start py-1 px-2 fs-6"
+            className="btn text-start py-1 px-2 fs-6 border-0"
+            style={{ 
+              backgroundColor: '#ff6b6b', 
+              color: 'white',
+              fontWeight: '500',
+              borderRadius: '4px'
+            }}
             onClick={() => handleNavigation("/infantil")}
           >
             Infantil
@@ -105,7 +123,13 @@ const Navbar = ({ carrito }) => {
           <hr className="my-2" />
 
           <button
-            className="btn btn-outline-secondary text-start py-1 px-2 fs-6"
+            className="btn text-start py-1 px-2 fs-6 border-0"
+            style={{ 
+              backgroundColor: '#ff6b6b', 
+              color: 'white',
+              fontWeight: '500',
+              borderRadius: '4px'
+            }}
             onClick={() => handleNavigation("/micuenta")}
           >
             Ver mi cuenta
