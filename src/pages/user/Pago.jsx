@@ -132,7 +132,6 @@ const Pago = ({ carrito, setCarrito, user }) => {
         setPasoActual(pasoActual - 1);
     };
 
-    // 🔥🔥🔥 FUNCIÓN DE PAGO CORREGIDA
     const procesarPago = async () => {
         console.log('💰 INICIANDO PROCESO DE PAGO...');
         
@@ -152,7 +151,6 @@ const Pago = ({ carrito, setCarrito, user }) => {
             return;
         }
 
-        // 🔥 VERIFICAR PRODUCTOS ANTES DE ENVIAR
         console.log('🔍 VERIFICANDO PRODUCTOS EN CARRITO:');
         carrito.forEach((item, index) => {
             console.log(`Producto ${index}:`, {
@@ -163,7 +161,6 @@ const Pago = ({ carrito, setCarrito, user }) => {
             });
         });
 
-        // 🔥 FILTRAR SOLO PRODUCTOS CON ID VÁLIDO
         const productosValidos = carrito.filter(item => item.id && Number(item.id) > 0);
         
         if (productosValidos.length === 0) {
@@ -327,7 +324,6 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                 </div>
                             )}
 
-                            {/* ... (el resto del JSX del formulario se mantiene igual) ... */}
                             {pasoActual === 1 && (
                                 <div className="fade-in">
                                     <h5 className="mb-4">Información Personal</h5>
@@ -531,4 +527,26 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                 </div>
                             </div>
 
-                            <div className="border-top pt-
+                            <div className="border-top pt-3">
+                                <div className="d-flex justify-content-between mb-2">
+                                    <span>Subtotal</span>
+                                    <span>${subtotal.toLocaleString()}</span>
+                                </div>
+                                <div className="d-flex justify-content-between mb-2">
+                                    <span>Envío</span>
+                                    <span>{costoEnvio === 0 ? 'Gratis' : `$${costoEnvio.toLocaleString()}`}</span>
+                                </div>
+                                <div className="d-flex justify-content-between fw-bold fs-5 text-success">
+                                    <span>Total</span>
+                                    <span>${total.toLocaleString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Pago;
