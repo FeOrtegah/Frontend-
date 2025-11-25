@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Container, Card, Button, Alert, Spinner, Row, Col, Badge, Table } from "react-bootstrap";
 import VentaService from "../../services/VentaService";
-import './global.css';
-
+import "../../styles/global.css";
 const MiCuenta = ({ user, setUser }) => {
   const navigate = useNavigate();
   const [ventas, setVentas] = useState([]);
