@@ -37,10 +37,6 @@ class UserService {
             
             const response = await axios.post(BASE_URL, usuario);
             console.log('✅ Usuario creado exitosamente:', response.data);
-
-            console.log('⏳ Esperando 300ms antes de proceder al autologin...');
-            await new Promise(resolve => setTimeout(resolve, 300));
-            
             return { success: true, data: response.data };
             
         } catch (error) {
@@ -52,6 +48,36 @@ class UserService {
             return { 
                 success: false, 
                 error: error.response?.data || 'Error de conexión al crear cuenta' 
+            };
+        }
+    }
+
+    async verifyToken(token) {
+        try {
+            const response = await axios.get(`${BASE_URL}/verify`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            return { success: true, data: response.data };
+        } catch (error) {
+            console.error('❌ Error verificando token:', error);
+            return { 
+                success: false, 
+                error: error.response?.data || 'Error verificando token' 
+            };
+        }
+    }
+
+    async logout(token) {
+        try {
+            const response = await axios.post(`${BASE_URL}/logout`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            return { success: true, data: response.data };
+        } catch (error) {
+            console.error('❌ Error en logout:', error);
+            return { 
+                success: false, 
+                error: error.response?.data || 'Error en logout' 
             };
         }
     }
