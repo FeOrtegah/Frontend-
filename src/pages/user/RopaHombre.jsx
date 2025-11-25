@@ -226,18 +226,17 @@ const RopaHombre = () => {
                 {productosFiltrados.map(product => (
                   <div key={product.id} className="col-xl-3 col-lg-4 col-md-6 mb-4">
                     <div className="card h-100 product-card">
-                      {/* ✅ CORREGIDO - SOLO IMAGEN REAL */}
                       <img 
-                        src={product.image} {/* ✅ QUITADO el fallback placeholder */}
+                        src={product.image}
                         className="card-img-top" 
                         alt={product.name}
                         style={{ height: '250px', objectFit: 'cover' }}
                         onError={(e) => {
-                          console.error('❌ Error cargando imagen:', product.image);
-                          e.target.src = '/img/logo.webp'; // ✅ Solo si falla la imagen real
+                          console.error('Error cargando imagen:', product.image);
+                          e.target.src = '/img/logo.webp';
                         }}
                         onLoad={() => {
-                          console.log('✅ Imagen cargada correctamente:', product.image);
+                          console.log('Imagen cargada correctamente:', product.image);
                         }}
                       />
                       <div className="card-body d-flex flex-column">
