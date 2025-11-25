@@ -9,12 +9,27 @@ const MiCuenta = ({ user, setUser }) => {
   const [loadingVentas, setLoadingVentas] = useState(false);
   const [error, setError] = useState("");
 
+  // 🔥 DEBUG: Ver qué datos llegan al componente
+  console.log("🔍 MiCuenta - user prop:", user);
+  console.log("🔍 MiCuenta - sessionStorage:", JSON.parse(sessionStorage.getItem("usuarioActivo") || "null"));
+  console.log("🔍 MiCuenta - localStorage:", JSON.parse(localStorage.getItem("user") || "null"));
+
+  // Normalizar los datos del usuario para evitar problemas de estructura
+  const normalizedUser = user ? {
+    id: user.id || user._id || user.usuarioId || 'N/A',
+    nombre: user.nombre || user.name || user.nombreCompleto || 'N/A',
+    correo: user.correo || user.email || user.mail || 'N/A',
+    rol: user.rol || user.role || user.tipo || 'Cliente'
+  } : null;
+
+  console.log("✅ Usuario normalizado en MiCuenta:", normalizedUser);
+
   const formatClp = (value) => (value || 0).toLocaleString("es-CL");
   const obtenerTotalVenta = useCallback((venta) => venta.totalCalculado || 0, []);
   const obtenerCantidadProductos = useCallback((venta) => venta.cantidadProductos || 0, []);
 
   const cargarVentas = async (usuario) => {
-    if (!usuario?.id) return;
+    if (!usuario?.id || usuario.id === 'N/A') return;
 
     setLoadingVentas(true);
     setError("");
@@ -35,19 +50,20 @@ const MiCuenta = ({ user, setUser }) => {
   };
 
   useEffect(() => {
-    if (user && user.id) {
-      cargarVentas(user);
+    if (normalizedUser && normalizedUser.id && normalizedUser.id !== 'N/A') {
+      cargarVentas(normalizedUser);
     }
-  }, [user]);
+  }, [normalizedUser]);
 
   const cerrarSesion = () => {
     sessionStorage.removeItem("usuarioActivo");
     localStorage.removeItem("user");
+    localStorage.removeItem("userToken");
     setUser(null);
     navigate('/');
   };
 
-  if (!user) {
+  if (!normalizedUser) {
     return (
       <Container className="my-5 text-center">
         <Spinner animation="border" />
@@ -56,7 +72,7 @@ const MiCuenta = ({ user, setUser }) => {
     );
   }
 
-  const rolName = user.rol?.nombreRol || user.rol || 'Cliente';
+  const rolName = normalizedUser.rol?.nombreRol || normalizedUser.rol || 'Cliente';
   const esAdmin = rolName.toLowerCase() === 'admin';
 
   return (
@@ -77,9 +93,9 @@ const MiCuenta = ({ user, setUser }) => {
             <Card.Body>
               <Row>
                 <Col md={6}>
-                  <p><strong>Nombre:</strong> {user.nombre || 'N/A'}</p>
-                  <p><strong>Email:</strong> {user.correo || 'N/A'}</p>
-                  <p><strong>ID:</strong> <Badge bg="secondary">{user.id || 'N/A'}</Badge></p>
+                  <p><strong>Nombre:</strong> {normalizedUser.nombre || 'N/A'}</p>
+                  <p><strong>Email:</strong> {normalizedUser.correo || 'N/A'}</p>
+                  <p><strong>ID:</strong> <Badge bg="secondary">{normalizedUser.id || 'N/A'}</Badge></p>
                 </Col>
                 <Col md={6}>
                   <p>
