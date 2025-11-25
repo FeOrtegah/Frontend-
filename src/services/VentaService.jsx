@@ -1,93 +1,160 @@
-// src/services/VentaService.jsx
 const BASE_URL = 'https://backend-fullstackv1.onrender.com/api/v1/ventas';
 
 class VentaService {
-    // Obtener todas las ventas de un usuario
     async obtenerVentasPorUsuario(usuarioId) {
         try {
-            const response = await fetch(`${BASE_URL}/usuario/${usuarioId}`);
-            if (!response.ok) throw new Error('Error al obtener ventas');
+            console.log(`🔄 Obteniendo ventas para usuario: ${usuarioId}`);
+            const response = await fetch(`${BASE_URL}/ventas/usuario/${usuarioId}`);
+            
+            console.log(`📊 Response status: ${response.status}`);
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`❌ Error ${response.status}:`, errorText);
+                throw new Error(`Error ${response.status} al obtener ventas`);
+            }
+            
             const data = await response.json();
+            console.log(`✅ Ventas obtenidas:`, data);
             return { success: true, data };
         } catch (error) {
-            return { success: false, error: 'Error al obtener las ventas' };
+            console.error('💥 Error en obtenerVentasPorUsuario:', error);
+            return { 
+                success: false, 
+                error: error.message || 'Error al obtener las ventas' 
+            };
         }
     }
 
-    // Obtener una venta por su ID
     async obtenerVentaPorId(id) {
         try {
-            const response = await fetch(`${BASE_URL}/${id}`);
-            if (!response.ok) throw new Error('Error al obtener la venta');
+            console.log(`🔄 Obteniendo venta ID: ${id}`);
+            const response = await fetch(`${BASE_URL}/ventas/${id}`);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`❌ Error ${response.status}:`, errorText);
+                throw new Error(`Error ${response.status} al obtener la venta`);
+            }
+            
             const data = await response.json();
+            console.log(`✅ Venta obtenida:`, data);
             return { success: true, data };
         } catch (error) {
-            return { success: false, error: 'Error al obtener la venta' };
+            console.error('💥 Error en obtenerVentaPorId:', error);
+            return { 
+                success: false, 
+                error: error.message || 'Error al obtener la venta' 
+            };
         }
     }
 
-    // Crear una nueva venta
     async crearVenta(ventaData) {
         try {
-            const response = await fetch(BASE_URL, {
+            console.log('🔄 Creando nueva venta:', ventaData);
+            const response = await fetch(`${BASE_URL}/ventas`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(ventaData)
             });
+            
+            console.log(`📊 Response status: ${response.status}`);
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`❌ Error ${response.status}:`, errorText);
+                throw new Error(`Error ${response.status} al crear venta`);
+            }
+            
             const data = await response.json();
+            console.log('✅ Venta creada:', data);
             return { success: true, data };
         } catch (error) {
-            return { success: false, error: 'Error al procesar la venta' };
+            console.error('💥 Error en crearVenta:', error);
+            return { 
+                success: false, 
+                error: error.message || 'Error al procesar la venta' 
+            };
         }
     }
 
-    // Calcular el total de una venta
     calcularTotalVenta(venta) {
         if (!venta) return 0;
 
         if (venta.total != null) return Number(venta.total);
 
-        const arrays = ['items', 'productoVenta', 'productos'];
+        const arrays = ['items', 'productoVenta', 'productos', 'detalles'];
         for (let key of arrays) {
             if (venta[key]?.length > 0) {
-                return venta[key].reduce((sum, item) => {
-                    const precio = item.precio || item.precioUnitario || 0;
-                    const cantidad = item.cantidad || 0;
+                const total = venta[key].reduce((sum, item) => {
+                    const precio = item.precio || item.precioUnitario || item.price || 0;
+                    const cantidad = item.cantidad || item.quantity || 0;
                     const subtotal = item.subtotal || (precio * cantidad);
                     return sum + Number(subtotal);
                 }, 0);
+                
+                console.log(`💰 Total calculado para venta ${venta.id}:`, total);
+                return total;
             }
         }
 
+        console.log(`⚠️ No se pudo calcular total para venta ${venta.id}`);
         return 0;
     }
 
-    // Calcular la cantidad de productos en una venta
     calcularCantidadProductos(venta) {
         if (!venta) return 0;
 
-        const arrays = ['items', 'productoVenta', 'productos'];
+        const arrays = ['items', 'productoVenta', 'productos', 'detalles'];
         for (let key of arrays) {
             if (venta[key]?.length > 0) {
-                return venta[key].reduce((sum, item) => sum + (Number(item.cantidad) || 0), 0);
+                const cantidad = venta[key].reduce((sum, item) => sum + (Number(item.cantidad) || Number(item.quantity) || 0), 0);
+                console.log(`📦 Cantidad productos venta ${venta.id}:`, cantidad);
+                return cantidad;
             }
         }
 
         return 0;
     }
 
-    // Procesar un array de ventas, agregando campos calculados
     procesarVentas(ventas) {
-        if (!Array.isArray(ventas)) return [];
+        if (!Array.isArray(ventas)) {
+            console.warn('⚠️ procesarVentas recibió datos no válidos:', ventas);
+            return [];
+        }
 
-        return ventas.map(venta => ({
+        console.log(`🔄 Procesando ${ventas.length} ventas`);
+        const ventasProcesadas = ventas.map(venta => ({
             ...venta,
             totalCalculado: this.calcularTotalVenta(venta),
             cantidadProductos: this.calcularCantidadProductos(venta)
         }));
+
+        console.log('✅ Ventas procesadas:', ventasProcesadas);
+        return ventasProcesadas;
+    }
+
+    async obtenerTodasLasVentas() {
+        try {
+            console.log('🔄 Obteniendo todas las ventas');
+            const response = await fetch(`${BASE_URL}/ventas`);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`❌ Error ${response.status}:`, errorText);
+                throw new Error(`Error ${response.status} al obtener todas las ventas`);
+            }
+            
+            const data = await response.json();
+            console.log(`✅ Todas las ventas obtenidas:`, data);
+            return { success: true, data };
+        } catch (error) {
+            console.error('💥 Error en obtenerTodasLasVentas:', error);
+            return { 
+                success: false, 
+                error: error.message || 'Error al obtener todas las ventas' 
+            };
+        }
     }
 }
 
-// Exportar una instancia única del servicio
 const ventaService = new VentaService();
 export default ventaService;
