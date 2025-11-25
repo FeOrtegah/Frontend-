@@ -33,9 +33,7 @@ export const appRoutes = [
   { path: "/pago", element: <Pago />, private: true },
   { path: "/confirmacion", element: <Confirmacion />, private: true },
   { path: "/micuenta", element: <MiCuenta />, private: true },
-  
   { path: "/admin", element: <HomeAdmin />, private: true, admin: true },
   { path: "/admin/*", element: <HomeAdmin />, private: true, admin: true },
-
   { path: "*", element: <div className="text-center text-3xl py-10">404 - Página no encontrada</div>, public: true },
 ];
