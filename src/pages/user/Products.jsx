@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button, Alert, Spinner, Badge } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import ProductService from "/src/services/ProductService";
+import './global.css';
 
 const Products = ({ categoria, tipo, carrito, setCarrito }) => {
   const [products, setProducts] = useState([]);
