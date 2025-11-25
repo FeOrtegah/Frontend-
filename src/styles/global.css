@@ -308,3 +308,35 @@ html, body {
 .badge.bg-danger {
   background-color: #dc3545 !important;
 }
+
+
+.btn-primary,
+.btn-danger {
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
+}
+
+.btn-primary:hover,
+.btn-danger:hover {
+  background-color: #c82333 !important;
+  border-color: #bd2130 !important;
+}
+
+.btn-outline-primary {
+  color: #dc3545 !important;
+  border-color: #dc3545 !important;
+}
+
+.btn-outline-primary:hover {
+  background-color: #dc3545 !important;
+  color: white !important;
+}
+
+.list-group-item.active {
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
+}
+.form-check-input:checked {
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
+}
