@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useProducts } from '../../context/ProductContext';
 
-
 const RopaMujer = () => {
   const { subcategoria } = useParams();
   const [filtroPrecio, setFiltroPrecio] = useState('');
@@ -223,12 +222,12 @@ const RopaMujer = () => {
                   <div key={product.id} className="col-xl-3 col-lg-4 col-md-6 mb-4">
                     <div className="card h-100 product-card">
                       <img 
-                        src={product.image} 
+                        src={product.image}
                         className="card-img-top" 
                         alt={product.name}
                         style={{ height: '250px', objectFit: 'cover' }}
                         onError={(e) => {
-                          e.target.src = 'https://via.placeholder.com/250x250?text=Imagen+No+Disponible';
+                          e.target.src = '/img/logo.webp';
                         }}
                       />
                       <div className="card-body d-flex flex-column">
