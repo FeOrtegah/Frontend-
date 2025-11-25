@@ -183,6 +183,7 @@ const MiCuentaComponent = ({ user, setUser, navigate }) => {
 
     useEffect(() => {
         if (!user) {
+            // Esta redirección se maneja en AppWrapper, pero se mantiene para seguridad inmediata del componente
             navigate('/login');
         } else {
             cargarVentas();
@@ -366,18 +367,25 @@ const AppWrapper = () => {
         }
     });
 
-    const initialRoute = user ? '/micuenta' : '/login';
+    const initialRoute = user ? '/micuenta' : '/'; 
     const [currentRoute, setCurrentRoute] = useState(initialRoute);
+    
     const navigate = useCallback((path, state = {}) => {
         setCurrentRoute(path);
     }, []);
 
     useEffect(() => {
-        if (user && (currentRoute === '/login' || currentRoute === '/registro')) {
-            navigate('/micuenta');
-        }
+        const publicRoutes = ['/', '/login', '/registro'];
+        
+        // Caso 1: Usuario NO logueado intentando acceder a una ruta privada
         if (!user && currentRoute === '/micuenta') {
             navigate('/login');
+            return;
+        }
+        
+        // Caso 2: Usuario logueado intentando acceder a una ruta pública de autenticación
+        if (user && publicRoutes.includes(currentRoute) && currentRoute !== '/') {
+            navigate('/micuenta');
         }
     }, [user, currentRoute, navigate]);
 
@@ -393,14 +401,14 @@ const AppWrapper = () => {
         
         sessionStorage.setItem("usuarioActivo", JSON.stringify(userData));
         setUser(userData);
-        navigate('/micuenta');
+        navigate('/micuenta'); 
     };
     
     let componentToRender;
 
-    if (currentRoute === '/micuenta') {
+    if (currentRoute === '/micuenta' && user) {
         componentToRender = <MiCuentaComponent user={user} setUser={setUser} navigate={navigate} />;
-    } else if (currentRoute === '/login' || currentRoute === '/registro') {
+    } else if (currentRoute === '/login' || currentRoute === '/registro' || (currentRoute === '/micuenta' && !user)) {
         componentToRender = (
             <Container className="text-center my-5 max-w-lg">
                 <Card className="p-8 mx-auto shadow-xl">
