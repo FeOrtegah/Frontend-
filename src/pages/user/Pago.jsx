@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import VentaService from '../../services/VentaService';
 
@@ -23,10 +23,43 @@ const Pago = ({ carrito, setCarrito, user }) => {
     const [pasoActual, setPasoActual] = useState(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [usuario, setUsuario] = useState(null); // 🔥 Cambiado a estado
     const navigate = useNavigate();
 
-    // 🔥 CORREGIDO: Usar user de props en lugar de sessionStorage
-    const usuario = user || JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('usuarioActivo'));
+    // 🔥 CORREGIDO: useEffect para cargar usuario correctamente
+    useEffect(() => {
+        console.log('🔍 DEBUG - Buscando usuario en Pago:');
+        
+        // Intentar todas las fuentes posibles
+        const usuarioDeProps = user;
+        const usuarioDeLocalStorage = JSON.parse(localStorage.getItem('user') || 'null');
+        const usuarioDeSessionStorage = JSON.parse(sessionStorage.getItem('usuarioActivo') || 'null');
+        
+        console.log('- user de props:', usuarioDeProps);
+        console.log('- localStorage user:', usuarioDeLocalStorage);
+        console.log('- sessionStorage usuarioActivo:', usuarioDeSessionStorage);
+
+        // Orden de prioridad: props -> localStorage -> sessionStorage
+        const usuarioEncontrado = usuarioDeProps || usuarioDeLocalStorage || usuarioDeSessionStorage;
+        
+        console.log('✅ Usuario encontrado:', usuarioEncontrado);
+        
+        if (usuarioEncontrado && usuarioEncontrado.id) {
+            console.log('✅ Usuario ID válido:', usuarioEncontrado.id);
+            setUsuario(usuarioEncontrado);
+            
+            // Rellenar automáticamente el formulario
+            setFormData(prev => ({
+                ...prev,
+                nombre: usuarioEncontrado.nombre || '',
+                email: usuarioEncontrado.correo || usuarioEncontrado.email || '',
+                telefono: usuarioEncontrado.telefono || ''
+            }));
+        } else {
+            console.error('❌ No se encontró usuario válido con ID');
+            setError('No se pudo cargar la información del usuario. Por favor, inicia sesión nuevamente.');
+        }
+    }, [user]);
 
     const subtotal = carrito.reduce((sum, item) => sum + ((item.price || item.precio || 0) * (item.cantidad || 1)), 0);
     const costoEnvio = formData.metodoEnvio === 'delivery' ? 3500 : 0;
@@ -73,20 +106,45 @@ const Pago = ({ carrito, setCarrito, user }) => {
         setPasoActual(pasoActual - 1);
     };
 
+    // 🔥 NUEVO: Función para asegurar número
+    const ensureNumber = (value) => {
+        if (value === null || value === undefined) {
+            console.error('❌ Valor nulo o indefinido:', value);
+            return 0;
+        }
+        
+        const num = parseInt(value);
+        if (isNaN(num)) {
+            console.error('❌ Valor no numérico:', value);
+            return 0;
+        }
+        return num;
+    };
+
     const procesarPago = async () => {
         if (pasoActual === 3 && !validarPaso3()) {
             setError('Por favor completa la información de pago');
             return;
         }
 
-        // 🔥 VALIDACIÓN CRÍTICA: Verificar que el usuario esté autenticado
-        if (!usuario || !usuario.id) {
-            setError('Debes iniciar sesión para realizar una compra');
-            setTimeout(() => navigate('/auth'), 2000);
+        // 🔥 VALIDACIÓN MEJORADA
+        if (!usuario) {
+            setError('No se encontró información del usuario. Por favor, inicia sesión nuevamente.');
+            setTimeout(() => navigate('/auth'), 3000);
             return;
         }
 
-        // 🔥 VALIDACIÓN: Verificar que el carrito tenga productos válidos
+        console.log('🔍 DEBUG FINAL - Usuario antes de procesar:');
+        console.log('- Usuario completo:', usuario);
+        console.log('- Usuario ID:', usuario.id);
+        console.log('- Tipo de ID:', typeof usuario.id);
+
+        if (!usuario.id) {
+            setError('Error: ID de usuario no disponible. Por favor, contacta al soporte.');
+            return;
+        }
+
+        // Validar carrito
         const carritoValido = carrito.every(item => item && item.id && (item.price || item.precio));
         if (!carritoValido) {
             setError('El carrito contiene productos inválidos');
@@ -97,17 +155,11 @@ const Pago = ({ carrito, setCarrito, user }) => {
         setError('');
 
         try {
-            console.log('🔍 DEBUG - Datos antes de crear venta:');
-            console.log('- Usuario:', usuario);
-            console.log('- Carrito:', carrito);
-            console.log('- Método pago seleccionado:', formData.metodoPago);
-            console.log('- Método envío seleccionado:', formData.metodoEnvio);
-
-            // 🔥 CORREGIDO: Estructura de datos validada
+            // 🔥 CORREGIDO: Estructura de datos con conversión segura
             const ventaData = {
                 numeroVenta: `VEN-${Date.now()}`,
                 usuario: { 
-                    id: parseInt(usuario.id) // 🔥 Asegurar que sea número
+                    id: ensureNumber(usuario.id)
                 },
                 estado: { 
                     id: 1 // PENDIENTE
@@ -121,9 +173,9 @@ const Pago = ({ carrito, setCarrito, user }) => {
                 },
                 items: carrito.map(item => ({
                     producto: { 
-                        id: parseInt(item.id) // 🔥 Asegurar que sea número
+                        id: ensureNumber(item.id)
                     },
-                    cantidad: parseInt(item.cantidad || 1),
+                    cantidad: ensureNumber(item.cantidad || 1),
                     precioUnitario: parseFloat(item.price || item.precio || 0),
                     subtotal: parseFloat((item.price || item.precio || 0) * (item.cantidad || 1))
                 })),
@@ -192,7 +244,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
         );
     }
 
-    // 🔥 VALIDACIÓN: Si no hay usuario, mostrar mensaje
+    // 🔥 MEJORADO: Validación de usuario con estado
     if (!usuario || !usuario.id) {
         return (
             <div className="container py-5 text-center">
@@ -201,15 +253,25 @@ const Pago = ({ carrito, setCarrito, user }) => {
                         <div className="mb-4">
                             <i className="bi bi-exclamation-triangle" style={{ fontSize: '4rem', color: '#dc3545' }}></i>
                         </div>
-                        <h2>Acceso Requerido</h2>
-                        <p className="text-muted mb-4">Debes iniciar sesión para realizar una compra</p>
-                        <button 
-                            className="btn btn-primary btn-lg" 
-                            onClick={() => navigate('/auth')}
-                        >
-                            <i className="bi bi-box-arrow-in-right me-2"></i>
-                            Iniciar Sesión
-                        </button>
+                        <h2>Error de Autenticación</h2>
+                        <p className="text-muted mb-3">No se pudo verificar tu identidad.</p>
+                        <p className="text-muted mb-4">Por favor, inicia sesión nuevamente.</p>
+                        <div className="d-flex gap-2 justify-content-center">
+                            <button 
+                                className="btn btn-primary btn-lg" 
+                                onClick={() => navigate('/auth')}
+                            >
+                                <i className="bi bi-box-arrow-in-right me-2"></i>
+                                Iniciar Sesión
+                            </button>
+                            <button 
+                                className="btn btn-outline-secondary btn-lg" 
+                                onClick={() => window.location.reload()}
+                            >
+                                <i className="bi bi-arrow-clockwise me-2"></i>
+                                Recargar
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -263,10 +325,14 @@ const Pago = ({ carrito, setCarrito, user }) => {
 
                             {/* Información del usuario actual */}
                             {usuario && (
-                                <div className="alert alert-info d-flex align-items-center mb-4">
+                                <div className="alert alert-success d-flex align-items-center mb-4">
                                     <i className="bi bi-person-check me-2"></i>
                                     <div>
-                                        <strong>Comprador:</strong> {usuario.nombre} ({usuario.correo || usuario.email})
+                                        <strong>Comprador identificado:</strong> {usuario.nombre} 
+                                        {usuario.correo && ` (${usuario.correo})`}
+                                        {usuario.email && ` (${usuario.email})`}
+                                        <br />
+                                        <small>ID: {usuario.id}</small>
                                     </div>
                                 </div>
                             )}
