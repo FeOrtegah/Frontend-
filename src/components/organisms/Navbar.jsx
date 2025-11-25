@@ -5,7 +5,6 @@ const Navbar = ({ carrito }) => {
   const navigate = useNavigate();
 
   const closeOffcanvas = () => {
-    // Intenta obtener la instancia de Offcanvas de Bootstrap para cerrarla.
     const offcanvas = document.getElementById('offcanvasMenu');
     if (offcanvas && window.bootstrap && window.bootstrap.Offcanvas) {
       const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(offcanvas);
@@ -18,13 +17,6 @@ const Navbar = ({ carrito }) => {
   const handleNavigation = (path) => {
     closeOffcanvas();
     navigate(path);
-  };
-
-  const buttonStyle = {
-    backgroundColor: "red",
-    color: "white",
-    fontWeight: "bold",
-    border: "none"
   };
 
   return (
@@ -86,40 +78,37 @@ const Navbar = ({ carrito }) => {
           ></button>
         </div>
         
-        <div className="offcanvas-body d-grid gap-3">
+        <div className="offcanvas-body d-grid gap-2">
           
-          {/* BOTÓN HOMBRE (ROJO) */}
+          {/* BOTÓN HOMBRE (ESTILO "VER MI CUENTA") */}
           <button
-            className="btn py-2"
-            style={buttonStyle}
+            className="btn btn-outline-secondary text-start py-2"
             onClick={() => handleNavigation("/hombre")}
           >
             Hombre
           </button>
 
-          {/* BOTÓN MUJER (ROJO) */}
+          {/* BOTÓN MUJER (ESTILO "VER MI CUENTA") */}
           <button
-            className="btn py-2"
-            style={buttonStyle}
+            className="btn btn-outline-secondary text-start py-2"
             onClick={() => handleNavigation("/mujer")}
           >
             Mujer
           </button>
 
-          {/* BOTÓN INFANTIL (ROJO) */}
+          {/* BOTÓN INFANTIL (ESTILO "VER MI CUENTA") */}
           <button
-            className="btn py-2"
-            style={buttonStyle}
+            className="btn btn-outline-secondary text-start py-2"
             onClick={() => handleNavigation("/infantil")}
           >
             Infantil
           </button>
           
-          <hr />
+          <hr className="my-2" />
 
-          {/* BOTÓN MI CUENTA (REDIRECCIÓN AUTOMÁTICA) */}
+          {/* BOTÓN MI CUENTA */}
           <button
-            className="btn btn-outline-secondary py-2"
+            className="btn btn-outline-secondary text-start py-2"
             onClick={() => handleNavigation("/micuenta")}
           >
             Ver mi cuenta
