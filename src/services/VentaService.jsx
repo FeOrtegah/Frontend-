@@ -1,23 +1,41 @@
-const BASE_URL = 'https://backend-fullstackv1.onrender.com/api/v1/ventas';
+const BASE_URL = 'https://backend-fullstackv1.onrender.com/api/v1';
 
 class VentaService {
+
     async obtenerVentasPorUsuario(usuarioId) {
         try {
-            console.log(`🔄 Obteniendo ventas para usuario: ${usuarioId}`);
-            const response = await fetch(`${BASE_URL}/ventas/usuario/${usuarioId}`);
+            console.log(`Obteniendo ventas para usuario: ${usuarioId}`);
             
-            console.log(`📊 Response status: ${response.status}`);
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error(`❌ Error ${response.status}:`, errorText);
-                throw new Error(`Error ${response.status} al obtener ventas`);
+
+            const response = await fetch(`${BASE_URL}/ventas?usuarioId=${usuarioId}`);
+            
+            console.log(`Response status: ${response.status}`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log(`Ventas obtenidas por query:`, data);
+                return { success: true, data };
             }
             
-            const data = await response.json();
-            console.log(`✅ Ventas obtenidas:`, data);
-            return { success: true, data };
+            console.log('Intentando obtener todas las ventas...');
+            const allVentasResponse = await fetch(`${BASE_URL}/ventas`);
+            
+            if (!allVentasResponse.ok) {
+                throw new Error(`Error ${allVentasResponse.status} al obtener ventas`);
+            }
+            
+            const todasLasVentas = await allVentasResponse.json();
+            
+
+            const ventasUsuario = todasLasVentas.filter(venta => 
+                venta.usuario && venta.usuario.id === parseInt(usuarioId)
+            );
+            
+            console.log(` Ventas filtradas para usuario ${usuarioId}:`, ventasUsuario);
+            return { success: true, data: ventasUsuario };
+            
         } catch (error) {
-            console.error('💥 Error en obtenerVentasPorUsuario:', error);
+            console.error('💥Error en obtenerVentasPorUsuario:', error);
             return { 
                 success: false, 
                 error: error.message || 'Error al obtener las ventas' 
@@ -25,6 +43,7 @@ class VentaService {
         }
     }
 
+    // Obtener una venta por su ID
     async obtenerVentaPorId(id) {
         try {
             console.log(`🔄 Obteniendo venta ID: ${id}`);
@@ -32,12 +51,12 @@ class VentaService {
             
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error(`❌ Error ${response.status}:`, errorText);
+                console.error(` Error ${response.status}:`, errorText);
                 throw new Error(`Error ${response.status} al obtener la venta`);
             }
             
             const data = await response.json();
-            console.log(`✅ Venta obtenida:`, data);
+            console.log(`Venta obtenida:`, data);
             return { success: true, data };
         } catch (error) {
             console.error('💥 Error en obtenerVentaPorId:', error);
@@ -48,27 +67,34 @@ class VentaService {
         }
     }
 
+
     async crearVenta(ventaData) {
         try {
             console.log('🔄 Creando nueva venta:', ventaData);
+            
             const response = await fetch(`${BASE_URL}/ventas`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
                 body: JSON.stringify(ventaData)
             });
             
-            console.log(`📊 Response status: ${response.status}`);
+            console.log(`Response status: ${response.status}`);
+            
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error(`❌ Error ${response.status}:`, errorText);
-                throw new Error(`Error ${response.status} al crear venta`);
+                throw new Error(`Error ${response.status} al crear venta: ${errorText}`);
             }
             
             const data = await response.json();
-            console.log('✅ Venta creada:', data);
+            console.log('Venta creada exitosamente:', data);
             return { success: true, data };
+            
         } catch (error) {
-            console.error('💥 Error en crearVenta:', error);
+            console.error('Error en crearVenta:', error);
             return { 
                 success: false, 
                 error: error.message || 'Error al procesar la venta' 
@@ -76,10 +102,12 @@ class VentaService {
         }
     }
 
+
     calcularTotalVenta(venta) {
         if (!venta) return 0;
 
         if (venta.total != null) return Number(venta.total);
+
 
         const arrays = ['items', 'productoVenta', 'productos', 'detalles'];
         for (let key of arrays) {
@@ -106,7 +134,8 @@ class VentaService {
         const arrays = ['items', 'productoVenta', 'productos', 'detalles'];
         for (let key of arrays) {
             if (venta[key]?.length > 0) {
-                const cantidad = venta[key].reduce((sum, item) => sum + (Number(item.cantidad) || Number(item.quantity) || 0), 0);
+                const cantidad = venta[key].reduce((sum, item) => 
+                    sum + (Number(item.cantidad) || Number(item.quantity) || 0), 0);
                 console.log(`📦 Cantidad productos venta ${venta.id}:`, cantidad);
                 return cantidad;
             }
@@ -117,18 +146,18 @@ class VentaService {
 
     procesarVentas(ventas) {
         if (!Array.isArray(ventas)) {
-            console.warn('⚠️ procesarVentas recibió datos no válidos:', ventas);
+            console.warn(' procesarVentas recibió datos no válidos:', ventas);
             return [];
         }
 
-        console.log(`🔄 Procesando ${ventas.length} ventas`);
+        console.log(`Procesando ${ventas.length} ventas`);
         const ventasProcesadas = ventas.map(venta => ({
             ...venta,
             totalCalculado: this.calcularTotalVenta(venta),
             cantidadProductos: this.calcularCantidadProductos(venta)
         }));
 
-        console.log('✅ Ventas procesadas:', ventasProcesadas);
+        console.log(' Ventas procesadas:', ventasProcesadas);
         return ventasProcesadas;
     }
 
@@ -155,6 +184,7 @@ class VentaService {
         }
     }
 }
+
 
 const ventaService = new VentaService();
 export default ventaService;
