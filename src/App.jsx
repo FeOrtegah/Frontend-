@@ -2,7 +2,7 @@ import React from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Navbar from "./components/organisms/Navbar";
 import Footer from "./components/organisms/Footer";
-import { appRoutes } from "./routes/Config";
+import { appRoutes } from "./routes/config";
 import { useProducts } from "./context/ProductContext";
 
 function App() {
