@@ -6,16 +6,15 @@ import UserService from '../../services/UserService';
 import { useAuth } from '../../context/AuthContext';
 import loginData from './data/loginData';
 
-const Login = () => {
-    const [form, setForm] = useState({ correo: "", contrasena: "" });
-    const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
-    const { login } = useAuth();
-
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
-
+const userDataNormalizado = {
+    id: usuario.id || usuario.usuario?.id || usuario.data?.id,
+    nombre: usuario.nombre || usuario.usuario?.nombre,
+    correo: usuario.correo || usuario.email || form.correo,
+    email: usuario.email || usuario.correo || form.correo,
+    rol: usuario.rol || usuario.usuario?.rol,
+    telefono: usuario.telefono || '',
+    token: usuario.token || "mock-token-login"
+};
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!form.correo || !form.contrasena) {
