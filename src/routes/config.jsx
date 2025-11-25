@@ -12,9 +12,8 @@ const MiCuenta = lazy(() => import("../pages/user/MiCuenta"));
 const Blogs = lazy(() => import("../pages/user/Blogs"));
 const Ayuda = lazy(() => import("../pages/user/Ayuda"));
 const Noticias = lazy(() => import("../pages/user/Noticias"));
-
 const HomeAdmin = lazy(() => import("../pages/admin/HomeAdmin"));
-const HomeFacciones = lazy(() => import("../pages/admin/Facciones/HomeFacciones"));
+
 
 export const publicRoutes = [
   { path: "/", element: <Home />, showNavbar: true },
@@ -41,7 +40,6 @@ export const privateRoutes = [
 
 export const adminRoutes = [
   { path: "/admin", element: <HomeAdmin />, isAdmin: true, showNavbar: false },
-  { path: "/admin/facciones", element: <HomeFacciones />, isAdmin: true, showNavbar: false },
 ];
 
 export const notFoundRoute = {
