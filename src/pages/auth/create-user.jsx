@@ -4,14 +4,15 @@ import Forms from '../../components/templates/Forms';
 import { generarMensaje } from '../../utils/GenerarMensaje';
 import UserService from '../../services/UserService';
 
-const CreateUser = ({ setUser }) => {
-    const [form, setForm] = useState({ nombre: "", correo: "", contrasena: "" });
-    const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
-
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
+const userDataNormalizado = {
+    id: usuarioData.id || usuarioData.usuario?.id || usuarioData.data?.id,
+    nombre: usuarioData.nombre || usuarioData.usuario?.nombre,
+    correo: usuarioData.correo || usuarioData.email || form.correo,
+    email: usuarioData.email || usuarioData.correo || form.correo,
+    rol: usuarioData.rol || usuarioData.usuario?.rol,
+    telefono: usuarioData.telefono || '',
+    token: usuarioData.token || "mock-token-createuser"
+};
 
     const handleSubmit = async (e) => {
         e.preventDefault();
