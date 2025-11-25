@@ -1,41 +1,61 @@
-import { lazy } from 'react';
+import { lazy } from "react";
 
-// Lazy loading hace que cargue las páginas solo cuando se necesitan
-const Home = lazy(() => import('../pages/user/Home'));
-const Login = lazy(() => import('../pages/auth/login'));
-const CreateUser = lazy(() => import('../pages/auth/create-user'));
-const HomeAdmin = lazy(() => import('../pages/admin/HomeAdmin'));
-const HomeFacciones = lazy(() => import('../pages/admin/Facciones/HomeFacciones'));
-const RopaHombre = lazy(() => import('../pages/user/RopaHombre')); // ← Agregar esta línea
-const RopaMujer = lazy(() => import('../pages/user/RopaMujer'));   // ← Agregar esta línea
-const RopaInfantil = lazy(() => import('../pages/user/RopaInfantil')); // ← Agregar esta línea
+const Home = lazy(() => import("../pages/user/Home"));
+const RopaHombre = lazy(() => import("../pages/user/RopaHombre"));
+const RopaMujer = lazy(() => import("../pages/user/RopaMujer"));
+const RopaInfantil = lazy(() => import("../pages/user/RopaInfantil"));
+const ProductDetail = lazy(() => import("../pages/user/ProductDetail"));
+const Carrito = lazy(() => import("../pages/user/Carrito"));
+const Pago = lazy(() => import("../pages/user/Pago"));
+const Confirmacion = lazy(() => import("../pages/user/Confirmacion"));
+const MiCuenta = lazy(() => import("../pages/user/MiCuenta"));
+const Blogs = lazy(() => import("../pages/user/Blogs"));
+const Ayuda = lazy(() => import("../pages/user/Ayuda"));
+const Noticias = lazy(() => import("../pages/user/Noticias"));
 
-// Rutas públicas o del usuario, así están mejor organizadas
-const publicRoutes = [
-  { path: '/', element: <Home />, showNavbar: true },
-  { path: '/login', element: <Login />, showNavbar: false },
-  { path: '/create-user', element: <CreateUser />, showNavbar: false },
-  // Agregar rutas de categorías
-  { path: '/hombre', element: <RopaHombre />, showNavbar: true },
-  { path: '/hombre/:subcategoria', element: <RopaHombre />, showNavbar: true }, // ← Subcategorías
-  { path: '/mujer', element: <RopaMujer />, showNavbar: true },
-  { path: '/mujer/:subcategoria', element: <RopaMujer />, showNavbar: true },
-  { path: '/infantil', element: <RopaInfantil />, showNavbar: true },
-  { path: '/infantil/:subcategoria', element: <RopaInfantil />, showNavbar: true },
+const Login = lazy(() => import("../pages/user/Login"));
+const Registro = lazy(() => import("../pages/user/Registro"));
+
+const HomeAdmin = lazy(() => import("../pages/admin/HomeAdmin"));
+const HomeFacciones = lazy(() => import("../pages/admin/Facciones/HomeFacciones"));
+
+export const publicRoutes = [
+  { path: "/", element: <Home />, showNavbar: true },
+  { path: "/login", element: <Login />, showNavbar: false },
+  { path: "/registro", element: <Registro />, showNavbar: false },
+  { path: "/hombre", element: <RopaHombre />, showNavbar: true },
+  { path: "/hombre/:subcategoria", element: <RopaHombre />, showNavbar: true },
+  { path: "/mujer", element: <RopaMujer />, showNavbar: true },
+  { path: "/mujer/:subcategoria", element: <RopaMujer />, showNavbar: true },
+  { path: "/infantil", element: <RopaInfantil />, showNavbar: true },
+  { path: "/infantil/:subcategoria", element: <RopaInfantil />, showNavbar: true },
+  { path: "/producto/:id", element: <ProductDetail />, showNavbar: true },
+  { path: "/blog", element: <Blogs />, showNavbar: true },
+  { path: "/ayuda", element: <Ayuda />, showNavbar: true },
+  { path: "/noticias", element: <Noticias />, showNavbar: true },
 ];
 
-// Rutas del administrador 
-const adminRoutes = [
-  { path: '/admin/dashboard', element: <HomeAdmin />, isAdmin: true },
-  { path: '/admin/facciones', element: <HomeFacciones />, isAdmin: true },
+export const privateRoutes = [
+  { path: "/carrito", element: <Carrito />, private: true, showNavbar: true },
+  { path: "/pago", element: <Pago />, private: true, showNavbar: true },
+  { path: "/confirmacion", element: <Confirmacion />, private: true, showNavbar: true },
+  { path: "/micuenta", element: <MiCuenta />, private: true, showNavbar: true },
 ];
 
-// Ruta 404 por ahora no hice una página específica, solo un div simple
-const notFoundRoute = {
-  path: '*',
-  element: <div className="text-center py-10 text-2xl">404 - Página no encontrada u.u</div>,
+export const adminRoutes = [
+  { path: "/admin", element: <HomeAdmin />, isAdmin: true, showNavbar: false },
+  { path: "/admin/facciones", element: <HomeFacciones />, isAdmin: true, showNavbar: false },
+];
+
+export const notFoundRoute = {
+  path: "*",
+  element: <div className="text-center text-3xl py-10">404 - Página no encontrada</div>,
   showNavbar: false,
 };
 
-// Exportar todas las rutas en un solo arreglo, hell yeah
-export const appRoutes = [...publicRoutes, ...adminRoutes, notFoundRoute];
+export const Config = [
+  ...publicRoutes,
+  ...privateRoutes,
+  ...adminRoutes,
+  notFoundRoute,
+];
