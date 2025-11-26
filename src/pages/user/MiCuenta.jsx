@@ -11,7 +11,6 @@ const MiCuenta = ({ user, setUser }) => {
 
   const formatClp = (value) => (value || 0).toLocaleString("es-CL");
   
-  // ✅ FUNCIONES ACTUALIZADAS
   const obtenerTotalVenta = useCallback((venta) => {
     return venta.totalCalculado || venta.total || 0;
   }, []);
@@ -34,7 +33,6 @@ const MiCuenta = ({ user, setUser }) => {
       const resultado = await ventaService.obtenerVentasPorUsuario(usuario.id);
 
       if (resultado.success) {
-        // ✅ PROCESAR VENTAS CON LOS NUEVOS MÉTODOS
         const ventasProcesadas = ventaService.procesarVentas(resultado.data);
         setVentas(ventasProcesadas);
         
