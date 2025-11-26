@@ -9,33 +9,103 @@ const RopaHombre = () => {
   
   const { products, loading } = useProducts();
 
-  const imagenesHombre = {
-    poleras: [
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop", // Polera negra
-      "https://hmchile.vtexassets.com/arquivos/ids/7515921/Polera-Slim-Fit---Blanco---H-M-CL.jpg?v=638902878705900000", // Polera blanca
-      "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=300&h=300&fit=crop",  // Polera gris
-      "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=300&h=300&fit=crop", // Polera azul
-      "https://images.unsplash.com/photo-1594032194509-0056023973b2?w=300&h=300&fit=crop"  // Polera rayas
-    ],
-    pantalones: [
-      "https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&h=300&fit=crop", // Jeans azul
-      "https://images.unsplash.com/photo-1582418702059-97ebafb35d09?w=300&h=300&fit=crop", // Pantalón negro
-      "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?w=300&h=300&fit=crop",  // Jeans claro
-      "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=300&h=300&fit=crop", // Jeans rotos
-      "https://images.unsplash.com/photo-1605518216938-7c31b7b14ad0?w=300&h=300&fit=crop"  // Chinos
-    ],
-    chaquetas: [
-      "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&h=300&fit=crop", // Chaqueta denim
-      "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=300&h=300&fit=crop", // Chaqueta cuero
-      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop",  // Chaqueta invierno
-      "https://images.unsplash.com/photo-1591047530581-26786778c238?w=300&h=300&fit=crop", // Chaqueta bomber
-      "https://images.unsplash.com/photo-1539533018447-63fcce2678e5?w=300&h=300&fit=crop"  // Parka
-    ],
-    shorts: [
-      "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=300&h=300&fit=crop", // Shorts deportivos
-      "https://images.unsplash.com/photo-1506629905607-e48b0e67d879?w=300&h=300&fit=crop", // Shorts jean
-      "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=300&h=300&fit=crop"  // Shorts casual
-    ]
+  const imagenesProductos = {
+    // Poleras
+    "Polera básica blanca": "https://hmchile.vtexassets.com/arquivos/ids/7515921/Polera-Slim-Fit---Blanco---H-M-CL.jpg?v=638902878705900000",
+    "Polera oversize negra": "https://http2.mlstatic.com/D_NQ_NP_829589-MLC70612698490_072023-O-polera-hombre-oversize-fit-negra-super-fuego-para-regalo.webp", 
+    
+    // Pantalones
+    "Jeans Baggy Negro": "https://image.hm.com/assets/hm/dc/98/dc987f075569a9e8afb546dd6288344c6cc7a614.jpg?imwidth=768", 
+    "Jogger Morado": "https://casadelasbatas.com/33980-large_default/pantalon-sanitario-jogger-morado-de-microfibra-flex-gary-s.jpg", 
+    
+    // Chaquetas
+    "Chaqueta jean clásica": "https://lsjsas.com/cdn/shop/files/chaqueta-jean-clasica-hombre-azul-industrial-jpg.jpg?v=1761091893&width=1100", 
+    
+    // Shorts
+    "Short AND1": "https://m.media-amazon.com/images/I/61ClsB7n+OL._AC_SL1000_.jpg", 
+    "Short AND1 modelo premium": "https://www.manelsanchez.com/uploads/media/images/1ac_copia_copia8.jpg" 
+  };
+
+
+  const obtenerImagenProducto = (product) => {
+    if (!product) {
+      return 'https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=Producto+Hombre';
+    }
+
+
+    const nombreProducto = product.name || product.nombre;
+    if (nombreProducto && imagenesProductos[nombreProducto]) {
+      return imagenesProductos[nombreProducto];
+    }
+
+
+    if (nombreProducto) {
+      const nombreLower = nombreProducto.toLowerCase();
+      
+      // Poleras
+      if (nombreLower.includes('polera') && nombreLower.includes('blanca')) {
+        return "https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?w=300&h=300&fit=crop";
+      }
+      if (nombreLower.includes('polera') && nombreLower.includes('negra')) {
+        return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop";
+      }
+      if (nombreLower.includes('polera')) {
+        return "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=300&h=300&fit=crop";
+      }
+      
+      // Jeans/Pantalones
+      if (nombreLower.includes('jeans') && nombreLower.includes('negro')) {
+        return "https://images.unsplash.com/photo-1582418702059-97ebafb35d09?w=300&h=300&fit=crop";
+      }
+      if (nombreLower.includes('jeans')) {
+        return "https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&h=300&fit=crop";
+      }
+      if (nombreLower.includes('jogger')) {
+        return "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=300&h=300&fit=crop";
+      }
+      if (nombreLower.includes('pantalon')) {
+        return "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?w=300&h=300&fit=crop";
+      }
+      
+      // Chaquetas
+      if (nombreLower.includes('chaqueta') && nombreLower.includes('jean')) {
+        return "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&h=300&fit=crop";
+      }
+      if (nombreLower.includes('chaqueta')) {
+        return "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=300&h=300&fit=crop";
+      }
+      
+      // Shorts
+      if (nombreLower.includes('short') && nombreLower.includes('and1')) {
+        return "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=300&h=300&fit=crop";
+      }
+      if (nombreLower.includes('short')) {
+        return "https://images.unsplash.com/photo-1506629905607-e48b0e67d879?w=300&h=300&fit=crop";
+      }
+    }
+
+    // 3. Si el producto ya tiene una imagen válida, usarla
+    if (product.image && product.image !== '/img/placeholder.jpg' && !product.image.includes('placeholder')) {
+      return product.image;
+    }
+
+    // 4. Fallback genérico por tipo
+    const textoBusqueda = `${product.name} ${product.descripcion}`.toLowerCase();
+    if (textoBusqueda.includes('polera') || textoBusqueda.includes('camiseta')) {
+      return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop";
+    }
+    if (textoBusqueda.includes('jeans') || textoBusqueda.includes('pantalon')) {
+      return "https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&h=300&fit=crop";
+    }
+    if (textoBusqueda.includes('chaqueta')) {
+      return "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&h=300&fit=crop";
+    }
+    if (textoBusqueda.includes('short')) {
+      return "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=300&h=300&fit=crop";
+    }
+
+    // 5. Último fallback
+    return `https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=${encodeURIComponent(product.name || 'Producto')}`;
   };
 
   const subcategorias = [
@@ -44,39 +114,6 @@ const RopaHombre = () => {
     { id: 'chaquetas', nombre: 'Chaquetas' },
     { id: 'shorts', nombre: 'Shorts' }
   ];
-
-  const obtenerImagenProducto = (product) => {
-    if (!product) {
-      return 'https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=Producto+Hombre';
-    }
-
-    if (product.image && product.image !== '/img/placeholder.jpg' && !product.image.includes('placeholder')) {
-      return product.image;
-    }
-
-    let tipoProducto = 'poleras'; 
-    
-    if (product.tipo) {
-      tipoProducto = product.tipo.toLowerCase();
-    } 
-    else if (product.name || product.descripcion) {
-      const textoBusqueda = `${product.name} ${product.descripcion}`.toLowerCase();
-      
-      if (textoBusqueda.includes('pantalon') || textoBusqueda.includes('jeans')) {
-        tipoProducto = 'pantalones';
-      } else if (textoBusqueda.includes('chaqueta') || textoBusqueda.includes('jacket')) {
-        tipoProducto = 'chaquetas';
-      } else if (textoBusqueda.includes('short')) {
-        tipoProducto = 'shorts';
-      }
-    }
-
-    const imagenesTipo = imagenesHombre[tipoProducto] || imagenesHombre.poleras;
-    
-    const imagenIndex = product.id ? (product.id % imagenesTipo.length) : 0;
-    
-    return imagenesTipo[imagenIndex];
-  };
 
   const productosFiltrados = useMemo(() => {
     let filtered = products.filter(product => 
@@ -94,7 +131,8 @@ const RopaHombre = () => {
         }
         if (subcategoria === 'pantalones') {
           return textoBusqueda.includes('pantalon') || 
-                 textoBusqueda.includes('jeans');
+                 textoBusqueda.includes('jeans') ||
+                 textoBusqueda.includes('jogger');
         }
         if (subcategoria === 'chaquetas') {
           return textoBusqueda.includes('chaqueta') || 
@@ -138,16 +176,13 @@ const RopaHombre = () => {
     return 'Ropa para Hombre';
   };
 
+  // ✅ DEBUG MEJORADO
   React.useEffect(() => {
     if (products.length > 0 && productosFiltrados.length > 0) {
-      console.log('🖼️ Imágenes asignadas a productos:');
-      productosFiltrados.slice(0, 3).forEach(product => {
-        console.log('📦', {
-          nombre: product.name,
-          tipo: product.tipo,
-          imagenAsignada: obtenerImagenProducto(product),
-          imagenOriginal: product.image
-        });
+      console.log('🎯 Asignación de imágenes:');
+      productosFiltrados.forEach(product => {
+        const imagenAsignada = obtenerImagenProducto(product);
+        console.log(`📦 "${product.name}" → ${imagenAsignada}`);
       });
     }
   }, [productosFiltrados]);
@@ -303,7 +338,6 @@ const RopaHombre = () => {
                           console.log('❌ Error cargando imagen para:', product.name);
                           e.target.src = `https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=${encodeURIComponent(product.name)}`;
                         }}
-                        onLoad={() => console.log('Imagen cargada para:', product.name)}
                       />
                       <div className="card-body d-flex flex-column">
                         <h6 className="card-title">{product.name}</h6>
