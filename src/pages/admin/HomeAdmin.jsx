@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Table, Badge, Button, Modal, Form, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Badge, Button, Modal, Form, Spinner, Alert } from 'react-bootstrap';
+import ProductService from '../../services/ProductService';
 
 const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    price: '',
-    originalPrice: '',
+    nombre: '',
+    precio: '',
+    precioOriginal: '',
     image: '',
     categoria: '',
     tipo: '',
     talla: '',
     descripcion: '',
-    oferta: false
+    oferta: false,
+    stock: ''
   });
 
   const handleInputChange = (e) => {
@@ -24,7 +26,22 @@ const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
 
   const onSubmit = (e) => {
     e.preventDefault();
-    handleSubmit(formData);
+    
+    // Preparar datos para la API
+    const productData = {
+      nombre: formData.nombre,
+      precio: parseInt(formData.precio),
+      precioOriginal: formData.precioOriginal ? parseInt(formData.precioOriginal) : null,
+      image: formData.image,
+      categoria: formData.categoria,
+      tipo: formData.tipo,
+      talla: formData.talla,
+      descripcion: formData.descripcion,
+      oferta: formData.oferta,
+      stock: parseInt(formData.stock) || 0
+    };
+
+    handleSubmit(productData);
   };
 
   return (
@@ -40,8 +57,8 @@ const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
                 <Form.Label>Nombre del producto *</Form.Label>
                 <Form.Control
                   type="text"
-                  name="name"
-                  value={formData.name}
+                  name="nombre"
+                  value={formData.nombre}
                   onChange={handleInputChange}
                   placeholder="Nombre del producto"
                   required
@@ -53,11 +70,12 @@ const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
                 <Form.Label>Precio *</Form.Label>
                 <Form.Control
                   type="number"
-                  name="price"
-                  value={formData.price}
+                  name="precio"
+                  value={formData.precio}
                   onChange={handleInputChange}
                   placeholder="Precio"
                   required
+                  min="0"
                 />
               </Form.Group>
             </div>
@@ -66,10 +84,25 @@ const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
                 <Form.Label>Precio original (opcional)</Form.Label>
                 <Form.Control
                   type="number"
-                  name="originalPrice"
-                  value={formData.originalPrice}
+                  name="precioOriginal"
+                  value={formData.precioOriginal}
                   onChange={handleInputChange}
                   placeholder="Precio original"
+                  min="0"
+                />
+              </Form.Group>
+            </div>
+            <div className="col-md-6">
+              <Form.Group className="mb-3">
+                <Form.Label>Stock *</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="stock"
+                  value={formData.stock}
+                  onChange={handleInputChange}
+                  placeholder="Cantidad en stock"
+                  required
+                  min="0"
                 />
               </Form.Group>
             </div>
@@ -198,51 +231,68 @@ const HomeAdmin = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [alert, setAlert] = useState({ show: false, message: '', type: '' });
 
-  useEffect(() => {
+  const showAlert = (message, type = 'info') => {
+    setAlert({ show: true, message, type });
+    setTimeout(() => setAlert({ show: false, message: '', type: '' }), 5000);
+  };
+
+  // Cargar productos desde la base de datos
+  const loadProducts = async () => {
+    setLoading(true);
     try {
-      const savedProducts = JSON.parse(localStorage.getItem('adminProducts')) || [];
-      setProducts(savedProducts);
-    } catch {
-      generarMensaje('Error al cargar productos', 'warning');
+      const result = await ProductService.getAllProducts();
+      if (result.success) {
+        setProducts(result.data);
+      } else {
+        showAlert('Error al cargar productos: ' + result.error, 'danger');
+      }
+    } catch (error) {
+      showAlert('Error al cargar productos', 'danger');
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    loadProducts();
   }, []);
 
-  const saveProducts = (newProducts) => {
-    localStorage.setItem('adminProducts', JSON.stringify(newProducts));
-    setProducts(newProducts);
-  };
-
-  const handleCreateProduct = (formData) => {
+  const handleCreateProduct = async (productData) => {
     setSubmitLoading(true);
-    setTimeout(() => {
-      try {
-        const newProduct = {
-          ...formData,
-          id: Date.now(),
-          price: parseInt(formData.price),
-          originalPrice: formData.originalPrice ? parseInt(formData.originalPrice) : undefined,
-          oferta: formData.oferta || false
-        };
-        const updatedProducts = [...products, newProduct];
-        saveProducts(updatedProducts);
+    try {
+      const result = await ProductService.createProduct(productData);
+      
+      if (result.success) {
+        showAlert('¡Producto creado con éxito!', 'success');
         setShowModal(false);
-        generarMensaje('¡Producto creado con éxito!', 'success');
-      } catch {
-        generarMensaje('Error al crear el producto', 'warning');
-      } finally {
-        setSubmitLoading(false);
+        // Recargar la lista de productos
+        await loadProducts();
+      } else {
+        showAlert('Error al crear producto: ' + result.error, 'danger');
       }
-    }, 1000);
+    } catch (error) {
+      showAlert('Error al crear producto', 'danger');
+    } finally {
+      setSubmitLoading(false);
+    }
   };
 
-  const handleDeleteProduct = (productId) => {
+  const handleDeleteProduct = async (productId) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
-      const updatedProducts = products.filter(product => product.id !== productId);
-      saveProducts(updatedProducts);
-      generarMensaje('Producto eliminado correctamente', 'success');
+      try {
+        const result = await ProductService.deleteProduct(productId);
+        if (result.success) {
+          showAlert('Producto eliminado correctamente', 'success');
+          // Recargar la lista de productos
+          await loadProducts();
+        } else {
+          showAlert('Error al eliminar producto: ' + result.error, 'danger');
+        }
+      } catch (error) {
+        showAlert('Error al eliminar producto', 'danger');
+      }
     }
   };
 
@@ -255,6 +305,12 @@ const HomeAdmin = () => {
 
   return (
     <Container fluid className="py-4">
+      {alert.show && (
+        <Alert variant={alert.type} dismissible onClose={() => setAlert({ show: false, message: '', type: '' })}>
+          {alert.message}
+        </Alert>
+      )}
+
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h1 className="h3 mb-0">Panel de Administración</h1>
@@ -307,9 +363,10 @@ const HomeAdmin = () => {
         <Card.Body>
           {loading ? (
             <div className="text-center py-4">
-              <div className="spinner-border" role="status">
+              <Spinner animation="border" role="status">
                 <span className="visually-hidden">Cargando...</span>
-              </div>
+              </Spinner>
+              <p className="mt-2">Cargando productos...</p>
             </div>
           ) : products.length === 0 ? (
             <div className="text-center py-4">
@@ -328,6 +385,7 @@ const HomeAdmin = () => {
                     <th>Categoría</th>
                     <th>Tipo</th>
                     <th>Precio</th>
+                    <th>Stock</th>
                     <th>Oferta</th>
                     <th>Acciones</th>
                   </tr>
@@ -363,10 +421,15 @@ const HomeAdmin = () => {
                           </div>
                         )}
                       </td>
+                      <td>
+                        <Badge bg={product.stock > 0 ? 'success' : 'danger'}>
+                          {product.stock}
+                        </Badge>
+                      </td>
                       <td>{product.oferta ? <Badge bg="success">Sí</Badge> : <Badge bg="secondary">No</Badge>}</td>
                       <td>
                         <div className="d-flex gap-2">
-                          <Button variant="warning" size="sm" onClick={() => generarMensaje('Función de editar próximamente', 'info')}>
+                          <Button variant="warning" size="sm" onClick={() => showAlert('Función de editar próximamente', 'info')}>
                             Editar
                           </Button>
                           <Button variant="danger" size="sm" onClick={() => handleDeleteProduct(product.id)}>
