@@ -10,8 +10,20 @@ const MiCuenta = ({ user, setUser }) => {
   const [error, setError] = useState("");
 
   const formatClp = (value) => (value || 0).toLocaleString("es-CL");
-  const obtenerTotalVenta = useCallback((venta) => venta.totalCalculado || 0, []);
-  const obtenerCantidadProductos = useCallback((venta) => venta.cantidadProductos || 0, []);
+  
+  // ✅ FUNCIONES ACTUALIZADAS
+  const obtenerTotalVenta = useCallback((venta) => {
+    return venta.totalCalculado || venta.total || 0;
+  }, []);
+
+  const obtenerCantidadProductos = useCallback((venta) => {
+    return venta.cantidadProductos || 0;
+  }, []);
+
+  const obtenerFechaVenta = useCallback((venta) => {
+    return venta.fechaFormateada || 
+           (venta.fecha ? new Date(venta.fecha).toLocaleDateString('es-CL') : "-");
+  }, []);
 
   const cargarVentas = async (usuario) => {
     if (!usuario?.id) return;
@@ -22,12 +34,16 @@ const MiCuenta = ({ user, setUser }) => {
       const resultado = await ventaService.obtenerVentasPorUsuario(usuario.id);
 
       if (resultado.success) {
+        // ✅ PROCESAR VENTAS CON LOS NUEVOS MÉTODOS
         const ventasProcesadas = ventaService.procesarVentas(resultado.data);
         setVentas(ventasProcesadas);
+        
+        console.log('📊 Ventas procesadas:', ventasProcesadas);
       } else {
         setError(resultado.error || "Error al cargar las ventas");
       }
     } catch (error) {
+      console.error('Error cargando ventas:', error);
       setError("No se pudieron cargar las ventas desde el servicio.");
     } finally {
       setLoadingVentas(false);
@@ -127,6 +143,7 @@ const MiCuenta = ({ user, setUser }) => {
                         {ventas.map((venta, index) => {
                           const total = obtenerTotalVenta(venta);
                           const cantidad = obtenerCantidadProductos(venta);
+                          const fecha = obtenerFechaVenta(venta);
 
                           let estadoColor = 'info';
                           if (venta.estado?.nombre === 'Completada') estadoColor = 'success';
@@ -135,13 +152,29 @@ const MiCuenta = ({ user, setUser }) => {
                           return (
                             <tr key={index}>
                               <td>{venta.numeroVenta || `VEN-${index + 1}`}</td>
-                              <td>{venta.fecha ? new Date(venta.fecha).toLocaleDateString() : "-"}</td>
                               <td>
-                                <Badge bg={estadoColor}>{venta.estado?.nombre || "PENDIENTE"}</Badge>
+                                {/* ✅ FECHA MEJORADA */}
+                                {fecha}
                               </td>
-                              <td>{venta.metodoPago?.nombre || "No especificado"}</td>
-                              <td>{cantidad}</td>
-                              <td>${formatClp(total)}</td>
+                              <td>
+                                <Badge bg={estadoColor}>
+                                  {venta.estadoTexto || venta.estado?.nombre || "PENDIENTE"}
+                                </Badge>
+                              </td>
+                              <td>
+                                {venta.metodoPagoTexto || venta.metodoPago?.nombre || "No especificado"}
+                              </td>
+                              <td>
+                                {/* ✅ CANTIDAD DE PRODUCTOS MEJORADA */}
+                                <Badge bg="secondary">
+                                  {cantidad} producto{cantidad !== 1 ? 's' : ''}
+                                </Badge>
+                              </td>
+                              <td>
+                                <strong className="text-success">
+                                  ${formatClp(total)}
+                                </strong>
+                              </td>
                               <td>
                                 <Button 
                                   size="sm"
