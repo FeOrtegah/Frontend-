@@ -25,8 +25,6 @@ describe('NewsTitle Component', () => {
 
   it('handles empty children', () => {
     const { container } = render(<NewsTitle></NewsTitle>);
-    
-    // CORREGIDO: Usar container.querySelector en lugar de getByText para elementos vacíos
     const title = container.querySelector('h3');
     expect(title).toBeDefined();
     expect(title.textContent).toBe('');
@@ -41,7 +39,6 @@ describe('NewsTitle Component', () => {
     
     const title = screen.getByText(/News Title/);
     expect(title).toBeDefined();
-    // CORREGIDO: Verificar que contiene el span de manera más específica
     const span = screen.getByText('Special');
     expect(span.tagName.toLowerCase()).toBe('span');
   });
