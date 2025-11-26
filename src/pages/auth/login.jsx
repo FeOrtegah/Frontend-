@@ -6,15 +6,16 @@ import UserService from '../../services/UserService';
 import { useAuth } from '../../context/AuthContext';
 import loginData from './data/loginData';
 
-const userDataNormalizado = {
-    id: usuario.id || usuario.usuario?.id || usuario.data?.id,
-    nombre: usuario.nombre || usuario.usuario?.nombre,
-    correo: usuario.correo || usuario.email || form.correo,
-    email: usuario.email || usuario.correo || form.correo,
-    rol: usuario.rol || usuario.usuario?.rol,
-    telefono: usuario.telefono || '',
-    token: usuario.token || "mock-token-login"
-};
+const Login = () => {
+    const [form, setForm] = useState({ correo: "", contrasena: "" });
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+    const { login } = useAuth();
+
+    const handleChange = (e) => {
+        setForm({ ...form, [e.target.name]: e.target.value });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!form.correo || !form.contrasena) {
@@ -25,37 +26,29 @@ const userDataNormalizado = {
         setLoading(true);
 
         try {
-            console.log('🚀 Iniciando proceso de login...');
             const response = await UserService.login(form);
             
-            // VERIFICAR SI LA RESPUESTA FUE EXITOSA
             if (!response.success) {
                 throw new Error(response.error?.message || response.error || 'Error en el login');
             }
 
             const usuario = response.data;
-            console.log('👤 Usuario recibido del servicio:', usuario);
 
-            // 🔥🔥🔥 CORREGIDO: Normalizar y guardar de forma CONSISTENTE
             const userDataNormalizado = {
                 id: usuario.id || usuario.usuario?.id || usuario.data?.id,
                 nombre: usuario.nombre || usuario.usuario?.nombre,
-                correo: usuario.correo || usuario.email,
-                email: usuario.email || usuario.correo,
+                correo: usuario.correo || usuario.email || form.correo,
+                email: usuario.email || usuario.correo || form.correo,
                 rol: usuario.rol || usuario.usuario?.rol,
-                telefono: usuario.telefono || ''
+                telefono: usuario.telefono || '',
+                token: usuario.token || "mock-token-login"
             };
 
-            console.log('💾 Guardando usuario normalizado:', userDataNormalizado);
-
-            // GUARDAR EN TODAS LAS UBICACIONES
             localStorage.setItem('user', JSON.stringify(userDataNormalizado));
             sessionStorage.setItem('usuarioActivo', JSON.stringify(userDataNormalizado));
 
-            // USA EL CONTEXTO
             if (login) {
                 login(userDataNormalizado);
-                console.log('✅ Contexto de auth actualizado');
             }
 
             generarMensaje(`¡Bienvenido ${userDataNormalizado.nombre}!`, 'success');
@@ -69,7 +62,6 @@ const userDataNormalizado = {
             }, 1500);
 
         } catch (error) {
-            console.error('💥 Error completo en login:', error);
             const errorMessage = error.message;
             generarMensaje(errorMessage, 'error');
         } finally {
