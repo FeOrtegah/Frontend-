@@ -69,38 +69,29 @@ const Auth = ({ setUser }) => {
                 return;
             }
 
-            console.log('🔍 Respuesta completa de login:', result);
-            console.log('🔍 Datos del usuario:', result.data);
-
-            // 🔥🔥🔥 CORREGIDO: Normalización MEJORADA
             const userData = result.data;
             const normalizedUser = {
                 id: userData.id || userData.usuario?.id || userData.data?.id,
                 nombre: userData.nombre || userData.usuario?.nombre,
-                correo: userData.correo || userData.email,
-                email: userData.email || userData.correo,
+                correo: userData.correo || userData.email || email,
+                email: userData.email || userData.correo || email,
                 rol: userData.rol || userData.usuario?.rol,
                 telefono: userData.telefono || '',
                 token: userData.token || "mock-token-login"
             };
-
-            console.log('✅ Usuario normalizado:', normalizedUser);
             
-            // 🔥 GUARDAR DE FORMA CONSISTENTE
             sessionStorage.setItem("usuarioActivo", JSON.stringify(normalizedUser));
             localStorage.setItem("user", JSON.stringify(normalizedUser));
             localStorage.setItem("userToken", normalizedUser.token);
 
             if (setUser) {
                 setUser(normalizedUser);
-                console.log('✅ Estado global actualizado:', normalizedUser);
             }
 
             setSuccess("Has iniciado sesion correctamente");
 
             setTimeout(() => navigate("/"), 1200);
         } catch (err) {
-            console.error('💥 Error en login:', err);
             setError("Ocurrio un error inesperado al intentar iniciar sesion.");
         } finally {
             setLoading(false);
@@ -168,31 +159,23 @@ const Auth = ({ setUser }) => {
                 return;
             }
 
-            console.log('🔍 Respuesta completa de registro:', autoLoginResult);
-            console.log('🔍 Datos del usuario:', autoLoginResult.data);
-
-            // 🔥🔥🔥 CORREGIDO: Normalización MEJORADA
             const userData = autoLoginResult.data;
             const normalizedUser = {
                 id: userData.id || userData.usuario?.id || userData.data?.id,
                 nombre: userData.nombre || userData.usuario?.nombre,
-                correo: userData.correo || userData.email,
-                email: userData.email || userData.correo,
+                correo: userData.correo || userData.email || email,
+                email: userData.email || userData.correo || email,
                 rol: userData.rol || userData.usuario?.rol,
                 telefono: userData.telefono || '',
                 token: userData.token || "mock-token-registro"
             };
 
-            console.log('✅ Usuario normalizado:', normalizedUser);
-
-            // 🔥 GUARDAR DE FORMA CONSISTENTE
             sessionStorage.setItem("usuarioActivo", JSON.stringify(normalizedUser));
             localStorage.setItem("user", JSON.stringify(normalizedUser));
             localStorage.setItem("userToken", normalizedUser.token);
 
             if (setUser) {
                 setUser(normalizedUser);
-                console.log('✅ Estado global actualizado:', normalizedUser);
             }
 
             setFormData((prev) => ({
@@ -210,7 +193,6 @@ const Auth = ({ setUser }) => {
             setTimeout(() => navigate("/"), 1200);
             
         } catch (err) {
-            console.error('💥 Error en registro:', err);
             setError("Ocurrio un error irrecuperable al procesar el registro.");
         } finally {
             setLoading(false);
