@@ -121,28 +121,22 @@ const Pago = ({ carrito, setCarrito, user }) => {
         setError('');
 
         try {
+            // ✅ ESTRUCTURA CORREGIDA - Usando la estructura del DTO VentaRequest
             const ventaData = {
-                numeroVenta: `VEN-${Date.now()}`,
-                usuario: { id: userId },
-                estado: { id: 1 },
-                metodoPago: { id: formData.metodoPago === 'tarjeta' ? 1 : formData.metodoPago === 'transferencia' ? 2 : 3 },
-                metodoEnvio: { id: formData.metodoEnvio === 'delivery' ? 1 : 2 },
+                usuarioId: userId,  // ✅ Solo el ID, no objeto
+                estadoId: 1,        // ✅ Solo el ID
+                metodoPagoId: formData.metodoPago === 'tarjeta' ? 1 : 
+                             formData.metodoPago === 'transferencia' ? 2 : 3,  // ✅ Solo el ID
+                metodoEnvioId: formData.metodoEnvio === 'delivery' ? 1 : 2,    // ✅ Solo el ID
                 items: productosValidos.map(item => ({
-                    producto: { id: Number(item.id) },
+                    productoId: Number(item.id),  // ✅ Solo el ID del producto
                     cantidad: Number(item.cantidad || 1),
                     precioUnitario: Number(item.price || item.precio || 0),
                     subtotal: Number((item.price || item.precio || 0) * (item.cantidad || 1))
-                })),
-                total: Number(total),
-                direccionEnvio: {
-                    direccion: formData.direccion,
-                    ciudad: formData.ciudad,
-                    comuna: formData.comuna,
-                    codigoPostal: formData.codigoPostal,
-                    instrucciones: formData.instruccionesEspeciales
-                }
+                }))
             };
 
+            console.log('📤 Enviando datos al backend:', ventaData);
             const resultado = await VentaService.crearVenta(ventaData);
 
             if (resultado.success) {
