@@ -12,7 +12,7 @@ const RopaHombre = () => {
   const imagenesHombre = {
     poleras: [
       "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop", // Polera negra
-      "https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?w=300&h=300&fit=crop", // Polera blanca
+      "https://hmchile.vtexassets.com/arquivos/ids/7515921/Polera-Slim-Fit---Blanco---H-M-CL.jpg?v=638902878705900000", // Polera blanca
       "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=300&h=300&fit=crop",  // Polera gris
       "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=300&h=300&fit=crop", // Polera azul
       "https://images.unsplash.com/photo-1594032194509-0056023973b2?w=300&h=300&fit=crop"  // Polera rayas
