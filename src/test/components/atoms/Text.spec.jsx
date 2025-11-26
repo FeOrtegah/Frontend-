@@ -46,8 +46,6 @@ describe('Text Component', () => {
 
   it('handles empty children gracefully', () => {
     const { container } = render(<Text></Text>);
-    
-    // Usar querySelector más específico
     const text = container.querySelector('p');
     expect(text).toBeDefined();
     expect(text.textContent).toBe('');
@@ -59,14 +57,12 @@ describe('Text Component', () => {
     expect(text).toBeDefined();
     expect(text.textContent).toBe('');
     
-    // Test para undefined también
     const { container: container2 } = render(<Text>{undefined}</Text>);
     const text2 = container2.querySelector('p');
     expect(text2).toBeDefined();
     expect(text2.textContent).toBe('');
   });
 
-  // Para números como children
   it('handles number as children', () => {
     render(<Text>{42}</Text>);
     
