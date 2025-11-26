@@ -238,8 +238,8 @@ const HomeAdmin = () => {
     return {
       total: products.length,
       ofertas: products.filter(p => p.oferta).length,
-      hombre: products.filter(p => p.categorias && p.categorias.nombre.toLowerCase() === 'hombre').length,
-      mujer: products.filter(p => p.categorias && p.categorias.nombre.toLowerCase() === 'mujer').length
+      hombre: products.filter(p => (p.categorias && p.categorias.nombre.toLowerCase() === 'hombre') || p.categoria === 'hombre').length,
+      mujer: products.filter(p => (p.categorias && p.categorias.nombre.toLowerCase() === 'mujer') || p.categoria === 'mujer').length
     };
   };
 
