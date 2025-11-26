@@ -9,20 +9,17 @@ const RopaMujer = () => {
   
   const { products, loading } = useProducts();
 
-  // SOLO LAS 3 SUBCATEGORÍAS PARA MUJER
   const subcategorias = [
     { id: 'poleras', nombre: 'Poleras' },
     { id: 'pantalones', nombre: 'Pantalones' },
     { id: 'chaquetas', nombre: 'Chaquetas' }
   ];
 
-  // FILTRO MEJORADO - Busca en nombre y descripción
   const productosFiltrados = useMemo(() => {
     let filtered = products.filter(product => 
       product.categoria?.toLowerCase() === 'mujer'
     );
 
-    // Filtrar por subcategoría
     if (subcategoria) {
       filtered = filtered.filter(product => {
         const textoBusqueda = `${product.name} ${product.descripcion}`.toLowerCase();
@@ -47,21 +44,20 @@ const RopaMujer = () => {
       });
     }
 
-    // Resto de filtros igual
     if (filtroOferta) {
       filtered = filtered.filter(product => product.oferta);
     }
 
     if (filtroPrecio) {
       switch (filtroPrecio) {
-        case 'menor-50':
-          filtered = filtered.filter(product => product.price < 50);
+        case 'menor-8000':
+          filtered = filtered.filter(product => product.price < 8000);
           break;
-        case '50-100':
-          filtered = filtered.filter(product => product.price >= 50 && product.price <= 100);
+        case '8000-12000':
+          filtered = filtered.filter(product => product.price >= 8000 && product.price <= 12000);
           break;
-        case 'mayor-100':
-          filtered = filtered.filter(product => product.price > 100);
+        case 'mayor-12000':
+          filtered = filtered.filter(product => product.price > 12000);
           break;
         default:
           break;
@@ -151,10 +147,10 @@ const RopaMujer = () => {
                   value={filtroPrecio}
                   onChange={(e) => setFiltroPrecio(e.target.value)}
                 >
-                  <option value="">Todos</option>
-                  <option value="menor-50">Menor a $50</option>
-                  <option value="50-100">$50 - $100</option>
-                  <option value="mayor-100">Mayor a $100</option>
+                  <option value="">Todos los precios</option>
+                  <option value="menor-8000">Menor a $8.000</option>
+                  <option value="8000-12000">$8.000 - $12.000</option>
+                  <option value="mayor-12000">Mayor a $12.000</option>
                 </select>
               </div>
 
@@ -237,14 +233,14 @@ const RopaMujer = () => {
                         </p>
                         <div className="mt-auto">
                           <div className="d-flex justify-content-between align-items-center mb-2">
-                            <span className="h6 text-primary mb-0">${product.price}</span>
+                            <span className="h6 text-primary mb-0">${product.price.toLocaleString('es-CL')}</span>
                             {product.oferta && (
                               <span className="badge bg-danger">Oferta</span>
                             )}
                           </div>
                           {product.oferta && product.originalPrice && (
                             <small className="text-muted text-decoration-line-through">
-                              ${product.originalPrice}
+                              ${product.originalPrice.toLocaleString('es-CL')}
                             </small>
                           )}
                           <Link 
