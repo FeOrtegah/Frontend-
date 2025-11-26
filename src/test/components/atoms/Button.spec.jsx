@@ -7,7 +7,7 @@ import Button from '../../../components/atoms/Button';
 describe('Button Component', () => {
  it('renderiza el botón correctamente', () => {
    const { getByText } = render(<Button>Haz click</Button>);
-   expect(getByText('Haz click')).toBeTruthy(); // Matcher básico: verifica que el elemento existe
+   expect(getByText('Haz click')).toBeTruthy();
  });
 
  
