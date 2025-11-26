@@ -117,7 +117,6 @@ const Products = ({ categoria, tipo, carrito, setCarrito }) => {
                   }}
                   className="card-img-hover"
                 />
-                {/* Badges para ofertas y categorías */}
                 <div className="position-absolute top-0 start-0 p-2">
                   {product.oferta && (
                     <Badge bg="danger" className="me-1">
@@ -151,8 +150,6 @@ const Products = ({ categoria, tipo, carrito, setCarrito }) => {
                     </span>
                   )}
                 </div>
-
-                {/* Tipo de producto */}
                 {product.tipo && (
                   <div className="mb-2">
                     <Badge bg="outline-dark" variant="outline" className="text-dark border">
@@ -160,8 +157,6 @@ const Products = ({ categoria, tipo, carrito, setCarrito }) => {
                     </Badge>
                   </div>
                 )}
-
-                {/* Descripción corta */}
                 {product.descripcion && (
                   <Card.Text className="text-muted small flex-grow-1">
                     {product.descripcion.length > 100 
@@ -170,8 +165,6 @@ const Products = ({ categoria, tipo, carrito, setCarrito }) => {
                     }
                   </Card.Text>
                 )}
-
-                {/* SOLO BOTÓN VER DETALLES */}
                 <div className="flex-grow-0">
                   <Link to={`/producto/${product.id || product._id}`}>
                     <Button variant="dark" className="w-100">
@@ -184,8 +177,6 @@ const Products = ({ categoria, tipo, carrito, setCarrito }) => {
           </Col>
         ))}
       </Row>
-
-      {/* CSS para efecto hover */}
       <style jsx>{`
         .hover-shadow:hover {
           box-shadow: 0 8px 25px rgba(0,0,0,0.15);
