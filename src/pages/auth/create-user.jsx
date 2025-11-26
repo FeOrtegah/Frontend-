@@ -4,15 +4,14 @@ import Forms from '../../components/templates/Forms';
 import { generarMensaje } from '../../utils/GenerarMensaje';
 import UserService from '../../services/UserService';
 
-const userDataNormalizado = {
-    id: usuarioData.id || usuarioData.usuario?.id || usuarioData.data?.id,
-    nombre: usuarioData.nombre || usuarioData.usuario?.nombre,
-    correo: usuarioData.correo || usuarioData.email || form.correo,
-    email: usuarioData.email || usuarioData.correo || form.correo,
-    rol: usuarioData.rol || usuarioData.usuario?.rol,
-    telefono: usuarioData.telefono || '',
-    token: usuarioData.token || "mock-token-createuser"
-};
+const CreateUser = ({ setUser }) => {
+    const [form, setForm] = useState({ nombre: "", correo: "", contrasena: "" });
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+
+    const handleChange = (e) => {
+        setForm({ ...form, [e.target.name]: e.target.value });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -21,7 +20,6 @@ const userDataNormalizado = {
             return;
         }
 
-        // Validar email
         const dominiosPermitidos = ["gmail.com", "duocuc.cl", "profesor.duoc.cl"];
         const dominio = form.correo.split("@")[1];
         if (!dominiosPermitidos.includes(dominio)) {
@@ -29,7 +27,6 @@ const userDataNormalizado = {
             return;
         }
 
-        // Validar contraseña
         if (form.contrasena.length < 6) {
             generarMensaje('La contraseña debe tener al menos 6 caracteres', 'warning');
             return;
@@ -47,19 +44,15 @@ const userDataNormalizado = {
                 }
             }
             
-            console.log('📤 Creando usuario...');
             const response = await UserService.createUser(usuario);
             
             if (!response.success) {
                 throw new Error(response.error?.message || response.error || 'Error al crear usuario');
             }
 
-            console.log('✅ Usuario creado exitosamente:', response.data);
             generarMensaje('¡Usuario creado exitosamente!', 'success');
 
-            // 🔥🔥🔥 CORREGIDO: Login automático MEJORADO
             try {
-                console.log('🚀 Intentando login automático...');
                 const loginResponse = await UserService.login({
                     correo: form.correo,
                     contrasena: form.contrasena
@@ -68,29 +61,23 @@ const userDataNormalizado = {
                 if (loginResponse.success) {
                     const usuarioData = loginResponse.data;
                     
-                    // 🔥🔥🔥 GUARDAR DE FORMA CORRECTA Y CONSISTENTE
                     const userDataNormalizado = {
                         id: usuarioData.id || usuarioData.usuario?.id || usuarioData.data?.id,
                         nombre: usuarioData.nombre || usuarioData.usuario?.nombre,
-                        correo: usuarioData.correo || usuarioData.email,
-                        email: usuarioData.email || usuarioData.correo,
+                        correo: usuarioData.correo || usuarioData.email || form.correo,
+                        email: usuarioData.email || usuarioData.correo || form.correo,
                         rol: usuarioData.rol || usuarioData.usuario?.rol,
-                        telefono: usuarioData.telefono || ''
+                        telefono: usuarioData.telefono || '',
+                        token: usuarioData.token || "mock-token-createuser"
                     };
                     
-                    console.log('💾 Guardando usuario normalizado:', userDataNormalizado);
-                    
-                    // Guardar en TODAS las ubicaciones
                     sessionStorage.setItem("usuarioActivo", JSON.stringify(userDataNormalizado));
                     localStorage.setItem("user", JSON.stringify(userDataNormalizado));
                     
-                    // 🔥 ACTUALIZAR ESTADO GLOBAL
                     if (setUser) {
                         setUser(userDataNormalizado);
-                        console.log('✅ Estado global actualizado:', userDataNormalizado);
                     }
                     
-                    console.log('✅ Login automático exitoso:', userDataNormalizado);
                     generarMensaje(`¡Bienvenido ${userDataNormalizado.nombre}!`, 'success');
 
                     setTimeout(() => {
@@ -100,7 +87,6 @@ const userDataNormalizado = {
                     throw new Error(loginResponse.error || 'Error en login automático');
                 }
             } catch (loginError) {
-                console.log('⚠️ Login automático falló:', loginError);
                 generarMensaje('Cuenta creada. Por favor inicia sesión manualmente.', 'success');
                 setTimeout(() => {
                     navigate('/auth');
@@ -108,7 +94,6 @@ const userDataNormalizado = {
             }
 
         } catch (error) {
-            console.error('💥 Error completo:', error);
             const errorMessage = error.message;
             generarMensaje(errorMessage, 'error');
         } finally {
