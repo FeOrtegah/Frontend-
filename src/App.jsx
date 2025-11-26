@@ -25,7 +25,7 @@ function App() {
     setCarrito(savedCarrito);
     if (savedUser) {
       setUser(savedUser);
-      console.log('✅ Usuario cargado al iniciar App:', savedUser);
+      console.log('Usuario cargado al iniciar App:', savedUser);
     }
     
     setIsAuthLoaded(true); 
@@ -38,7 +38,7 @@ function App() {
   React.useEffect(() => {
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));
-      console.log('💾 Usuario guardado en localStorage:', user);
+      console.log(' Usuario guardado en localStorage:', user);
     } else {
       localStorage.removeItem("user");
     }
@@ -89,7 +89,7 @@ function App() {
       <main className="flex-grow-1">
         <Routes>
           {appRoutes.map((route, i) => {
-            console.log(`🔍 Procesando ruta: ${route.path}`, { 
+            console.log(` Procesando ruta: ${route.path}`, { 
               isAdmin: route.isAdmin, 
               private: route.private,
               user: user 
