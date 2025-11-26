@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Table, Badge, Button, Modal, Form, Spinner, Alert } from 'react-bootstrap';
 import ProductService from '../../services/ProductService';
+import homeData from '../../data/homeData';
 
 const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
   const [formData, setFormData] = useState({
@@ -27,7 +28,6 @@ const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
   const onSubmit = (e) => {
     e.preventDefault();
     
-    // Preparar datos para la API
     const productData = {
       nombre: formData.nombre,
       precio: parseInt(formData.precio),
@@ -222,10 +222,6 @@ const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
   );
 };
 
-const generarMensaje = (mensaje, tipo = 'info') => {
-  alert(`${tipo.toUpperCase()}: ${mensaje}`);
-};
-
 const HomeAdmin = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -238,7 +234,15 @@ const HomeAdmin = () => {
     setTimeout(() => setAlert({ show: false, message: '', type: '' }), 5000);
   };
 
-  // Cargar productos desde la base de datos
+  const getStats = () => {
+    return {
+      total: products.length,
+      ofertas: products.filter(p => p.oferta).length,
+      hombre: products.filter(p => p.categoria === 'hombre').length,
+      mujer: products.filter(p => p.categoria === 'mujer').length
+    };
+  };
+
   const loadProducts = async () => {
     setLoading(true);
     try {
@@ -267,7 +271,6 @@ const HomeAdmin = () => {
       if (result.success) {
         showAlert('¡Producto creado con éxito!', 'success');
         setShowModal(false);
-        // Recargar la lista de productos
         await loadProducts();
       } else {
         showAlert('Error al crear producto: ' + result.error, 'danger');
@@ -285,7 +288,6 @@ const HomeAdmin = () => {
         const result = await ProductService.deleteProduct(productId);
         if (result.success) {
           showAlert('Producto eliminado correctamente', 'success');
-          // Recargar la lista de productos
           await loadProducts();
         } else {
           showAlert('Error al eliminar producto: ' + result.error, 'danger');
@@ -303,6 +305,8 @@ const HomeAdmin = () => {
 
   const getTipoBadge = (tipo) => <Badge bg="secondary">{tipo}</Badge>;
 
+  const stats = getStats();
+
   return (
     <Container fluid className="py-4">
       {alert.show && (
@@ -311,140 +315,141 @@ const HomeAdmin = () => {
         </Alert>
       )}
 
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h1 className="h3 mb-0">Panel de Administración</h1>
-          <p className="text-muted mb-0">Gestiona los productos de tu tienda</p>
-        </div>
-        <Button variant="primary" onClick={() => setShowModal(true)} className="px-4 py-2">
-          + Agregar Producto
-        </Button>
-      </div>
+      {/* Renderizar homeData */}
+      {homeData.map((section, index) => {
+        switch (section.type) {
+          case "text":
+            return (
+              <div key={index} className={section.className}>
+                {section.text.map(textItem => (
+                  <div key={textItem.id} className={textItem.className}>
+                    {textItem.content}
+                  </div>
+                ))}
+              </div>
+            );
 
-      <Row className="mb-4">
-        <Col md={3}>
-          <Card className="bg-primary text-white">
-            <Card.Body>
-              <h5>Total Productos</h5>
-              <h2>{products.length}</h2>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card className="bg-success text-white">
-            <Card.Body>
-              <h5>En Oferta</h5>
-              <h2>{products.filter(p => p.oferta).length}</h2>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card className="bg-info text-white">
-            <Card.Body>
-              <h5>Hombre</h5>
-              <h2>{products.filter(p => p.categoria === 'hombre').length}</h2>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card className="bg-warning text-white">
-            <Card.Body>
-              <h5>Mujer</h5>
-              <h2>{products.filter(p => p.categoria === 'mujer').length}</h2>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+          case "stats":
+            return (
+              <Row key={index} className={section.className}>
+                {section.stats.map((stat, statIndex) => (
+                  <Col md={3} key={statIndex}>
+                    <Card className={`bg-${stat.color} text-white`}>
+                      <Card.Body>
+                        <h5>{stat.title}</h5>
+                        <h2>{stats[stat.key]}</h2>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            );
 
-      <Card>
-        <Card.Header>
-          <h5 className="mb-0">Lista de Productos</h5>
-        </Card.Header>
-        <Card.Body>
-          {loading ? (
-            <div className="text-center py-4">
-              <Spinner animation="border" role="status">
-                <span className="visually-hidden">Cargando...</span>
-              </Spinner>
-              <p className="mt-2">Cargando productos...</p>
-            </div>
-          ) : products.length === 0 ? (
-            <div className="text-center py-4">
-              <p className="text-muted">No hay productos registrados</p>
-              <Button variant="primary" onClick={() => setShowModal(true)}>
-                Crear Primer Producto
-              </Button>
-            </div>
-          ) : (
-            <div className="table-responsive">
-              <Table striped hover>
-                <thead>
-                  <tr>
-                    <th>Imagen</th>
-                    <th>Producto</th>
-                    <th>Categoría</th>
-                    <th>Tipo</th>
-                    <th>Precio</th>
-                    <th>Stock</th>
-                    <th>Oferta</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {products.map((product) => (
-                    <tr key={product.id}>
-                      <td>
-                        <img 
-                          src={product.image} 
-                          alt={product.name}
-                          style={{ width: '50px', height: '50px', objectFit: 'cover' }}
-                          className="rounded"
-                          onError={(e) => { e.target.src = 'https://via.placeholder.com/50x50?text=Imagen+no+disponible'; }}
-                        />
-                      </td>
-                      <td>
-                        <strong>{product.name}</strong>
-                        <br />
-                        <small className="text-muted">
-                          {product.descripcion ? product.descripcion.substring(0, 50) + '...' : 'Sin descripción'}
-                        </small>
-                      </td>
-                      <td>{getCategoriaBadge(product.categoria)}</td>
-                      <td>{getTipoBadge(product.tipo)}</td>
-                      <td>
-                        <strong>${product.price?.toLocaleString()}</strong>
-                        {product.originalPrice && (
-                          <div>
-                            <small className="text-muted text-decoration-line-through">
-                              ${product.originalPrice?.toLocaleString()}
-                            </small>
-                          </div>
-                        )}
-                      </td>
-                      <td>
-                        <Badge bg={product.stock > 0 ? 'success' : 'danger'}>
-                          {product.stock}
-                        </Badge>
-                      </td>
-                      <td>{product.oferta ? <Badge bg="success">Sí</Badge> : <Badge bg="secondary">No</Badge>}</td>
-                      <td>
-                        <div className="d-flex gap-2">
-                          <Button variant="warning" size="sm" onClick={() => showAlert('Función de editar próximamente', 'info')}>
-                            Editar
-                          </Button>
-                          <Button variant="danger" size="sm" onClick={() => handleDeleteProduct(product.id)}>
-                            Eliminar
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </div>
-          )}
-        </Card.Body>
-      </Card>
+          case "button":
+            return (
+              <div key={index} className={section.className}>
+                <Button 
+                  variant={section.variant} 
+                  onClick={() => setShowModal(true)}
+                  className="px-4 py-2"
+                >
+                  {section.text}
+                </Button>
+              </div>
+            );
+
+          case "table":
+            return (
+              <Card key={index} className={section.className}>
+                <Card.Header>
+                  <h5 className="mb-0">{section.title}</h5>
+                </Card.Header>
+                <Card.Body>
+                  {loading ? (
+                    <div className="text-center py-4">
+                      <Spinner animation="border" role="status">
+                        <span className="visually-hidden">Cargando...</span>
+                      </Spinner>
+                      <p className="mt-2">Cargando productos...</p>
+                    </div>
+                  ) : products.length === 0 ? (
+                    <div className="text-center py-4">
+                      <p className="text-muted">No hay productos registrados</p>
+                      <Button variant="primary" onClick={() => setShowModal(true)}>
+                        Crear Primer Producto
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="table-responsive">
+                      <Table striped hover>
+                        <thead>
+                          <tr>
+                            {section.columns.map((column, colIndex) => (
+                              <th key={colIndex}>{column}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {products.map((product) => (
+                            <tr key={product.id}>
+                              <td>
+                                <img 
+                                  src={product.image} 
+                                  alt={product.name}
+                                  style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                                  className="rounded"
+                                  onError={(e) => { e.target.src = 'https://via.placeholder.com/50x50?text=Imagen+no+disponible'; }}
+                                />
+                              </td>
+                              <td>
+                                <strong>{product.name}</strong>
+                                <br />
+                                <small className="text-muted">
+                                  {product.descripcion ? product.descripcion.substring(0, 50) + '...' : 'Sin descripción'}
+                                </small>
+                              </td>
+                              <td>{getCategoriaBadge(product.categoria)}</td>
+                              <td>{getTipoBadge(product.tipo)}</td>
+                              <td>
+                                <strong>${product.price?.toLocaleString()}</strong>
+                                {product.originalPrice && (
+                                  <div>
+                                    <small className="text-muted text-decoration-line-through">
+                                      ${product.originalPrice?.toLocaleString()}
+                                    </small>
+                                  </div>
+                                )}
+                              </td>
+                              <td>
+                                <Badge bg={product.stock > 0 ? 'success' : 'danger'}>
+                                  {product.stock}
+                                </Badge>
+                              </td>
+                              <td>{product.oferta ? <Badge bg="success">Sí</Badge> : <Badge bg="secondary">No</Badge>}</td>
+                              <td>
+                                <div className="d-flex gap-2">
+                                  <Button variant="warning" size="sm" onClick={() => showAlert('Función de editar próximamente', 'info')}>
+                                    Editar
+                                  </Button>
+                                  <Button variant="danger" size="sm" onClick={() => handleDeleteProduct(product.id)}>
+                                    Eliminar
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    </div>
+                  )}
+                </Card.Body>
+              </Card>
+            );
+
+          default:
+            return null;
+        }
+      })}
 
       <ProductModal
         show={showModal}
