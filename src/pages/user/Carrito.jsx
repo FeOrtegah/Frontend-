@@ -9,7 +9,7 @@ import {
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
-const Carrito = ({ carrito, setCarrito, user }) => { // 🔥 Agregar user como prop
+const Carrito = ({ carrito, setCarrito, user }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -44,8 +44,7 @@ const Carrito = ({ carrito, setCarrito, user }) => { // 🔥 Agregar user como p
     try {
       setLoading(true);
       setError(null);
-      
-      // 🔥 MEJOR VERIFICACIÓN: Revisar tanto las props como localStorage
+
       const usuarioLocal = JSON.parse(localStorage.getItem('user') || 'null');
       const usuarioSession = JSON.parse(sessionStorage.getItem('usuarioActivo') || 'null');
       const usuarioProps = user; // desde las props
@@ -55,8 +54,7 @@ const Carrito = ({ carrito, setCarrito, user }) => { // 🔥 Agregar user como p
         usuarioLocal,
         usuarioSession
       });
-      
-      // Usar el usuario de las props primero, luego sessionStorage, luego localStorage
+
       const usuario = usuarioProps || usuarioSession || usuarioLocal;
       
       if (!usuario) {
@@ -68,12 +66,10 @@ const Carrito = ({ carrito, setCarrito, user }) => { // 🔥 Agregar user como p
       }
       
       console.log('✅ Usuario autenticado, procediendo al pago:', usuario);
-      
-      // Guardar el carrito actual en localStorage para usarlo en el pago
+
       localStorage.setItem("carritoParaPago", JSON.stringify(carrito));
       localStorage.setItem("totalParaPago", getTotal().toString());
       
-      // 🔥 REDIRIGIR AL PAGO DIRECTAMENTE
       navigate('/pago');
       
     } catch (err) {
@@ -193,7 +189,6 @@ const Carrito = ({ carrito, setCarrito, user }) => { // 🔥 Agregar user como p
           })}
         </tbody>
       </Table>
-
       <div className="text-end mt-4">
         <h4>Total: ${getTotal().toLocaleString()}</h4>
         
@@ -221,8 +216,6 @@ const Carrito = ({ carrito, setCarrito, user }) => { // 🔥 Agregar user como p
             )}
           </Button>
         </div>
-        
-        {/* Mensaje informativo para usuarios no logueados */}
         {!user && !localStorage.getItem('user') && (
           <Alert variant="info" className="mt-3">
             <small>
