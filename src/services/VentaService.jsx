@@ -69,117 +69,105 @@ class VentaService {
     }
 
     validarDatosVenta(ventaData) {
-        console.log('🔍 Validando datos de venta:', ventaData);
-        
-        if (!ventaData) {
-            throw new Error('Los datos de la venta son requeridos');
-        }
-        
-        const datos = { ...ventaData };
-        
-        // Validar usuario
-        if (!datos.usuario) {
-            throw new Error('Usuario es requerido');
-        }
-        
-        if (!datos.usuario.id || isNaN(Number(datos.usuario.id))) {
-            throw new Error('Usuario ID es inválido');
-        }
-        
-        datos.usuario.id = Number(datos.usuario.id);
-        
-        // 🔥 CORREGIDO: Validar items y FILTRAR los que no tienen ID
-        if (!datos.items || !Array.isArray(datos.items) || datos.items.length === 0) {
-            throw new Error('El carrito está vacío');
-        }
-        
-        // Filtrar solo items válidos
-        const itemsValidos = datos.items
-            .filter(item => {
-                const tieneId = item.producto && item.producto.id && Number(item.producto.id) > 0;
-                if (!tieneId) {
-                    console.warn('⚠️ Producto sin ID válido, excluyendo:', item);
-                }
-                return tieneId;
-            })
-            .map((item, index) => {
-                const productoId = Number(item.producto.id);
-                const cantidad = Number(item.cantidad || 1);
-                const precioUnitario = Number(item.precioUnitario || item.precio || 0);
-                const subtotal = cantidad * precioUnitario;
-                
-                if (cantidad < 1) {
-                    throw new Error(`La cantidad del producto en posición ${index + 1} debe ser al menos 1`);
-                }
-                
-                if (precioUnitario < 0) {
-                    throw new Error(`El precio del producto en posición ${index + 1} es inválido`);
-                }
-                
-                return {
-                    producto: { id: productoId },
-                    cantidad: cantidad,
-                    precioUnitario: precioUnitario,
-                    subtotal: subtotal
-                };
-            });
-
-        // Verificar que quedaron items válidos
-        if (itemsValidos.length === 0) {
-            throw new Error('No hay productos válidos en el carrito');
-        }
-
-        datos.items = itemsValidos;
-        
-        // Validar método de pago
-        if (!datos.metodoPago) {
-            datos.metodoPago = { id: 1 };
-        } else if (!datos.metodoPago.id) {
-            datos.metodoPago.id = 1;
-        }
-        datos.metodoPago.id = Number(datos.metodoPago.id);
-        
-        // Validar método de envío
-        if (!datos.metodoEnvio) {
-            datos.metodoEnvio = { id: 1 };
-        } else if (!datos.metodoEnvio.id) {
-            datos.metodoEnvio.id = 1;
-        }
-        datos.metodoEnvio.id = Number(datos.metodoEnvio.id);
-        
-        // Validar estado
-        if (!datos.estado) {
-            datos.estado = { id: 1 };
-        } else if (!datos.estado.id) {
-            datos.estado.id = 1;
-        }
-        datos.estado.id = Number(datos.estado.id);
-        
-        // Calcular total
-        if (!datos.total || datos.total === 0) {
-            datos.total = datos.items.reduce((sum, item) => sum + item.subtotal, 0);
-        }
-        datos.total = Number(datos.total);
-        
-        // Validar número de venta
-        if (!datos.numeroVenta) {
-            datos.numeroVenta = `VEN-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
-        }
-        
-        // Asegurar dirección de envío
-        if (datos.direccionEnvio) {
-            datos.direccionEnvio = {
-                direccion: datos.direccionEnvio.direccion || '',
-                ciudad: datos.direccionEnvio.ciudad || '',
-                comuna: datos.direccionEnvio.comuna || '',
-                codigoPostal: datos.direccionEnvio.codigoPostal || '',
-                instrucciones: datos.direccionEnvio.instrucciones || ''
-            };
-        }
-        
-        console.log('✅ Datos validados correctamente:', datos);
-        return datos;
+    console.log('🔍 Validando datos de venta:', ventaData);
+    
+    if (!ventaData) {
+        throw new Error('Los datos de la venta son requeridos');
     }
+    
+    const datos = { ...ventaData };
+    
+    // ✅ CAMBIADO: Validar usuarioId (no usuario.id)
+    if (!datos.usuarioId || isNaN(Number(datos.usuarioId))) {
+        throw new Error('Usuario ID es requerido');
+    }
+    
+    datos.usuarioId = Number(datos.usuarioId);
+    
+    // ✅ CAMBIADO: Validar estadoId (no estado.id)
+    if (!datos.estadoId || isNaN(Number(datos.estadoId))) {
+        throw new Error('Estado ID es requerido');
+    }
+    datos.estadoId = Number(datos.estadoId);
+    
+    // ✅ CAMBIADO: Validar metodoPagoId (no metodoPago.id)
+    if (!datos.metodoPagoId || isNaN(Number(datos.metodoPagoId))) {
+        throw new Error('Método de pago ID es requerido');
+    }
+    datos.metodoPagoId = Number(datos.metodoPagoId);
+    
+    // ✅ CAMBIADO: Validar metodoEnvioId (no metodoEnvio.id)
+    if (!datos.metodoEnvioId || isNaN(Number(datos.metodoEnvioId))) {
+        throw new Error('Método de envío ID es requerido');
+    }
+    datos.metodoEnvioId = Number(datos.metodoEnvioId);
+    
+    // ✅ CAMBIADO: Validar items con productoId (no producto.id)
+    if (!datos.items || !Array.isArray(datos.items) || datos.items.length === 0) {
+        throw new Error('El carrito está vacío');
+    }
+    
+    const itemsValidos = datos.items
+        .filter(item => {
+            const tieneId = item.productoId && Number(item.productoId) > 0;
+            if (!tieneId) {
+                console.warn('⚠️ Producto sin ID válido, excluyendo:', item);
+            }
+            return tieneId;
+        })
+        .map((item, index) => {
+            const productoId = Number(item.productoId);  // ✅ productoId
+            const cantidad = Number(item.cantidad || 1);
+            const precioUnitario = Number(item.precioUnitario || item.precio || 0);
+            const subtotal = cantidad * precioUnitario;
+            
+            if (cantidad < 1) {
+                throw new Error(`La cantidad del producto en posición ${index + 1} debe ser al menos 1`);
+            }
+            
+            if (precioUnitario < 0) {
+                throw new Error(`El precio del producto en posición ${index + 1} es inválido`);
+            }
+            
+            return {
+                productoId: productoId,  // ✅ Mantener productoId
+                cantidad: cantidad,
+                precioUnitario: precioUnitario,
+                subtotal: subtotal
+            };
+        });
+
+    if (itemsValidos.length === 0) {
+        throw new Error('No hay productos válidos en el carrito');
+    }
+
+    datos.items = itemsValidos;
+    
+    // Calcular total
+    if (!datos.total || datos.total === 0) {
+        datos.total = datos.items.reduce((sum, item) => sum + item.subtotal, 0);
+    }
+    datos.total = Number(datos.total);
+    
+    // Validar número de venta
+    if (!datos.numeroVenta) {
+        datos.numeroVenta = `VEN-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+    }
+    
+    // Asegurar dirección de envío
+    if (datos.direccionEnvio) {
+        datos.direccionEnvio = {
+            direccion: datos.direccionEnvio.direccion || '',
+            ciudad: datos.direccionEnvio.ciudad || '',
+            comuna: datos.direccionEnvio.comuna || '',
+            codigoPostal: datos.direccionEnvio.codigoPostal || '',
+            instrucciones: datos.direccionEnvio.instrucciones || ''
+        };
+    }
+    
+    console.log('✅ Datos validados correctamente:', datos);
+    return datos;
+}
 
     // ... (los otros métodos se mantienen igual)
     async obtenerVentasPorUsuario(usuarioId) {
