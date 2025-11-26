@@ -9,6 +9,89 @@ const RopaInfantil = () => {
   
   const { products, loading } = useProducts();
 
+  const imagenesProductos = {
+    // Poleras infantiles
+    "Polera infantil estampada": "https://ficcus.vtexassets.com/arquivos/ids/307505/24103560801_1.jpg?v=638260838879930000",
+    "Polera con dibujos": "https://cdnx.jumpseller.com/estampados-bettoskys/image/27997770/resize/255/255?1665441695",
+    "Polera infantil con estampados divertidos": "https://fashionspark.com/cdn/shop/files/67f01e22a25f0e414a86ae0639ec56.jpg?v=1746722956",
+    
+    // Pantalones infantiles
+    "Pantalón jeans infantil": "https://colgramcl.vtexassets.com/arquivos/ids/782266-800-auto?v=638968579272270000&width=800&height=auto&aspect=true",
+    "Pantalón jeans para niños": "https://colgramcl.vtexassets.com/arquivos/ids/782266-800-auto?v=638968579272270000&width=800&height=auto&aspect=true",
+    
+    // Chaquetas infantiles
+    "Chaqueta infantil": "https://www.hellyhansenchile.cl/media/catalog/product/cache/bd8b7f832b1c63fb97fb3daad23d0528/4/1/41773-1_drjkotrcam6u1ifk.jpg",
+    "Chaqueta con capucha": "https://http2.mlstatic.com/D_NQ_NP_611098-CBT87050282971_072025-O-chaqueta-de-plumon-con-capucha-para-ninos-a-la-moda-con-aisl.webp"
+  };
+
+  const obtenerImagenProducto = (product) => {
+    if (!product) {
+      return 'https://via.placeholder.com/300x300/FF6B6B/FFFFFF?text=Producto+Infantil';
+    }
+
+    const nombreProducto = product.name || product.nombre;
+    if (nombreProducto && imagenesProductos[nombreProducto]) {
+      return imagenesProductos[nombreProducto];
+    }
+
+    if (nombreProducto) {
+      const nombreLower = nombreProducto.toLowerCase();
+      
+      // Poleras infantiles
+      if (nombreLower.includes('polera') && nombreLower.includes('infantil')) {
+        return "https://images.unsplash.com/photo-1622295028116-2c8c4b2e14b5?w=300&h=300&fit=crop";
+      }
+      if (nombreLower.includes('polera') && nombreLower.includes('dibujos')) {
+        return "https://images.unsplash.com/photo-1622295350161-2cb3a7dcdd41?w=300&h=300&fit=crop";
+      }
+      if (nombreLower.includes('polera') || nombreLower.includes('camiseta')) {
+        return "https://images.unsplash.com/photo-1622295350161-2cb3a7dcdd41?w=300&h=300&fit=crop";
+      }
+      
+      // Pantalones infantiles
+      if (nombreLower.includes('pantalon') && nombreLower.includes('jeans')) {
+        return "https://images.unsplash.com/photo-1600243873592-b7948e7b3bf3?w=300&h=300&fit=crop";
+      }
+      if (nombreLower.includes('pantalon') && nombreLower.includes('infantil')) {
+        return "https://images.unsplash.com/photo-1600243873592-b7948e7b3bf3?w=300&h=300&fit=crop";
+      }
+      if (nombreLower.includes('pantalon')) {
+        return "https://images.unsplash.com/photo-1600243873592-b7948e7b3bf3?w=300&h=300&fit=crop";
+      }
+      
+      // Chaquetas infantiles
+      if (nombreLower.includes('chaqueta') && nombreLower.includes('capucha')) {
+        return "https://images.unsplash.com/photo-1622295350161-2cb3a7dcdd41?w=300&h=300&fit=crop";
+      }
+      if (nombreLower.includes('chaqueta') && nombreLower.includes('infantil')) {
+        return "https://images.unsplash.com/photo-1622295350161-2cb3a7dcdd41?w=300&h=300&fit=crop";
+      }
+      if (nombreLower.includes('chaqueta')) {
+        return "https://images.unsplash.com/photo-1622295350161-2cb3a7dcdd41?w=300&h=300&fit=crop";
+      }
+    }
+
+    // Si el producto ya tiene una imagen válida, usarla
+    if (product.image && product.image !== '/img/placeholder.jpg' && !product.image.includes('placeholder')) {
+      return product.image;
+    }
+
+    // Fallback genérico por tipo
+    const textoBusqueda = `${product.name} ${product.descripcion}`.toLowerCase();
+    if (textoBusqueda.includes('polera') || textoBusqueda.includes('camiseta')) {
+      return "https://images.unsplash.com/photo-1622295350161-2cb3a7dcdd41?w=300&h=300&fit=crop";
+    }
+    if (textoBusqueda.includes('jeans') || textoBusqueda.includes('pantalon')) {
+      return "https://images.unsplash.com/photo-1600243873592-b7948e7b3bf3?w=300&h=300&fit=crop";
+    }
+    if (textoBusqueda.includes('chaqueta')) {
+      return "https://images.unsplash.com/photo-1622295350161-2cb3a7dcdd41?w=300&h=300&fit=crop";
+    }
+
+    // Último fallback
+    return `https://via.placeholder.com/300x300/FF6B6B/FFFFFF?text=${encodeURIComponent(product.name || 'Producto Infantil')}`;
+  };
+
   const subcategorias = [
     { id: 'poleras', nombre: 'Poleras' },
     { id: 'pantalones', nombre: 'Pantalones' },
@@ -71,6 +154,17 @@ const RopaInfantil = () => {
     }
     return 'Ropa Infantil';
   };
+
+  // DEBUG para ver las imágenes asignadas
+  React.useEffect(() => {
+    if (products.length > 0 && productosFiltrados.length > 0) {
+      console.log('🎯 Asignación de imágenes infantiles:');
+      productosFiltrados.forEach(product => {
+        const imagenAsignada = obtenerImagenProducto(product);
+        console.log(`👶 "${product.name}" → ${imagenAsignada}`);
+      });
+    }
+  }, [productosFiltrados]);
 
   if (loading) {
     return (
@@ -215,12 +309,13 @@ const RopaInfantil = () => {
                   <div key={product.id} className="col-xl-3 col-lg-4 col-md-6 mb-4">
                     <div className="card h-100 product-card">
                       <img 
-                        src={product.image}
+                        src={obtenerImagenProducto(product)}
                         className="card-img-top" 
                         alt={product.name}
                         style={{ height: '250px', objectFit: 'cover' }}
                         onError={(e) => {
-                          e.target.src = '/img/logo.webp';
+                          console.log('❌ Error cargando imagen infantil para:', product.name);
+                          e.target.src = `https://via.placeholder.com/300x300/FF6B6B/FFFFFF?text=${encodeURIComponent(product.name)}`;
                         }}
                       />
                       <div className="card-body d-flex flex-column">
@@ -230,7 +325,9 @@ const RopaInfantil = () => {
                         </p>
                         <div className="mt-auto">
                           <div className="d-flex justify-content-between align-items-center mb-2">
-                            <span className="h6 text-primary mb-0">${product.price.toLocaleString('es-CL')}</span>
+                            <span className="h6 text-primary mb-0">
+                              ${product.price?.toLocaleString('es-CL') || '0'}
+                            </span>
                             {product.oferta && (
                               <span className="badge bg-danger">Oferta</span>
                             )}
