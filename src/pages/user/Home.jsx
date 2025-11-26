@@ -6,10 +6,9 @@ import ProductService from "/src/services/ProductService";
 const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [products, setProducts] = useState([]); // ✅ AGREGADO
+  const [products, setProducts] = useState([]);
   const [productosOfertaAleatorios, setProductosOfertaAleatorios] = useState([]);
 
-  // Función para seleccionar 'n' elementos aleatorios de un array
   const selectRandomOffers = (arr, n) => {
     const shuffled = [...arr];
     let i = arr.length;
@@ -29,12 +28,10 @@ const Home = () => {
         setLoading(true);
         const response = await ProductService.getAllProducts();
         const allProducts = response.data;
-        setProducts(allProducts); // ✅ AHORA FUNCIONA
+        setProducts(allProducts);
 
-        // 1. Filtrar solo los productos que están en oferta
         const ofertas = allProducts.filter(product => product.oferta);
         
-        // 2. Seleccionar hasta 3 ofertas aleatorias
         const randomOffers = selectRandomOffers(ofertas, 3);
         
         setProductosOfertaAleatorios(randomOffers);
@@ -84,7 +81,7 @@ const Home = () => {
             src="/img/coño.webp" 
             className="card-img-top" 
             alt="Novedades" 
-            style={{ height: "400px", objectFit: "cover" }} // ✅ CORREGIDO
+            style={{ height: "400px", objectFit: "cover" }}
           />
         </div>
       </section>
@@ -113,7 +110,7 @@ const Home = () => {
                     
                     <Card.Img
                       variant="top"
-                      src={product.imagenUrl || '/images/placeholder.jpg'} // ✅ MEJORADO
+                      src={product.imagenUrl || '/images/placeholder.jpg'}
                       style={{ maxHeight: "300px", objectFit: "contain" }}
                       onError={(e) => {
                         e.target.src = '/images/placeholder.jpg';
