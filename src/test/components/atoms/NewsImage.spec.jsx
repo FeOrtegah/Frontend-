@@ -23,7 +23,6 @@ describe('NewsImage Component', () => {
   });
 
   it('handles empty src and alt attributes', () => {
-    // CORREGIDO: Usar un src válido para evitar el warning
     render(<NewsImage src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" />);
     
     const image = screen.getByAltText('');
@@ -39,7 +38,6 @@ describe('NewsImage Component', () => {
     expect(image).toBeDefined();
   });
 
-  // TEST NUEVO: Para verificar que se renderiza sin problemas con src null/undefined
   it('renders with undefined src', () => {
     render(<NewsImage src={undefined} alt="test" />);
     
