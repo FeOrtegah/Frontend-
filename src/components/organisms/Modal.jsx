@@ -206,5 +206,4 @@ const ModalComponent = ({
   );
 };
 
-// ✅ Asegúrate de que tenga export default
 export default ModalComponent;
