@@ -21,7 +21,7 @@ const RopaMujer = () => {
     
     // Chaquetas
     "Chaqueta jean clásica": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSY3JT-TacsaJSYhNcypWv1gLKCldBTZXq8LA&s",
-    "Chaqueta negra": "https://www.elementalsafety.cl/cdn/shop/files/12-06-027-T-xS_12-06-027-F1_1651509302292-1300.jpg?v=1684520086",
+    "Chaqueta negra": "https://static2.goldengoose.com/public/Style/ECOMM/GWP02069.P001619-50866.jpg",
     "Chaqueta deportiva": "https://http2.mlstatic.com/D_NQ_NP_721587-CBT81767108385_012025-O-chaqueta-deportiva-para-mujer-ropa-de-yoga-de-secado-rapido.webp"
   };
 
