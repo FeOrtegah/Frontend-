@@ -5,8 +5,7 @@ import NewsTitle from "../atoms/NewsTitle";
 import NewsButton from "../atoms/NewsButton";
 
 const NewsCard = ({ news }) => {
-  if (!news) return null; // evita errores si news es undefined
-
+  if (!news) return null;
   return (
     <div className="card bg-dark text-light h-100 shadow-lg border-0">
       <NewsImage src={news.image} alt={news.title} />
