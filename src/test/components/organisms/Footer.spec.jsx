@@ -31,7 +31,6 @@ describe('Footer Component', () => {
     expect(tiktokLink.href).toBe('https://www.tiktok.com/');
     expect(xLink.href).toBe('https://www.x.com/');
     
-    // CORREGIDO: Removida la verificación de target="_blank" ya que no está en el componente
   });
 
   it('renders internal navigation links correctly', () => {
