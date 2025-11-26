@@ -1,6 +1,4 @@
-// src/utils/userUtils.js
 export const userUtils = {
-    // 🔥 MÉTODO MEJORADO: Extraer ID de usuario de CUALQUIER estructura
     extractUserId(usuarioData) {
         console.log('🕵️‍♂️ BUSCANDO ID EN:', usuarioData);
         
@@ -9,25 +7,20 @@ export const userUtils = {
             return null;
         }
 
-        // Lista de posibles ubicaciones del ID
         const posiblesPaths = [
-            // Estructura directa
             () => usuarioData.id,
             () => usuarioData.userId,
             () => usuarioData.usuarioId,
             
-            // Estructuras anidadas
             () => usuarioData.usuario?.id,
             () => usuarioData.user?.id,
             () => usuarioData.data?.id,
             () => usuarioData.data?.usuario?.id,
             () => usuarioData.data?.user?.id,
             
-            // Para respuestas de API
             () => usuarioData.response?.id,
             () => usuarioData.result?.id,
             
-            // Buscar en cualquier propiedad que contenga 'id'
             () => {
                 for (let key in usuarioData) {
                     if (key.toLowerCase().includes('id') && usuarioData[key]) {
@@ -39,7 +32,6 @@ export const userUtils = {
             }
         ];
 
-        // Probar todas las posibles ubicaciones
         for (let getPath of posiblesPaths) {
             try {
                 const id = getPath();
@@ -57,7 +49,6 @@ export const userUtils = {
         return null;
     },
 
-    // 🔥 VALIDACIÓN MEJORADA
     isValidUserId(userId) {
         if (userId === null || userId === undefined) return false;
         if (typeof userId === 'string') {
@@ -67,10 +58,9 @@ export const userUtils = {
         }
         
         const num = Number(userId);
-        return !isNaN(num) && num > 0 && num < 1000000; // Límite razonable
+        return !isNaN(num) && num > 0 && num < 1000000;
     },
 
-    // 🔥 OBTENER USUARIO DE TODAS LAS FUENTES POSIBLES
     getUserFromAllSources(userProp) {
         console.log('🔍 BUSCANDO USUARIO EN TODAS LAS FUENTES...');
         
@@ -89,7 +79,7 @@ export const userUtils = {
                     console.log(`✅ USUARIO ENCONTRADO en ${source.name} con ID: ${userId}`);
                     return {
                         ...source.data,
-                        id: userId // 🔥 Aseguramos que el ID sea válido
+                        id: userId
                     };
                 }
             }
