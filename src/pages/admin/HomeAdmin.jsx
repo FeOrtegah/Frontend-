@@ -298,6 +298,16 @@ const HomeAdmin = () => {
     }
   };
 
+  const formatPrice = (price) => {
+    if (price === null || price === undefined || price === '') return 'N/A';
+    return new Intl.NumberFormat('es-CL', {
+        style: 'currency',
+        currency: 'CLP',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(price);
+  };
+
   const getCategoriaBadge = (categoria) => {
     const variants = { hombre: 'primary', mujer: 'danger', infantil: 'success', desconocido: 'warning' };
     const key = categoria ? categoria.toLowerCase() : 'desconocido';
@@ -402,8 +412,9 @@ const HomeAdmin = () => {
                                 />
                               </td>
                               <td>
-                                <strong>{product.nombre}</strong>
-                                <br />
+                                <div style={{ fontWeight: 'bold', fontSize: '1em' }}>
+                                  {product.nombre || 'Nombre no disponible'}
+                                </div>
                                 <small className="text-muted">
                                   {product.descripcion ? product.descripcion.substring(0, 50) + '...' : 'Sin descripción'}
                                 </small>
@@ -411,11 +422,11 @@ const HomeAdmin = () => {
                               <td>{getCategoriaBadge(product.categorias ? product.categorias.nombre : product.categoria)}</td>
                               <td>{getTipoBadge(product.tipo || (product.categorias?.categoria ? product.categorias.categoria.nombre : null))}</td>
                               <td>
-                                <strong>${product.precio?.toLocaleString()}</strong>
-                                {product.precioOriginal && (
+                                <strong>{formatPrice(product.precio)}</strong>
+                                {product.precioOriginal && product.precioOriginal > product.precio && (
                                   <div>
                                     <small className="text-muted text-decoration-line-through">
-                                      ${product.precioOriginal?.toLocaleString()}
+                                      {formatPrice(product.precioOriginal)}
                                     </small>
                                   </div>
                                 )}
