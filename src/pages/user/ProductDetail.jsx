@@ -129,11 +129,11 @@ const ProductDetail = ({ carrito, setCarrito }) => {
           />
         </Col>
 
-        {/* Información del producto */}
+        {/* Informacion del producto */}
         <Col md={6}>
           <h1 className="fw-bold mb-3">{product.name}</h1>
           
-          {/* Categoría y tipo */}
+          {/* Categoria y tipo */}
           <div className="mb-2">
             <Badge bg="secondary" className="me-2 text-capitalize">
               {product.categoria}
@@ -169,7 +169,7 @@ const ProductDetail = ({ carrito, setCarrito }) => {
             )}
           </div>
 
-          {/* Descripción del producto */}
+          {/* Descripcion del producto */}
           {product.descripcion && (
             <div className="mb-4">
               <h6 className="fw-bold">Descripción:</h6>
@@ -177,7 +177,7 @@ const ProductDetail = ({ carrito, setCarrito }) => {
             </div>
           )}
 
-          {/* Selección de talla */}
+          {/* Seleccion de talla */}
           <div className="mb-3">
             <label className="form-label fw-bold">Talla:</label>
             <Form.Select 
@@ -193,7 +193,7 @@ const ProductDetail = ({ carrito, setCarrito }) => {
             </Form.Select>
           </div>
 
-          {/* Selección de cantidad */}
+          {/* Seleccion de cantidad */}
           <div className="mb-4">
             <label className="form-label fw-bold">Cantidad:</label>
             <div className="input-group" style={{ width: "130px" }}>
@@ -232,7 +232,7 @@ const ProductDetail = ({ carrito, setCarrito }) => {
             </Alert>
           )}
 
-          {/* Botón agregar al carrito con precio total */}
+          {/* Boton agregar al carrito con precio total */}
           <div className="mb-3">
             <Button
               variant="dark"
@@ -245,14 +245,14 @@ const ProductDetail = ({ carrito, setCarrito }) => {
             </Button>
           </div>
 
-          {/* Información en carrito */}
+          {/* Informacion en carrito */}
           {cantidadEnCarrito > 0 && (
             <Alert variant="info" className="text-center">
               <strong>En tu carrito:</strong> {cantidadEnCarrito} unidad(es) de este producto
             </Alert>
           )}
 
-          {/* Información adicional del producto */}
+          {/* Informacion adicional del producto */}
           <div className="mt-4">
             <h6 className="fw-bold">Características:</h6>
             <ul className="text-muted">
