@@ -17,9 +17,8 @@ describe('Input Component', () => {
     let input = screen.getByRole('textbox');
     expect(input.type).toBe('email');
 
-    // Usar getByRole para password también
     rerender(<Input type="password" />);
-    input = screen.getByDisplayValue(''); // Buscar por valor vacío
+    input = screen.getByDisplayValue('');
     expect(input.type).toBe('password');
   });
 
