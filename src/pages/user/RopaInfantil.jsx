@@ -71,12 +71,11 @@ const RopaInfantil = () => {
       }
     }
 
-    // Si el producto ya tiene una imagen válida, usarla
+
     if (product.image && product.image !== '/img/placeholder.jpg' && !product.image.includes('placeholder')) {
       return product.image;
     }
 
-    // Fallback genérico por tipo
     const textoBusqueda = `${product.name} ${product.descripcion}`.toLowerCase();
     if (textoBusqueda.includes('polera') || textoBusqueda.includes('camiseta')) {
       return "https://images.unsplash.com/photo-1622295350161-2cb3a7dcdd41?w=300&h=300&fit=crop";
@@ -88,7 +87,7 @@ const RopaInfantil = () => {
       return "https://images.unsplash.com/photo-1622295350161-2cb3a7dcdd41?w=300&h=300&fit=crop";
     }
 
-    // Último fallback
+
     return `https://via.placeholder.com/300x300/FF6B6B/FFFFFF?text=${encodeURIComponent(product.name || 'Producto Infantil')}`;
   };
 
@@ -155,7 +154,6 @@ const RopaInfantil = () => {
     return 'Ropa Infantil';
   };
 
-  // DEBUG para ver las imágenes asignadas
   React.useEffect(() => {
     if (products.length > 0 && productosFiltrados.length > 0) {
       console.log('🎯 Asignación de imágenes infantiles:');
