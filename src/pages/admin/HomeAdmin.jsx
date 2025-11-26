@@ -409,7 +409,7 @@ const HomeAdmin = () => {
                                 </small>
                               </td>
                               <td>{getCategoriaBadge(product.categorias ? product.categorias.nombre : product.categoria)}</td>
-                              <td>{getTipoBadge(product.tipo)}</td>
+                              <td>{getTipoBadge(product.tipo || (product.categorias?.categoria ? product.categorias.categoria.nombre : null))}</td>
                               <td>
                                 <strong>${product.precio?.toLocaleString()}</strong>
                                 {product.precioOriginal && (
