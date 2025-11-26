@@ -9,8 +9,6 @@ const MiCuenta = ({ user, setUser }) => {
   const [loadingVentas, setLoadingVentas] = useState(false);
   const [error, setError] = useState("");
 
-  console.log("🔍 User en MiCuenta:", user);
-
   const formatClp = (value) => (value || 0).toLocaleString("es-CL");
   const obtenerTotalVenta = useCallback((venta) => venta.totalCalculado || 0, []);
   const obtenerCantidadProductos = useCallback((venta) => venta.cantidadProductos || 0, []);
@@ -70,15 +68,6 @@ const MiCuenta = ({ user, setUser }) => {
       </div>
 
       {error && <Alert variant="danger">{error}</Alert>}
-
-      {/* DEBUG INFO */}
-      <Alert variant="info">
-        <strong>Debug Info:</strong><br/>
-        User object: {JSON.stringify(user)}<br/>
-        Tiene correo: {user.correo ? 'SÍ' : 'NO'}<br/>
-        Tiene email: {user.email ? 'SÍ' : 'NO'}<br/>
-        Propiedades: {user ? Object.keys(user).join(', ') : 'No user'}
-      </Alert>
       
       <Row className="justify-content-center">
         <Col md={10}>
