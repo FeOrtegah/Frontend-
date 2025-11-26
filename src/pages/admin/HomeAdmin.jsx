@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Table, Badge, Button, Modal, Form, Spinner, Alert } from 'react-bootstrap';
 import ProductService from '../../services/ProductService';
-import homeData from '../../data/homeData';
+import homeData from '../../Facciones/data/homeData';
 
 const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
   const [formData, setFormData] = useState({
