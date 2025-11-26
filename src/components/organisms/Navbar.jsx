@@ -4,12 +4,10 @@ import { Link, useNavigate } from "react-router-dom";
 const Navbar = ({ carrito }) => {
   const navigate = useNavigate();
 
-  // 🔥 Detectar si el usuario está logueado
   const usuarioActivo = JSON.parse(sessionStorage.getItem("usuarioActivo"));
 
   const closeOffcanvas = () => {
     const offcanvas = document.getElementById('offcanvasMenu');
-    // Usamos el método de Bootstrap para cerrar el Offcanvas
     if (offcanvas && window.bootstrap && window.bootstrap.Offcanvas) {
       const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(offcanvas);
       if (bsOffcanvas) {
@@ -18,22 +16,19 @@ const Navbar = ({ carrito }) => {
     }
   };
 
-  // Función genérica para navegar que siempre cierra el Offcanvas
   const handleNavigation = (path) => {
     closeOffcanvas();
     navigate(path);
   };
 
-  // 🔥 Acción del botón de "persona" en el NAVBAR PRINCIPAL
   const handleUserClick = () => {
     if (usuarioActivo) {
-      navigate("/micuenta"); // Si está logueado → ir a Mi Cuenta
+      navigate("/micuenta");
     } else {
-      navigate("/auth"); // Si NO → ir a login/registro
+      navigate("/auth");
     }
   };
-  
-  // 🔥 NUEVA ACCIÓN PARA EL BOTÓN "VER MI CUENTA" EN EL OFFCANVAS
+
   const handleAccountClick = () => {
     closeOffcanvas();
     if (usuarioActivo) {
@@ -66,7 +61,6 @@ const Navbar = ({ carrito }) => {
           </Link>
 
           <div className="iconos-derecha d-flex align-items-center">
-            {/* 🔥 BOTÓN DE USUARIO CON LÓGICA AGREGADA */}
             <button 
               onClick={handleUserClick}
               className="btn p-1 me-2 text-dark"
@@ -85,7 +79,6 @@ const Navbar = ({ carrito }) => {
           </div>
         </div>
       </nav>
-
       <div
         className="offcanvas offcanvas-start"
         tabIndex="-1"
@@ -102,15 +95,10 @@ const Navbar = ({ carrito }) => {
             data-bs-dismiss="offcanvas"
             aria-label="Cerrar"
           ></button>
-        </div>
-        
+        </div>      
         <div className="offcanvas-body p-0">
-          
-          {/* CATEGORÍAS PRINCIPALES */}
           <div className="p-3">
             <div className="menu-category fw-semibold text-muted small mb-2">CATEGORÍAS</div>
-            
-            {/* Los botones de categorías usan handleNavigation y funcionan correctamente */}
             <button
               className="btn w-100 text-start p-3 border-bottom text-dark d-flex justify-content-between align-items-center"
               onClick={() => handleNavigation("/hombre")}
@@ -152,7 +140,6 @@ const Navbar = ({ carrito }) => {
           </div>
 
           <div className="border-top p-3 bg-light">
-            {/* 🔥 BOTÓN CORREGIDO: Usa la nueva función handleAccountClick */}
             <button
               className="btn w-100 text-start p-3 text-dark d-flex justify-content-between align-items-center"
               onClick={handleAccountClick} 
