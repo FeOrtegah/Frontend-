@@ -1,20 +1,46 @@
-// src/data/homeData.js
 export const homeData = [
     {
         type: "text",
         text: [
-            { id: 1, content: "Bienvenido a la edición de facciones", variant: "h1", className: "text-4xl font-bold text-center" },
-            { id: 2, content: "aquí podrás editar las facciones de una galaxia muy muy lejana ", variant: "p", className: "text-lg text-gray-600 text-center mt-2" },
+            { 
+                id: 1, 
+                content: "Panel de Administración EFA Store", 
+                variant: "h1", 
+                className: "text-4xl font-bold text-center mb-4" 
+            },
+            { 
+                id: 2, 
+                content: "Gestiona los productos de tu tienda desde aquí", 
+                variant: "p", 
+                className: "text-lg text-gray-600 text-center mb-8" 
+            },
         ],
     },
     {
+        type: "stats",
+        stats: [
+            { title: "Total Productos", value: 0, color: "primary", key: "total" },
+            { title: "En Oferta", value: 0, color: "success", key: "ofertas" },
+            { title: "Hombre", value: 0, color: "info", key: "hombre" },
+            { title: "Mujer", value: 0, color: "warning", key: "mujer" },
+        ],
+        className: "mb-6",
+    },
+    {
         type: "table",
-        title: "Facciones Activas",
-        columns: ["ID", "Nombre", "descripcion", "logo"],
+        title: "Productos de la Tienda",
+        columns: ["Imagen", "Nombre", "Categoría", "Tipo", "Precio", "Stock", "Oferta", "Acciones"],
         data: [], 
-        service: "facciones",
+        service: "productos",
         className: "my-8",
     },
+    {
+        type: "button",
+        text: "+ Agregar Producto",
+        variant: "primary",
+        action: "openModal",
+        className: "mb-4",
+    }
 ];
 
 export default homeData;
