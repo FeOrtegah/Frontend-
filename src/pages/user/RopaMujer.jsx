@@ -9,6 +9,84 @@ const RopaMujer = () => {
   
   const { products, loading } = useProducts();
 
+  // ✅ IMÁGENES ESPECÍFICAS PARA PRODUCTOS DE MUJER
+  const imagenesProductos = {
+    // Poleras
+    "Polera deportiva Azul": "https://kelme.cl/wp-content/uploads/2025/01/Polera-Deportiva-Mujer-K-Training-Kelme-2-1024x1024.jpg",
+    "Polera oversize Roja": "https://hmchile.vtexassets.com/arquivos/ids/6310024/Polera-oversize---Rojo-28---H-M-CL.jpg?v=638586069699400000",
+    "Polera deportiva sin mangas": "https://underarmourcl.vtexassets.com/arquivos/ids/609872/1354282-640_QSU_1.jpg?v=638054632238830000",
+    
+    // Pantalones
+    "Pantalón cargo beige": "https://hmchile.vtexassets.com/arquivos/ids/7343997/Pantalon-cargo-holgado---Beige---H-M-CL.jpg?v=638881497626470000",
+    "Pantalón skinny negro": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS0zYu1raCRz68xe6mEd0TmsHhnq534uJZpMw&s",
+    
+    // Chaquetas
+    "Chaqueta jean clásica": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSY3JT-TacsaJSYhNcypWv1gLKCldBTZXq8LA&s",
+    "Chaqueta negra": "https://www.elementalsafety.cl/cdn/shop/files/12-06-027-T-xS_12-06-027-F1_1651509302292-1300.jpg?v=1684520086",
+    "Chaqueta deportiva": "https://http2.mlstatic.com/D_NQ_NP_721587-CBT81767108385_012025-O-chaqueta-deportiva-para-mujer-ropa-de-yoga-de-secado-rapido.webp"
+  };
+
+  // ✅ FUNCIÓN PARA OBTENER IMÁGENES ESPECÍFICAS
+  const obtenerImagenProducto = (product) => {
+    if (!product) {
+      return 'https://via.placeholder.com/300x300/FF69B4/FFFFFF?text=Producto+Mujer';
+    }
+
+    const nombreProducto = product.name || product.nombre;
+    const descripcionProducto = product.descripcion || '';
+    const textoCompleto = `${nombreProducto} ${descripcionProducto}`.toLowerCase();
+
+    // 1. Buscar por nombre exacto
+    if (nombreProducto && imagenesProductos[nombreProducto]) {
+      return imagenesProductos[nombreProducto];
+    }
+
+    // 2. Buscar por palabras clave en nombre y descripción
+    if (textoCompleto.includes('polera') && textoCompleto.includes('deportiva') && textoCompleto.includes('azul')) {
+      return "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=300&h=300&fit=crop";
+    }
+    if (textoCompleto.includes('polera') && textoCompleto.includes('oversize') && textoCompleto.includes('roja')) {
+      return "https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?w=300&h=300&fit=crop";
+    }
+    if (textoCompleto.includes('polera') && textoCompleto.includes('deportiva') && textoCompleto.includes('sin mangas')) {
+      return "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=300&h=300&fit=crop";
+    }
+    if (textoCompleto.includes('pantalón') && textoCompleto.includes('cargo') && textoCompleto.includes('beige')) {
+      return "https://images.unsplash.com/photo-1582418702059-97ebafb35d09?w=300&h=300&fit=crop";
+    }
+    if (textoCompleto.includes('pantalón') && textoCompleto.includes('skinny') && textoCompleto.includes('negro')) {
+      return "https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&h=300&fit=crop";
+    }
+    if (textoCompleto.includes('chaqueta') && textoCompleto.includes('jean') && textoCompleto.includes('clásica')) {
+      return "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&h=300&fit=crop";
+    }
+    if (textoCompleto.includes('chaqueta') && textoCompleto.includes('negra') && textoCompleto.includes('elegante')) {
+      return "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=300&h=300&fit=crop";
+    }
+    if (textoCompleto.includes('chaqueta') && textoCompleto.includes('deportiva')) {
+      return "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop";
+    }
+
+    // 3. Búsqueda genérica por tipo
+    if (textoCompleto.includes('polera')) {
+      return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop";
+    }
+    if (textoCompleto.includes('pantalón')) {
+      return "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?w=300&h=300&fit=crop";
+    }
+    if (textoCompleto.includes('chaqueta')) {
+      return "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&h=300&fit=crop";
+    }
+
+    // 4. Si el producto ya tiene imagen válida
+    if (product.image && product.image !== '/img/placeholder.jpg' && !product.image.includes('placeholder')) {
+      return product.image;
+    }
+
+    // 5. Fallback final
+    return `https://via.placeholder.com/300x300/FF69B4/FFFFFF?text=${encodeURIComponent(product.name || 'Producto')}`;
+  };
+
   const subcategorias = [
     { id: 'poleras', nombre: 'Poleras' },
     { id: 'pantalones', nombre: 'Pantalones' },
@@ -74,6 +152,17 @@ const RopaMujer = () => {
     }
     return 'Ropa para Mujer';
   };
+
+  // ✅ DEBUG PARA VER ASIGNACIONES
+  React.useEffect(() => {
+    if (products.length > 0 && productosFiltrados.length > 0) {
+      console.log('🎀 ASIGNACIÓN DE IMÁGENES - MUJER:');
+      productosFiltrados.forEach(product => {
+        const imagenAsignada = obtenerImagenProducto(product);
+        console.log(`👚 "${product.name}" → ${imagenAsignada}`);
+      });
+    }
+  }, [productosFiltrados]);
 
   if (loading) {
     return (
@@ -217,13 +306,15 @@ const RopaMujer = () => {
                 {productosFiltrados.map(product => (
                   <div key={product.id} className="col-xl-3 col-lg-4 col-md-6 mb-4">
                     <div className="card h-100 product-card">
+                      {/* ✅ IMAGEN ESPECÍFICA PARA MUJER */}
                       <img 
-                        src={product.image}
+                        src={obtenerImagenProducto(product)}
                         className="card-img-top" 
                         alt={product.name}
                         style={{ height: '250px', objectFit: 'cover' }}
                         onError={(e) => {
-                          e.target.src = '/img/logo.webp';
+                          console.log('❌ Error cargando imagen para:', product.name);
+                          e.target.src = `https://via.placeholder.com/300x300/FF69B4/FFFFFF?text=${encodeURIComponent(product.name)}`;
                         }}
                       />
                       <div className="card-body d-flex flex-column">
@@ -233,7 +324,9 @@ const RopaMujer = () => {
                         </p>
                         <div className="mt-auto">
                           <div className="d-flex justify-content-between align-items-center mb-2">
-                            <span className="h6 text-primary mb-0">${product.price.toLocaleString('es-CL')}</span>
+                            <span className="h6 text-primary mb-0">
+                              ${product.price?.toLocaleString('es-CL') || '0'}
+                            </span>
                             {product.oferta && (
                               <span className="badge bg-danger">Oferta</span>
                             )}
