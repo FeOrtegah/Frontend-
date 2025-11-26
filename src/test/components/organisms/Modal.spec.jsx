@@ -2,7 +2,6 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ModalComponent from '../../../components/organisms/Modal';
 
-// Configuración ESTABLE de inputs (fuera del test para evitar recreación)
 const STABLE_INPUTS_CONFIG = [
   {
     name: 'title',
