@@ -3,13 +3,12 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 import ProductCard from '../../../components/organisms/ProductCard';
 
-// Componente envolvente para mockear useNavigate
 const MockRouter = ({ children, mockNavigate }) => {
   const router = createMemoryRouter(
     [{ path: '*', element: children }],
     { initialEntries: ['/'] }
   );
-  router.navigate = mockNavigate; // Inyectamos el mock de navigate
+  router.navigate = mockNavigate;
   return <RouterProvider router={router} />;
 };
 
@@ -39,7 +38,6 @@ describe('ProductCard Component', () => {
         <ProductCard product={mockProduct} />
       </MockRouter>
     );
-    // Ignora espacios y saltos de línea
     expect(
       screen.getByText((content) =>
         content.replace(/\s/g, '').includes(mockProduct.description.replace(/\s/g, ''))
@@ -67,7 +65,6 @@ describe('ProductCard Component', () => {
         <ProductCard product={mockProduct} />
       </MockRouter>
     );
-    // Corregido: React-Bootstrap Card.Img no establece alt, buscamos por role y src
     const image = screen.getByRole('img');
     expect(image).toBeTruthy();
     expect(image.getAttribute('src')).toBe(mockProduct.image);
@@ -79,7 +76,6 @@ describe('ProductCard Component', () => {
         <ProductCard product={mockProduct} />
       </MockRouter>
     );
-    // Corregido: buscar botón por role y texto (insensible a mayúsculas/minúsculas)
     const button = screen.getByRole('button', { name: /ver detalle/i });
     expect(button).toBeTruthy();
     expect(button).toHaveClass('btn-dark');
@@ -93,7 +89,6 @@ describe('ProductCard Component', () => {
     );
     const button = screen.getByRole('button', { name: /ver detalle/i });
     fireEvent.click(button);
-    // Comprobamos href del <a> envolvente
     const link = button.closest('a');
     expect(link.getAttribute('href')).toBe(`/producto/${mockProduct.id}`);
   });
