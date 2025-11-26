@@ -15,6 +15,33 @@ const RopaHombre = () => {
     { id: 'chaquetas', nombre: 'Chaquetas' }
   ];
 
+  // ✅ FUNCIÓN MEJORADA PARA MANEJAR IMÁGENES
+  const obtenerImagenProducto = (product) => {
+    if (!product || !product.image) {
+      console.log('❌ Producto sin imagen:', product?.name);
+      return '/img/logo.webp';
+    }
+
+    let imagen = product.image;
+
+    // Si la imagen es una URL completa, usarla directamente
+    if (imagen.startsWith('http')) {
+      return imagen;
+    }
+
+    // Si la imagen empieza con /, usarla como está
+    if (imagen.startsWith('/')) {
+      return imagen;
+    }
+
+    // Si es una ruta relativa sin /, agregar / al inicio
+    if (!imagen.startsWith('/') && !imagen.startsWith('http')) {
+      return `/${imagen}`;
+    }
+
+    return imagen;
+  };
+
   const productosFiltrados = useMemo(() => {
     let filtered = products.filter(product => 
       product.categoria?.toLowerCase() === 'hombre'
@@ -70,6 +97,21 @@ const RopaHombre = () => {
     }
     return 'Ropa para Hombre';
   };
+
+  // ✅ DEBUG: Ver qué productos y imágenes tenemos
+  React.useEffect(() => {
+    if (products.length > 0) {
+      console.log('🔍 DEBUG - Productos de hombre:', products.filter(p => p.categoria?.toLowerCase() === 'hombre'));
+      products.filter(p => p.categoria?.toLowerCase() === 'hombre').forEach(product => {
+        console.log('📦 Producto:', {
+          nombre: product.name,
+          imagen: product.image,
+          imagenCorregida: obtenerImagenProducto(product),
+          categoria: product.categoria
+        });
+      });
+    }
+  }, [products]);
 
   if (loading) {
     return (
@@ -213,14 +255,17 @@ const RopaHombre = () => {
                 {productosFiltrados.map(product => (
                   <div key={product.id} className="col-xl-3 col-lg-4 col-md-6 mb-4">
                     <div className="card h-100 product-card">
+                      {/* ✅ IMAGEN MEJORADA */}
                       <img 
-                        src={product.image}
+                        src={obtenerImagenProducto(product)}
                         className="card-img-top" 
                         alt={product.name}
                         style={{ height: '250px', objectFit: 'cover' }}
                         onError={(e) => {
+                          console.log('❌ Error cargando imagen:', product.image);
                           e.target.src = '/img/logo.webp';
                         }}
+                        onLoad={() => console.log('✅ Imagen cargada:', product.image)}
                       />
                       <div className="card-body d-flex flex-column">
                         <h6 className="card-title">{product.name}</h6>
