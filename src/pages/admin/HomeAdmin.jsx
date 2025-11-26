@@ -238,8 +238,8 @@ const HomeAdmin = () => {
     return {
       total: products.length,
       ofertas: products.filter(p => p.oferta).length,
-      hombre: products.filter(p => p.categoria === 'hombre').length,
-      mujer: products.filter(p => p.categoria === 'mujer').length
+      hombre: products.filter(p => p.categorias && p.categorias.nombre.toLowerCase() === 'hombre').length,
+      mujer: products.filter(p => p.categorias && p.categorias.nombre.toLowerCase() === 'mujer').length
     };
   };
 
@@ -299,11 +299,12 @@ const HomeAdmin = () => {
   };
 
   const getCategoriaBadge = (categoria) => {
-    const variants = { hombre: 'primary', mujer: 'danger', infantil: 'success' };
-    return <Badge bg={variants[categoria]}>{categoria}</Badge>;
+    const variants = { hombre: 'primary', mujer: 'danger', infantil: 'success', desconocido: 'warning' };
+    const key = categoria ? categoria.toLowerCase() : 'desconocido';
+    return <Badge bg={variants[key] || 'secondary'}>{categoria || 'Sin Categoría'}</Badge>;
   };
 
-  const getTipoBadge = (tipo) => <Badge bg="secondary">{tipo}</Badge>;
+  const getTipoBadge = (tipo) => <Badge bg="secondary">{tipo || 'N/A'}</Badge>;
 
   const stats = getStats();
 
@@ -315,7 +316,6 @@ const HomeAdmin = () => {
         </Alert>
       )}
 
-      {/* Renderizar homeData */}
       {homeData.map((section, index) => {
         switch (section.type) {
           case "text":
@@ -394,28 +394,28 @@ const HomeAdmin = () => {
                             <tr key={product.id}>
                               <td>
                                 <img 
-                                  src={product.image} 
-                                  alt={product.name}
+                                  src={product.imagenUrl || product.image || 'https://via.placeholder.com/50x50?text=S/I'} 
+                                  alt={product.nombre}
                                   style={{ width: '50px', height: '50px', objectFit: 'cover' }}
                                   className="rounded"
-                                  onError={(e) => { e.target.src = 'https://via.placeholder.com/50x50?text=Imagen+no+disponible'; }}
+                                  onError={(e) => { e.target.src = 'https://via.placeholder.com/50x50?text=S/I'; }}
                                 />
                               </td>
                               <td>
-                                <strong>{product.name}</strong>
+                                <strong>{product.nombre}</strong>
                                 <br />
                                 <small className="text-muted">
                                   {product.descripcion ? product.descripcion.substring(0, 50) + '...' : 'Sin descripción'}
                                 </small>
                               </td>
-                              <td>{getCategoriaBadge(product.categoria)}</td>
+                              <td>{getCategoriaBadge(product.categorias ? product.categorias.nombre : product.categoria)}</td>
                               <td>{getTipoBadge(product.tipo)}</td>
                               <td>
-                                <strong>${product.price?.toLocaleString()}</strong>
-                                {product.originalPrice && (
+                                <strong>${product.precio?.toLocaleString()}</strong>
+                                {product.precioOriginal && (
                                   <div>
                                     <small className="text-muted text-decoration-line-through">
-                                      ${product.originalPrice?.toLocaleString()}
+                                      ${product.precioOriginal?.toLocaleString()}
                                     </small>
                                   </div>
                                 )}
