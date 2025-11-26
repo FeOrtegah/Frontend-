@@ -6,7 +6,6 @@ class VentaService {
         try {
             console.log('🔄 Creando nueva venta - Datos recibidos:', ventaData);
             
-            // 🔥 DEBUG EXTRA PARA VER LOS PRODUCTOS
             console.log('🔍 DEBUG - Productos en carrito:');
             ventaData.items?.forEach((item, index) => {
                 console.log(`Producto ${index}:`, {
@@ -77,32 +76,27 @@ class VentaService {
     
     const datos = { ...ventaData };
     
-    // ✅ CAMBIADO: Validar usuarioId (no usuario.id)
     if (!datos.usuarioId || isNaN(Number(datos.usuarioId))) {
         throw new Error('Usuario ID es requerido');
     }
     
     datos.usuarioId = Number(datos.usuarioId);
     
-    // ✅ CAMBIADO: Validar estadoId (no estado.id)
     if (!datos.estadoId || isNaN(Number(datos.estadoId))) {
         throw new Error('Estado ID es requerido');
     }
     datos.estadoId = Number(datos.estadoId);
     
-    // ✅ CAMBIADO: Validar metodoPagoId (no metodoPago.id)
     if (!datos.metodoPagoId || isNaN(Number(datos.metodoPagoId))) {
         throw new Error('Método de pago ID es requerido');
     }
     datos.metodoPagoId = Number(datos.metodoPagoId);
     
-    // ✅ CAMBIADO: Validar metodoEnvioId (no metodoEnvio.id)
     if (!datos.metodoEnvioId || isNaN(Number(datos.metodoEnvioId))) {
         throw new Error('Método de envío ID es requerido');
     }
     datos.metodoEnvioId = Number(datos.metodoEnvioId);
     
-    // ✅ CAMBIADO: Validar items con productoId (no producto.id)
     if (!datos.items || !Array.isArray(datos.items) || datos.items.length === 0) {
         throw new Error('El carrito está vacío');
     }
@@ -116,7 +110,7 @@ class VentaService {
             return tieneId;
         })
         .map((item, index) => {
-            const productoId = Number(item.productoId);  // ✅ productoId
+            const productoId = Number(item.productoId);
             const cantidad = Number(item.cantidad || 1);
             const precioUnitario = Number(item.precioUnitario || item.precio || 0);
             const subtotal = cantidad * precioUnitario;
@@ -130,7 +124,7 @@ class VentaService {
             }
             
             return {
-                productoId: productoId,  // ✅ Mantener productoId
+                productoId: productoId,
                 cantidad: cantidad,
                 precioUnitario: precioUnitario,
                 subtotal: subtotal
@@ -149,12 +143,12 @@ class VentaService {
     }
     datos.total = Number(datos.total);
     
-    // Validar número de venta
+    // Validar numero de venta
     if (!datos.numeroVenta) {
         datos.numeroVenta = `VEN-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
     }
     
-    // Asegurar dirección de envío
+    // Asegurar direccion de envío
     if (datos.direccionEnvio) {
         datos.direccionEnvio = {
             direccion: datos.direccionEnvio.direccion || '',
@@ -169,7 +163,6 @@ class VentaService {
     return datos;
 }
 
-    // ... (los otros métodos se mantienen igual)
     async obtenerVentasPorUsuario(usuarioId) {
         try {
             if (!usuarioId || isNaN(Number(usuarioId))) {
@@ -283,18 +276,15 @@ class VentaService {
         };
         return estados[estadoId] || 'Desconocido';
     }
-
-    // ✅ MÉTODOS NUEVOS AGREGADOS - SIN CAMBIAR FUNCIONALIDAD EXISTENTE
     
     obtenerFechaVenta(venta) {
         if (!venta) return 'Fecha no disponible';
         
-        // Prioridad de campos de fecha
         const posiblesFechas = [
-            venta.fechaVenta,    // Nuevo campo que agregaste
-            venta.fecha,         // Campo existente
-            venta.fechaCreacion, // Otro posible campo
-            venta.createdAt      // Otro posible campo
+            venta.fechaVenta,
+            venta.fecha,
+            venta.fechaCreacion,
+            venta.createdAt
         ];
         
         for (let fecha of posiblesFechas) {
