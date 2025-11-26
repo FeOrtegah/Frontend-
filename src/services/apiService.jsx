@@ -12,8 +12,7 @@ const API_CONFIG = {
     },
     getUrl: function(endpoint, params = {}) {
         let url = `${this.BASE_URL}${this.ENDPOINTS[endpoint]}`;
-        
-        // Reemplazar parámetros en la URL
+
         Object.keys(params).forEach(key => {
             url = url.replace(`:${key}`, params[key]);
         });
