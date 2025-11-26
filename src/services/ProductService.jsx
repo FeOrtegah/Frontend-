@@ -1,8 +1,7 @@
 import axios from 'axios';
 import API_CONFIG from './apiService';
 
-// Configuración global de axios
-axios.defaults.timeout = 30000; // 30 segundos
+axios.defaults.timeout = 30000;
 
 class ProductService {
     async getAllProducts() {
@@ -13,7 +12,6 @@ class ProductService {
             const response = await axios.get(url);
             console.log('✅ Respuesta de la base de datos:', response.data);
             
-            // Procesar respuesta de la base de datos
             let rawProducts = [];
             
             if (Array.isArray(response.data)) {
@@ -141,64 +139,62 @@ class ProductService {
         }
     }
 
-    // Métodos auxiliares para mapear datos
     mapProducts(products) {
         return products.map(product => this.mapSingleProduct(product));
     }
 
     mapSingleProduct(product) {
-        console.log('🔍 Producto crudo de la BD:', product);
-        
-        // Mapeo mejorado para la base de datos
-        const mappedProduct = {
-            // ID
-            id: product.id || product._id || product.productoId,
-            
-            // Información básica
-            name: product.nombre || product.name || 'Sin nombre',
-            descripcion: product.descripcion || product.description || '',
-            
-            // Precios
-            price: Number(product.precio || product.price || 0),
-            originalPrice: product.originalPrice || product.precioOriginal ? 
-                          Number(product.originalPrice || product.precioOriginal) : null,
-            
-            // Categoría y tipo (CRÍTICO para el filtrado)
-            categoria: product.categoria || 
-                      product.categoría || // con tilde
-                      product.category ||
-                      product.categorias?.nombre ||
-                      product.categoriaNombre ||
-                      'sin-categoria',
-            
-            tipo: product.tipo || 
-                  product.type || 
-                  product.categoriaTipo ||
-                  'general',
-            
-            // Imagen
-            image: product.image || 
-                   product.imagen || 
-                   product.imageUrl ||
-                   "/img/placeholder.jpg",
-            
-            // Stock y oferta
-            stock: Number(product.stock || product.cantidad || 0),
-            oferta: Boolean(product.oferta || product.onSale || false),
-            
-            // Tallas
-            talla: product.talla || product.size || 'S,M,L,XL',
-            
-            // Timestamps
-            createdAt: product.createdAt || product.fechaCreacion,
-            updatedAt: product.updatedAt || product.fechaActualizacion
-        };
-        
-        console.log('🎯 Producto mapeado:', mappedProduct);
-        return mappedProduct;
+    console.log('🔍 Producto crudo de la BD:', product);
+    
+    let categoria = 'sin-categoria';
+    if (product.categoria) {
+        categoria = product.categoria;
+    } else if (product.categoría) { // con tilde
+        categoria = product.categoría;
+    } else if (product.category) {
+        categoria = product.category;
+    } else if (product.categorias) {
+        if (product.categorias && typeof product.categorias === 'object') {
+            categoria = product.categorias.nombre || 'sin-categoria';
+        }
+    } else if (product.categoriaNombre) {
+        categoria = product.categoriaNombre;
     }
+    
+    const mappedProduct = {
+        id: product.id || product._id || product.productoId,
+        name: product.nombre || product.name || 'Sin nombre',
+        descripcion: product.descripcion || product.description || '',
+        price: Number(product.precio || product.price || 0),
+        originalPrice: product.originalPrice || product.precioOriginal ? 
+                      Number(product.originalPrice || product.precioOriginal) : null,
+        categoria: categoria,
+        tipo: product.tipo || 
+              product.type || 
+              product.categoriaTipo ||
+              'general',
+        
+        // Imagen
+        image: product.image || 
+               product.imagen || 
+               product.imageUrl ||
+               "/img/placeholder.jpg",
+        
+        // Stock y oferta
+        stock: Number(product.stock || product.cantidad || 0),
+        oferta: Boolean(product.oferta || product.onSale || false),
+        
+        // Tallas
+        talla: product.talla || product.size || 'S,M,L,XL',
+        
+        createdAt: product.createdAt || product.fechaCreacion,
+        updatedAt: product.updatedAt || product.fechaActualizacion
+    };
+    
+    console.log('🎯 Producto mapeado:', mappedProduct);
+    return mappedProduct;
+}
 
-    // Método para obtener productos por categoría
     async getProductsByCategory(category) {
         try {
             console.log('🔍 Filtrando productos por categoría desde la BD:', category);
@@ -236,8 +232,6 @@ class ProductService {
             };
         }
     }
-
-    // Método para obtener productos por categoría y tipo
     async getProductsByCategoryAndType(category, type) {
         try {
             console.log(`🔍 Filtrando productos: ${category} / ${type}`);
