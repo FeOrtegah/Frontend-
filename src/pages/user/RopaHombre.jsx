@@ -84,12 +84,10 @@ const RopaHombre = () => {
       }
     }
 
-    // 3. Si el producto ya tiene una imagen válida, usarla
     if (product.image && product.image !== '/img/placeholder.jpg' && !product.image.includes('placeholder')) {
       return product.image;
     }
 
-    // 4. Fallback genérico por tipo
     const textoBusqueda = `${product.name} ${product.descripcion}`.toLowerCase();
     if (textoBusqueda.includes('polera') || textoBusqueda.includes('camiseta')) {
       return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop";
@@ -104,7 +102,6 @@ const RopaHombre = () => {
       return "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=300&h=300&fit=crop";
     }
 
-    // 5. Último fallback
     return `https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=${encodeURIComponent(product.name || 'Producto')}`;
   };
 
@@ -176,13 +173,12 @@ const RopaHombre = () => {
     return 'Ropa para Hombre';
   };
 
-  // ✅ DEBUG MEJORADO
   React.useEffect(() => {
     if (products.length > 0 && productosFiltrados.length > 0) {
-      console.log('🎯 Asignación de imágenes:');
+      console.log(' Asignación de imágenes:');
       productosFiltrados.forEach(product => {
         const imagenAsignada = obtenerImagenProducto(product);
-        console.log(`📦 "${product.name}" → ${imagenAsignada}`);
+        console.log(` "${product.name}" → ${imagenAsignada}`);
       });
     }
   }, [productosFiltrados]);
@@ -335,7 +331,7 @@ const RopaHombre = () => {
                         alt={product.name}
                         style={{ height: '250px', objectFit: 'cover' }}
                         onError={(e) => {
-                          console.log('❌ Error cargando imagen para:', product.name);
+                          console.log('Error cargando imagen para:', product.name);
                           e.target.src = `https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=${encodeURIComponent(product.name)}`;
                         }}
                       />
