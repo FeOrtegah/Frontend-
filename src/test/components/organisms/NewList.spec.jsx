@@ -61,7 +61,6 @@ describe('NewsList Component', () => {
     expect(newsCards.length).toBe(1);
   });
 
-  // NUEVO TEST: Verificar que no se rompe con datos inválidos
   it('handles malformed news data gracefully', () => {
     const malformedData = [
       { invalid: 'data' },
@@ -69,7 +68,6 @@ describe('NewsList Component', () => {
       undefined
     ];
     
-    // Should not crash and should show no news message or handle gracefully
     const { container } = render(<NewsList newsData={malformedData} />);
     expect(container).toBeDefined();
   });
