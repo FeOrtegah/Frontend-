@@ -121,15 +121,14 @@ const Pago = ({ carrito, setCarrito, user }) => {
         setError('');
 
         try {
-            // ✅ ESTRUCTURA CORREGIDA - Usando la estructura del DTO VentaRequest
             const ventaData = {
-                usuarioId: userId,  // ✅ Solo el ID, no objeto
-                estadoId: 1,        // ✅ Solo el ID
+                usuarioId: userId,
+                estadoId: 1,
                 metodoPagoId: formData.metodoPago === 'tarjeta' ? 1 : 
-                             formData.metodoPago === 'transferencia' ? 2 : 3,  // ✅ Solo el ID
-                metodoEnvioId: formData.metodoEnvio === 'delivery' ? 1 : 2,    // ✅ Solo el ID
+                             formData.metodoPago === 'transferencia' ? 2 : 3,
+                metodoEnvioId: formData.metodoEnvio === 'delivery' ? 1 : 2,
                 items: productosValidos.map(item => ({
-                    productoId: Number(item.id),  // ✅ Solo el ID del producto
+                    productoId: Number(item.id),
                     cantidad: Number(item.cantidad || 1),
                     precioUnitario: Number(item.price || item.precio || 0),
                     subtotal: Number((item.price || item.precio || 0) * (item.cantidad || 1))
