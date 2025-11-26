@@ -9,7 +9,6 @@ const RopaMujer = () => {
   
   const { products, loading } = useProducts();
 
-  // ✅ IMÁGENES ESPECÍFICAS PARA PRODUCTOS DE MUJER
   const imagenesProductos = {
     // Poleras
     "Polera deportiva Azul": "https://kelme.cl/wp-content/uploads/2025/01/Polera-Deportiva-Mujer-K-Training-Kelme-2-1024x1024.jpg",
@@ -26,7 +25,6 @@ const RopaMujer = () => {
     "Chaqueta deportiva": "https://http2.mlstatic.com/D_NQ_NP_721587-CBT81767108385_012025-O-chaqueta-deportiva-para-mujer-ropa-de-yoga-de-secado-rapido.webp"
   };
 
-  // ✅ FUNCIÓN PARA OBTENER IMÁGENES ESPECÍFICAS
   const obtenerImagenProducto = (product) => {
     if (!product) {
       return 'https://via.placeholder.com/300x300/FF69B4/FFFFFF?text=Producto+Mujer';
@@ -36,12 +34,10 @@ const RopaMujer = () => {
     const descripcionProducto = product.descripcion || '';
     const textoCompleto = `${nombreProducto} ${descripcionProducto}`.toLowerCase();
 
-    // 1. Buscar por nombre exacto
     if (nombreProducto && imagenesProductos[nombreProducto]) {
       return imagenesProductos[nombreProducto];
     }
 
-    // 2. Buscar por palabras clave en nombre y descripción
     if (textoCompleto.includes('polera') && textoCompleto.includes('deportiva') && textoCompleto.includes('azul')) {
       return "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=300&h=300&fit=crop";
     }
@@ -67,7 +63,6 @@ const RopaMujer = () => {
       return "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop";
     }
 
-    // 3. Búsqueda genérica por tipo
     if (textoCompleto.includes('polera')) {
       return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop";
     }
@@ -78,12 +73,10 @@ const RopaMujer = () => {
       return "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&h=300&fit=crop";
     }
 
-    // 4. Si el producto ya tiene imagen válida
     if (product.image && product.image !== '/img/placeholder.jpg' && !product.image.includes('placeholder')) {
       return product.image;
     }
 
-    // 5. Fallback final
     return `https://via.placeholder.com/300x300/FF69B4/FFFFFF?text=${encodeURIComponent(product.name || 'Producto')}`;
   };
 
@@ -153,7 +146,6 @@ const RopaMujer = () => {
     return 'Ropa para Mujer';
   };
 
-  // ✅ DEBUG PARA VER ASIGNACIONES
   React.useEffect(() => {
     if (products.length > 0 && productosFiltrados.length > 0) {
       console.log('🎀 ASIGNACIÓN DE IMÁGENES - MUJER:');
@@ -306,7 +298,7 @@ const RopaMujer = () => {
                 {productosFiltrados.map(product => (
                   <div key={product.id} className="col-xl-3 col-lg-4 col-md-6 mb-4">
                     <div className="card h-100 product-card">
-                      {/* ✅ IMAGEN ESPECÍFICA PARA MUJER */}
+
                       <img 
                         src={obtenerImagenProducto(product)}
                         className="card-img-top" 
