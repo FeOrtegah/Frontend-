@@ -283,6 +283,70 @@ class VentaService {
         };
         return estados[estadoId] || 'Desconocido';
     }
+
+    // ✅ MÉTODOS NUEVOS AGREGADOS - SIN CAMBIAR FUNCIONALIDAD EXISTENTE
+    
+    obtenerFechaVenta(venta) {
+        if (!venta) return 'Fecha no disponible';
+        
+        // Prioridad de campos de fecha
+        const posiblesFechas = [
+            venta.fechaVenta,    // Nuevo campo que agregaste
+            venta.fecha,         // Campo existente
+            venta.fechaCreacion, // Otro posible campo
+            venta.createdAt      // Otro posible campo
+        ];
+        
+        for (let fecha of posiblesFechas) {
+            if (fecha) {
+                try {
+                    const fechaObj = new Date(fecha);
+                    if (!isNaN(fechaObj.getTime())) {
+                        return fechaObj.toLocaleDateString('es-CL', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                    }
+                } catch (error) {
+                    console.warn('Error formateando fecha:', error);
+                }
+            }
+        }
+        
+        return 'Fecha no disponible';
+    }
+
+    obtenerMetodoPagoTexto(metodoPagoId) {
+        const metodos = {
+            1: 'Tarjeta',
+            2: 'Transferencia', 
+            3: 'Efectivo'
+        };
+        return metodos[metodoPagoId] || 'No especificado';
+    }
+
+    obtenerCantidadProductosDetallada(venta) {
+        if (!venta) return '0 productos';
+        
+        const cantidad = this.calcularCantidadProductos(venta);
+        return `${cantidad} producto${cantidad !== 1 ? 's' : ''}`;
+    }
+
+    obtenerResumenVenta(venta) {
+        if (!venta) return null;
+        
+        return {
+            numeroVenta: venta.numeroVenta || 'N/A',
+            fecha: this.obtenerFechaVenta(venta),
+            total: this.calcularTotalVenta(venta),
+            cantidadProductos: this.calcularCantidadProductos(venta),
+            estado: this.obtenerEstadoTexto(venta.estado?.id || venta.estado),
+            metodoPago: this.obtenerMetodoPagoTexto(venta.metodoPago?.id || venta.metodoPago)
+        };
+    }
 }
 
 export default new VentaService();
