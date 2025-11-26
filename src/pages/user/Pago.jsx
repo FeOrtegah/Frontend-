@@ -13,7 +13,48 @@ const Pago = ({ carrito, setCarrito, user }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [usuario, setUsuario] = useState(null);
+    const [fieldErrors, setFieldErrors] = useState({});
     const navigate = useNavigate();
+
+    // Validaciones para campos numéricos
+    const soloNumeros = (valor) => /^\d*$/.test(valor);
+
+    // Formatear número de tarjeta con espacios cada 4 dígitos
+    const formatearNumeroTarjeta = (valor) => {
+        const soloNumeros = valor.replace(/\D/g, '');
+        return soloNumeros.replace(/(\d{4})(?=\d)/g, '$1 ').substring(0, 19);
+    };
+
+    // Validar fecha de expiración (MM/AA)
+    const validarFechaExpiracion = (valor) => {
+        if (!/^\d{0,2}\/?\d{0,2}$/.test(valor)) return false;
+        
+        if (valor.length >= 2) {
+            const mes = parseInt(valor.substring(0, 2));
+            if (mes < 1 || mes > 12) return false;
+        }
+        
+        return true;
+    };
+
+    // Formatear fecha de expiración
+    const formatearFechaExpiracion = (valor) => {
+        const soloNumeros = valor.replace(/\D/g, '');
+        if (soloNumeros.length <= 2) return soloNumeros;
+        return soloNumeros.substring(0, 2) + '/' + soloNumeros.substring(2, 4);
+    };
+
+    // Validar CVV (solo 3-4 dígitos)
+    const validarCVV = (valor) => /^\d{0,4}$/.test(valor);
+
+    // Validar que solo letras y espacios para nombre
+    const soloLetrasYEspacios = (valor) => /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(valor);
+
+    // Validar email
+    const validarEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+    // Validar teléfono (solo números y +)
+    const validarTelefono = (telefono) => /^[\d+\-\s()]*$/.test(telefono);
 
     const isValidUserId = (userId) => {
         if (!userId) return false;
@@ -63,33 +104,146 @@ const Pago = ({ carrito, setCarrito, user }) => {
     }, [user, navigate]);
 
     const handleInputChange = (e) => {
-        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+        const { name, value } = e.target;
+        let valorProcesado = value;
+        let error = '';
+
+        // Aplicar validaciones específicas por campo
+        switch (name) {
+            case 'numeroTarjeta':
+                valorProcesado = formatearNumeroTarjeta(value);
+                if (valorProcesado.replace(/\s/g, '').length !== 16 && valorProcesado) {
+                    error = 'El número de tarjeta debe tener 16 dígitos';
+                }
+                break;
+
+            case 'fechaExpiracion':
+                if (!validarFechaExpiracion(value)) return;
+                valorProcesado = formatearFechaExpiracion(value);
+                
+                // Validar que no esté expirada
+                if (valorProcesado.length === 5) {
+                    const [mes, año] = valorProcesado.split('/');
+                    const fechaExpiracion = new Date(2000 + parseInt(año), parseInt(mes) - 1);
+                    const hoy = new Date();
+                    if (fechaExpiracion < hoy) {
+                        error = 'La tarjeta está expirada';
+                    }
+                }
+                break;
+
+            case 'cvv':
+                if (!validarCVV(value)) return;
+                valorProcesado = value.substring(0, 4);
+                if (valorProcesado.length < 3 && valorProcesado) {
+                    error = 'El CVV debe tener 3 o 4 dígitos';
+                }
+                break;
+
+            case 'nombreTarjeta':
+                if (!soloLetrasYEspacios(value)) return;
+                break;
+
+            case 'telefono':
+                if (!validarTelefono(value)) return;
+                break;
+
+            case 'email':
+                if (value && !validarEmail(value)) {
+                    error = 'Ingresa un email válido';
+                }
+                break;
+
+            case 'nombre':
+                if (!soloLetrasYEspacios(value)) return;
+                break;
+
+            case 'codigoPostal':
+                if (!soloNumeros(value)) return;
+                valorProcesado = value.substring(0, 10);
+                break;
+
+            default:
+                break;
+        }
+
+        setFormData(prev => ({ ...prev, [name]: valorProcesado }));
+        
+        // Actualizar errores del campo
+        setFieldErrors(prev => ({
+            ...prev,
+            [name]: error
+        }));
     };
 
-    const validarPaso1 = () => formData.nombre && formData.email && formData.telefono;
-    const validarPaso2 = () => formData.direccion && formData.ciudad && formData.comuna;
+    const validarPaso1 = () => {
+        const errors = {};
+        
+        if (!formData.nombre.trim()) errors.nombre = 'El nombre es requerido';
+        if (!formData.email.trim()) errors.email = 'El email es requerido';
+        else if (!validarEmail(formData.email)) errors.email = 'Email inválido';
+        if (!formData.telefono.trim()) errors.telefono = 'El teléfono es requerido';
+        
+        setFieldErrors(prev => ({ ...prev, ...errors }));
+        return Object.keys(errors).length === 0;
+    };
+
+    const validarPaso2 = () => {
+        const errors = {};
+        
+        if (!formData.direccion.trim()) errors.direccion = 'La dirección es requerida';
+        if (!formData.ciudad.trim()) errors.ciudad = 'La ciudad es requerida';
+        if (!formData.comuna.trim()) errors.comuna = 'La comuna es requerida';
+        
+        setFieldErrors(prev => ({ ...prev, ...errors }));
+        return Object.keys(errors).length === 0;
+    };
+
     const validarPaso3 = () => {
-        if (formData.metodoPago === 'tarjeta') {
-            return formData.numeroTarjeta && formData.nombreTarjeta && formData.fechaExpiracion && formData.cvv;
-        }
-        return true;
+        if (formData.metodoPago !== 'tarjeta') return true;
+
+        const errors = {};
+        
+        const numeroTarjetaLimpio = formData.numeroTarjeta.replace(/\s/g, '');
+        if (!numeroTarjetaLimpio) errors.numeroTarjeta = 'El número de tarjeta es requerido';
+        else if (numeroTarjetaLimpio.length !== 16) errors.numeroTarjeta = 'El número de tarjeta debe tener 16 dígitos';
+        
+        if (!formData.nombreTarjeta.trim()) errors.nombreTarjeta = 'El nombre en la tarjeta es requerido';
+        
+        if (!formData.fechaExpiracion) errors.fechaExpiracion = 'La fecha de expiración es requerida';
+        else if (formData.fechaExpiracion.length !== 5) errors.fechaExpiracion = 'Formato MM/AA requerido';
+        
+        if (!formData.cvv) errors.cvv = 'El CVV es requerido';
+        else if (formData.cvv.length < 3) errors.cvv = 'El CVV debe tener 3 o 4 dígitos';
+        
+        setFieldErrors(prev => ({ ...prev, ...errors }));
+        return Object.keys(errors).length === 0;
     };
 
     const siguientePaso = () => {
-        if (pasoActual === 1 && !validarPaso1()) {
-            setError('Completa la información personal');
-            return;
-        }
-        if (pasoActual === 2 && !validarPaso2()) {
-            setError('Completa la dirección de envío');
-            return;
-        }
         setError('');
+        
+        switch (pasoActual) {
+            case 1:
+                if (!validarPaso1()) {
+                    setError('Por favor corrige los errores en la información personal');
+                    return;
+                }
+                break;
+            case 2:
+                if (!validarPaso2()) {
+                    setError('Por favor corrige los errores en la dirección de envío');
+                    return;
+                }
+                break;
+        }
+        
         setPasoActual(pasoActual + 1);
     };
 
     const pasoAnterior = () => {
         setError('');
+        setFieldErrors({});
         setPasoActual(pasoActual - 1);
     };
 
@@ -107,6 +261,11 @@ const Pago = ({ carrito, setCarrito, user }) => {
 
         if (!carrito?.length) {
             setError('Carrito vacío');
+            return;
+        }
+
+        if (formData.metodoPago === 'tarjeta' && !validarPaso3()) {
+            setError('Por favor corrige los errores en la información de pago');
             return;
         }
 
@@ -190,6 +349,22 @@ const Pago = ({ carrito, setCarrito, user }) => {
         );
     }
 
+    // Función para renderizar campo con validación
+    const CampoConValidacion = ({ name, placeholder, type = 'text', maxLength, className = '' }) => (
+        <div className={className}>
+            <input 
+                type={type}
+                className={`form-control ${fieldErrors[name] ? 'is-invalid' : ''}`}
+                name={name}
+                value={formData[name]}
+                onChange={handleInputChange}
+                placeholder={placeholder}
+                maxLength={maxLength}
+            />
+            {fieldErrors[name] && <div className="invalid-feedback">{fieldErrors[name]}</div>}
+        </div>
+    );
+
     return (
         <div className="container py-5">
             <div className="row">
@@ -227,9 +402,23 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                 <div>
                                     <h5 className="mb-4">Información Personal</h5>
                                     <div className="row g-3">
-                                        <div className="col-md-6"><input type="text" className="form-control" name="nombre" value={formData.nombre} onChange={handleInputChange} placeholder="Nombre completo *" required /></div>
-                                        <div className="col-md-6"><input type="email" className="form-control" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email *" required /></div>
-                                        <div className="col-md-6"><input type="tel" className="form-control" name="telefono" value={formData.telefono} onChange={handleInputChange} placeholder="Teléfono *" required /></div>
+                                        <CampoConValidacion 
+                                            name="nombre"
+                                            placeholder="Nombre completo *"
+                                            className="col-md-6"
+                                        />
+                                        <CampoConValidacion 
+                                            name="email"
+                                            placeholder="Email *"
+                                            type="email"
+                                            className="col-md-6"
+                                        />
+                                        <CampoConValidacion 
+                                            name="telefono"
+                                            placeholder="Teléfono *"
+                                            type="tel"
+                                            className="col-md-6"
+                                        />
                                     </div>
                                 </div>
                             )}
@@ -238,11 +427,37 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                 <div>
                                     <h5 className="mb-4">Dirección de Envío</h5>
                                     <div className="row g-3">
-                                        <div className="col-12"><input type="text" className="form-control" name="direccion" value={formData.direccion} onChange={handleInputChange} placeholder="Dirección *" required /></div>
-                                        <div className="col-md-4"><input type="text" className="form-control" name="ciudad" value={formData.ciudad} onChange={handleInputChange} placeholder="Ciudad *" required /></div>
-                                        <div className="col-md-4"><input type="text" className="form-control" name="comuna" value={formData.comuna} onChange={handleInputChange} placeholder="Comuna *" required /></div>
-                                        <div className="col-md-4"><input type="text" className="form-control" name="codigoPostal" value={formData.codigoPostal} onChange={handleInputChange} placeholder="Código Postal" /></div>
-                                        <div className="col-12"><textarea className="form-control" name="instruccionesEspeciales" value={formData.instruccionesEspeciales} onChange={handleInputChange} rows="3" placeholder="Instrucciones especiales" /></div>
+                                        <CampoConValidacion 
+                                            name="direccion"
+                                            placeholder="Dirección *"
+                                            className="col-12"
+                                        />
+                                        <CampoConValidacion 
+                                            name="ciudad"
+                                            placeholder="Ciudad *"
+                                            className="col-md-4"
+                                        />
+                                        <CampoConValidacion 
+                                            name="comuna"
+                                            placeholder="Comuna *"
+                                            className="col-md-4"
+                                        />
+                                        <CampoConValidacion 
+                                            name="codigoPostal"
+                                            placeholder="Código Postal"
+                                            className="col-md-4"
+                                            maxLength="10"
+                                        />
+                                        <div className="col-12">
+                                            <textarea 
+                                                className="form-control"
+                                                name="instruccionesEspeciales" 
+                                                value={formData.instruccionesEspeciales} 
+                                                onChange={handleInputChange}
+                                                rows="3" 
+                                                placeholder="Instrucciones especiales" 
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -281,10 +496,29 @@ const Pago = ({ carrito, setCarrito, user }) => {
 
                                     {formData.metodoPago === 'tarjeta' && (
                                         <div className="row g-3">
-                                            <div className="col-12"><input type="text" className="form-control" name="numeroTarjeta" value={formData.numeroTarjeta} onChange={handleInputChange} placeholder="Número de tarjeta *" maxLength="19" /></div>
-                                            <div className="col-md-6"><input type="text" className="form-control" name="nombreTarjeta" value={formData.nombreTarjeta} onChange={handleInputChange} placeholder="Nombre en tarjeta *" /></div>
-                                            <div className="col-md-3"><input type="text" className="form-control" name="fechaExpiracion" value={formData.fechaExpiracion} onChange={handleInputChange} placeholder="MM/AA *" maxLength="5" /></div>
-                                            <div className="col-md-3"><input type="text" className="form-control" name="cvv" value={formData.cvv} onChange={handleInputChange} placeholder="CVV *" maxLength="3" /></div>
+                                            <CampoConValidacion 
+                                                name="numeroTarjeta"
+                                                placeholder="Número de tarjeta *"
+                                                className="col-12"
+                                                maxLength="19"
+                                            />
+                                            <CampoConValidacion 
+                                                name="nombreTarjeta"
+                                                placeholder="Nombre en tarjeta *"
+                                                className="col-md-6"
+                                            />
+                                            <CampoConValidacion 
+                                                name="fechaExpiracion"
+                                                placeholder="MM/AA *"
+                                                className="col-md-3"
+                                                maxLength="5"
+                                            />
+                                            <CampoConValidacion 
+                                                name="cvv"
+                                                placeholder="CVV *"
+                                                className="col-md-3"
+                                                maxLength="4"
+                                            />
                                         </div>
                                     )}
 
