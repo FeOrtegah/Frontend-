@@ -9,24 +9,21 @@ const RopaHombre = () => {
   
   const { products, loading } = useProducts();
 
-  // Mapeo directo de imágenes para productos específicos
-  const imagenesDirectas = {
-    // HOMBRE - Poleras
+  // Configuración de Cloudinary
+  const CLOUDINARY_CONFIG = {
+    cloudName: 'dotsiqixa', // ← TU CLOUD NAME
+    baseTransformations: 'w_400,h_400,c_fill,q_auto,f_auto' // Transformaciones óptimas
+  };
+
+  // Mapeo de fallback por si algún producto no tiene URL en BD
+  const imagenesFallback = {
     "Polera básica blanca": "https://hmchile.vtexassets.com/arquivos/ids/7515921/Polera-Slim-Fit---Blanco---H-M-CL.jpg?v=638902878705900000",
     "Polera oversize negra": "https://http2.mlstatic.com/D_NQ_NP_829589-MLC70612698490_072023-O-polera-hombre-oversize-fit-negra-super-fuego-para-regalo.webp",
-    
-    // HOMBRE - Pantalones
     "Jeans Baggy Negro": "https://image.hm.com/assets/hm/dc/98/dc987f075569a9e8afb546dd6288344c6cc7a614.jpg",
     "Jogger Morado": "https://casadelasbatas.com/33980-large_default/pantalon-sanitario-jogger-morado-de-microfibra-flex-gary-s.jpg",
-    
-    // HOMBRE - Chaquetas
     "Chaqueta jean clásica": "https://lsjsas.com/cdn/shop/files/chaqueta-jean-clasica-hombre-azul-industrial-jpg.jpg?v=1761091893",
-    
-    // HOMBRE - Shorts
     "Short AND1": "https://m.media-amazon.com/images/I/61ClsB7n+OL._AC_SL1000_.jpg",
     "Short AND1 modelo premium": "https://www.manelsanchez.com/uploads/media/images/1ac_copia_copia8.jpg",
-    
-    // Otros productos
     "Polera Boxy": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=600&fit=crop",
     "oscar": "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=600&h=600&fit=crop"
   };
@@ -34,78 +31,54 @@ const RopaHombre = () => {
   // Función optimizada para obtener imágenes
   const obtenerImagenProducto = (product) => {
     if (!product) {
-      // Placeholder de Unsplash que SIEMPRE funciona
       return 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=300&h=300&fit=crop&txt=Producto&txtsize=24&txtclr=ffffff&bg=4A90E2';
     }
 
     const nombreProducto = product.name || product.nombre || 'Producto';
+    
+    console.log('🔍 Buscando imagen para:', nombreProducto);
+
+    // 1. PRIMERO: Buscar URL en la base de datos (campo imagen_url)
+    if (product.imagen_url && product.imagen_url.trim() !== '') {
+      const url = product.imagen_url.trim();
+      console.log(`✅ URL encontrada en BD: ${url}`);
+      
+      // Verificar si es URL de Cloudinary
+      if (url.includes('cloudinary.com')) {
+        // Optimizar URL de Cloudinary si no tiene transformaciones
+        if (!url.includes('/w_') && !url.includes('/c_')) {
+          const optimizedUrl = url.replace(
+            '/upload/', 
+            `/upload/${CLOUDINARY_CONFIG.baseTransformations}/`
+          );
+          console.log(`⚡ URL optimizada: ${optimizedUrl}`);
+          return optimizedUrl;
+        }
+      }
+      return url; // Devolver URL tal como está en la BD
+    }
+
+    // 2. Buscar en otros campos posibles
+    const camposPosibles = ['image', 'imagen', 'url_imagen', 'foto', 'photo_url'];
+    for (const campo of camposPosibles) {
+      if (product[campo] && product[campo].trim() !== '') {
+        console.log(`📁 Encontrado en campo "${campo}":`, product[campo]);
+        return product[campo].trim();
+      }
+    }
+
+    // 3. Usar fallback si está en el mapeo
+    if (imagenesFallback[nombreProducto]) {
+      console.log(`🔄 Usando fallback para: ${nombreProducto}`);
+      return imagenesFallback[nombreProducto];
+    }
+
+    // 4. Último fallback: Unsplash con nombre del producto
     const textoCodificado = encodeURIComponent(nombreProducto.substring(0, 20));
+    const fallbackUrl = `https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=300&h=300&fit=crop&txt=${textoCodificado}&txtsize=20&txtclr=ffffff&bg=4A90E2`;
+    console.log(`🆘 Usando fallback Unsplash: ${fallbackUrl}`);
     
-    // 1. Buscar en campos de imagen de la BD (con todos los nombres posibles)
-    const camposImagen = ['imagen_url', 'url_imagen', 'imagen', 'image', 'foto', 'url_foto', 'photo_url', 'img_url'];
-    
-    for (const campo of camposImagen) {
-      if (product[campo] && typeof product[campo] === 'string') {
-        const valor = product[campo].trim();
-        
-        // Si es URL completa
-        if (valor.startsWith('http://') || valor.startsWith('https://')) {
-          console.log(`✅ Imagen de BD en campo "${campo}":`, valor);
-          return valor;
-        }
-        
-        // Si es ruta local
-        if (valor.startsWith('/')) {
-          const urlCompleta = `http://localhost:8080${valor}`;
-          console.log(`✅ Convirtiendo ruta local "${valor}" → ${urlCompleta}`);
-          return urlCompleta;
-        }
-      }
-    }
-
-    // 2. Mapeo directo por nombre exacto
-    if (nombreProducto && imagenesDirectas[nombreProducto]) {
-      console.log(`✅ Imagen directa para "${nombreProducto}"`);
-      return imagenesDirectas[nombreProducto];
-    }
-
-    // 3. Placeholder inteligente según tipo de producto
-    const nombreLower = nombreProducto.toLowerCase();
-    
-    // Poleras
-    if (nombreLower.includes('polera') || nombreLower.includes('camiseta') || nombreLower.includes('remera')) {
-      if (nombreLower.includes('blanca')) {
-        return `https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?w=300&h=300&fit=crop&txt=${textoCodificado}&txtsize=20&txtclr=ffffff`;
-      }
-      if (nombreLower.includes('negra')) {
-        return `https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop&txt=${textoCodificado}&txtsize=20&txtclr=ffffff`;
-      }
-      return `https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=300&h=300&fit=crop&txt=${textoCodificado}&txtsize=20&txtclr=ffffff`;
-    }
-    
-    // Jeans/Pantalones
-    if (nombreLower.includes('jeans') || nombreLower.includes('pantalon') || nombreLower.includes('jogger')) {
-      if (nombreLower.includes('negro')) {
-        return `https://images.unsplash.com/photo-1582418702059-97ebafb35d09?w=300&h=300&fit=crop&txt=${textoCodificado}&txtsize=20&txtclr=ffffff`;
-      }
-      return `https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&h=300&fit=crop&txt=${textoCodificado}&txtsize=20&txtclr=ffffff`;
-    }
-    
-    // Chaquetas
-    if (nombreLower.includes('chaqueta') || nombreLower.includes('jacket')) {
-      if (nombreLower.includes('jean')) {
-        return `https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&h=300&fit=crop&txt=${textoCodificado}&txtsize=20&txtclr=ffffff`;
-      }
-      return `https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=300&h=300&fit=crop&txt=${textoCodificado}&txtsize=20&txtclr=ffffff`;
-    }
-    
-    // Shorts
-    if (nombreLower.includes('short')) {
-      return `https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=300&h=300&fit=crop&txt=${textoCodificado}&txtsize=20&txtclr=ffffff`;
-    }
-
-    // 4. Último fallback: Placeholder genérico de Unsplash
-    return `https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=300&h=300&fit=crop&txt=${textoCodificado}&txtsize=24&txtclr=ffffff&bg=4A90E2`;
+    return fallbackUrl;
   };
 
   const subcategorias = [
@@ -151,22 +124,20 @@ const RopaHombre = () => {
     }
 
     if (filtroPrecio) {
+      const getPrecio = (product) => product.price || product.precio || 0;
+      
       switch (filtroPrecio) {
         case 'menor-10000':
-          filtered = filtered.filter(product => 
-            (product.price || product.precio || 0) < 10000
-          );
+          filtered = filtered.filter(product => getPrecio(product) < 10000);
           break;
         case '10000-15000':
           filtered = filtered.filter(product => {
-            const precio = product.price || product.precio || 0;
+            const precio = getPrecio(product);
             return precio >= 10000 && precio <= 15000;
           });
           break;
         case 'mayor-15000':
-          filtered = filtered.filter(product => 
-            (product.price || product.precio || 0) > 15000
-          );
+          filtered = filtered.filter(product => getPrecio(product) > 15000);
           break;
         default:
           break;
@@ -184,20 +155,22 @@ const RopaHombre = () => {
     return 'Ropa para Hombre';
   };
 
-  // DEBUG mejorado
+  // DEBUG: Ver qué productos llegan y sus imágenes
   React.useEffect(() => {
     if (products.length > 0) {
-      console.log('🔄 Productos cargados del backend:', products.length);
-      
       const productosHombre = products.filter(p => 
         p.categoria?.toLowerCase() === 'hombre' || p.categoria_id === 16
       );
       
-      console.log('👨 Productos Hombre filtrados:', productosHombre.length);
+      console.log('👨 PRODUCTOS HOMBRE ENCONTRADOS:', productosHombre.length);
       
-      // Ver campos disponibles
-      productosHombre.slice(0, 3).forEach((product, index) => {
-        console.log(`📋 Producto ${index + 1} campos disponibles:`, Object.keys(product));
+      productosHombre.forEach(product => {
+        console.log(`📋 ${product.id}: ${product.nombre || product.name}`, {
+          imagen_url: product.imagen_url,
+          image: product.image,
+          imagen: product.imagen,
+          url_imagen: product.url_imagen
+        });
       });
     }
   }, [products]);
@@ -350,7 +323,7 @@ const RopaHombre = () => {
                   
                   return (
                     <div key={product.id} className="col-xl-3 col-lg-4 col-md-6 mb-4">
-                      <div className="card h-100 product-card shadow-sm hover-shadow">
+                      <div className="card h-100 product-card shadow-sm">
                         <div className="position-relative" style={{ height: '250px', overflow: 'hidden' }}>
                           <img 
                             src={imagenSrc}
@@ -359,16 +332,15 @@ const RopaHombre = () => {
                             style={{ 
                               height: '100%', 
                               width: '100%', 
-                              objectFit: 'cover',
-                              transition: 'transform 0.3s ease'
+                              objectFit: 'cover'
                             }}
+                            loading="lazy" // Mejora performance
                             onError={(e) => {
-                              console.log('🔄 Fallback para:', nombre);
-                              // Fallback a Unsplash seguro
-                              e.target.src = `https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=300&h=300&fit=crop&txt=${encodeURIComponent(nombre.substring(0, 15))}&txtsize=20&txtclr=ffffff&bg=4A90E2`;
+                              console.log('❌ Error cargando imagen, usando fallback:', nombre);
+                              // Fallback directo a Unsplash
+                              const fallbackUrl = `https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=300&h=300&fit=crop&txt=${encodeURIComponent(nombre.substring(0, 15))}&txtsize=20&txtclr=ffffff&bg=4A90E2`;
+                              e.target.src = fallbackUrl;
                             }}
-                            onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
-                            onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                           />
                           {(product.oferta || product.es_oferta) && (
                             <span className="position-absolute top-0 end-0 m-2 badge bg-danger">
