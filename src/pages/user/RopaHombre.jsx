@@ -9,99 +9,34 @@ const RopaHombre = () => {
   
   const { products, loading } = useProducts();
 
-  const imagenesProductos = {
-    // Poleras
-    "Polera básica blanca": "https://hmchile.vtexassets.com/arquivos/ids/7515921/Polera-Slim-Fit---Blanco---H-M-CL.jpg?v=638902878705900000",
-    "Polera oversize negra": "https://http2.mlstatic.com/D_NQ_NP_829589-MLC70612698490_072023-O-polera-hombre-oversize-fit-negra-super-fuego-para-regalo.webp", 
-    
-    // Pantalones
-    "Jeans Baggy Negro": "https://image.hm.com/assets/hm/dc/98/dc987f075569a9e8afb546dd6288344c6cc7a614.jpg?imwidth=768", 
-    "Jogger Morado": "https://casadelasbatas.com/33980-large_default/pantalon-sanitario-jogger-morado-de-microfibra-flex-gary-s.jpg", 
-    
-    // Chaquetas
-    "Chaqueta jean clásica": "https://lsjsas.com/cdn/shop/files/chaqueta-jean-clasica-hombre-azul-industrial-jpg.jpg?v=1761091893&width=1100", 
-    
-    // Shorts
-    "Short AND1": "https://m.media-amazon.com/images/I/61ClsB7n+OL._AC_SL1000_.jpg", 
-    "Short AND1 modelo premium": "https://www.manelsanchez.com/uploads/media/images/1ac_copia_copia8.jpg" 
-  };
-
-
+  // Función simplificada que PRIMERO usa la imagen de la BD
   const obtenerImagenProducto = (product) => {
     if (!product) {
       return 'https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=Producto+Hombre';
     }
 
-
-    const nombreProducto = product.name || product.nombre;
-    if (nombreProducto && imagenesProductos[nombreProducto]) {
-      return imagenesProductos[nombreProducto];
+    // 1. PRIMERO: Usar la imagen de la base de datos si existe
+    if (product.imagen && product.imagen.startsWith('http')) {
+      return product.imagen;
     }
-
-
-    if (nombreProducto) {
-      const nombreLower = nombreProducto.toLowerCase();
-      
-      // Poleras
-      if (nombreLower.includes('polera') && nombreLower.includes('blanca')) {
-        return "https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?w=300&h=300&fit=crop";
-      }
-      if (nombreLower.includes('polera') && nombreLower.includes('negra')) {
-        return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop";
-      }
-      if (nombreLower.includes('polera')) {
-        return "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=300&h=300&fit=crop";
-      }
-      
-      // Jeans/Pantalones
-      if (nombreLower.includes('jeans') && nombreLower.includes('negro')) {
-        return "https://images.unsplash.com/photo-1582418702059-97ebafb35d09?w=300&h=300&fit=crop";
-      }
-      if (nombreLower.includes('jeans')) {
-        return "https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&h=300&fit=crop";
-      }
-      if (nombreLower.includes('jogger')) {
-        return "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=300&h=300&fit=crop";
-      }
-      if (nombreLower.includes('pantalon')) {
-        return "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?w=300&h=300&fit=crop";
-      }
-      
-      // Chaquetas
-      if (nombreLower.includes('chaqueta') && nombreLower.includes('jean')) {
-        return "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&h=300&fit=crop";
-      }
-      if (nombreLower.includes('chaqueta')) {
-        return "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=300&h=300&fit=crop";
-      }
-      
-      // Shorts
-      if (nombreLower.includes('short') && nombreLower.includes('and1')) {
-        return "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=300&h=300&fit=crop";
-      }
-      if (nombreLower.includes('short')) {
-        return "https://images.unsplash.com/photo-1506629905607-e48b0e67d879?w=300&h=300&fit=crop";
-      }
+    
+    // 2. Si tiene ruta local (/img/...), convertirla
+    if (product.imagen && product.imagen.startsWith('/img/')) {
+      return `http://localhost:8080${product.imagen}`;
     }
-
-    if (product.image && product.image !== '/img/placeholder.jpg' && !product.image.includes('placeholder')) {
+    
+    // 3. Si la BD tiene la imagen en otro campo (imagen_url, url_imagen, etc.)
+    if (product.imagen_url && product.imagen_url.startsWith('http')) {
+      return product.imagen_url;
+    }
+    if (product.url_imagen && product.url_imagen.startsWith('http')) {
+      return product.url_imagen;
+    }
+    if (product.image && product.image.startsWith('http')) {
       return product.image;
     }
 
-    const textoBusqueda = `${product.name} ${product.descripcion}`.toLowerCase();
-    if (textoBusqueda.includes('polera') || textoBusqueda.includes('camiseta')) {
-      return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop";
-    }
-    if (textoBusqueda.includes('jeans') || textoBusqueda.includes('pantalon')) {
-      return "https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&h=300&fit=crop";
-    }
-    if (textoBusqueda.includes('chaqueta')) {
-      return "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&h=300&fit=crop";
-    }
-    if (textoBusqueda.includes('short')) {
-      return "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=300&h=300&fit=crop";
-    }
-
+    // 4. Último fallback: placeholder según categoría
     return `https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=${encodeURIComponent(product.name || 'Producto')}`;
   };
 
@@ -114,12 +49,13 @@ const RopaHombre = () => {
 
   const productosFiltrados = useMemo(() => {
     let filtered = products.filter(product => 
-      product.categoria?.toLowerCase() === 'hombre'
+      product.categoria?.toLowerCase() === 'hombre' || 
+      product.categoria_id === 16 // ID de categoría hombre en tu BD
     );
 
     if (subcategoria) {
       filtered = filtered.filter(product => {
-        const textoBusqueda = `${product.name} ${product.descripcion}`.toLowerCase();
+        const textoBusqueda = `${product.name} ${product.descripcion} ${product.nombre}`.toLowerCase();
         
         if (subcategoria === 'poleras') {
           return textoBusqueda.includes('polera') || 
@@ -143,19 +79,22 @@ const RopaHombre = () => {
     }
 
     if (filtroOferta) {
-      filtered = filtered.filter(product => product.oferta);
+      filtered = filtered.filter(product => product.oferta || product.es_oferta);
     }
 
     if (filtroPrecio) {
       switch (filtroPrecio) {
         case 'menor-10000':
-          filtered = filtered.filter(product => product.price < 10000);
+          filtered = filtered.filter(product => product.price < 10000 || product.precio < 10000);
           break;
         case '10000-15000':
-          filtered = filtered.filter(product => product.price >= 10000 && product.price <= 15000);
+          filtered = filtered.filter(product => 
+            (product.price >= 10000 && product.price <= 15000) ||
+            (product.precio >= 10000 && product.precio <= 15000)
+          );
           break;
         case 'mayor-15000':
-          filtered = filtered.filter(product => product.price > 15000);
+          filtered = filtered.filter(product => product.price > 15000 || product.precio > 15000);
           break;
         default:
           break;
@@ -173,15 +112,24 @@ const RopaHombre = () => {
     return 'Ropa para Hombre';
   };
 
+  // DEBUG: Ver qué imágenes están llegando de la BD
   React.useEffect(() => {
-    if (products.length > 0 && productosFiltrados.length > 0) {
-      console.log(' Asignación de imágenes:');
-      productosFiltrados.forEach(product => {
-        const imagenAsignada = obtenerImagenProducto(product);
-        console.log(` "${product.name}" → ${imagenAsignada}`);
+    if (products.length > 0) {
+      const productosHombre = products.filter(p => 
+        p.categoria?.toLowerCase() === 'hombre' || p.categoria_id === 16
+      );
+      
+      console.log('📊 Productos hombre encontrados:', productosHombre.length);
+      productosHombre.forEach(product => {
+        console.log(`🖼️ "${product.name || product.nombre}":`, {
+          imagen: product.imagen,
+          imagen_url: product.imagen_url,
+          url_imagen: product.url_imagen,
+          image: product.image
+        });
       });
     }
-  }, [productosFiltrados]);
+  }, [products]);
 
   if (loading) {
     return (
@@ -196,7 +144,8 @@ const RopaHombre = () => {
 
   const titulo = generarTitulo();
   const productosHombre = products.filter(product => 
-    product.categoria?.toLowerCase() === 'hombre'
+    product.categoria?.toLowerCase() === 'hombre' || 
+    product.categoria_id === 16
   );
 
   return (
@@ -322,49 +271,55 @@ const RopaHombre = () => {
               </div>
 
               <div className="row">
-                {productosFiltrados.map(product => (
-                  <div key={product.id} className="col-xl-3 col-lg-4 col-md-6 mb-4">
-                    <div className="card h-100 product-card">
-                      <img 
-                        src={obtenerImagenProducto(product)}
-                        className="card-img-top" 
-                        alt={product.name}
-                        style={{ height: '250px', objectFit: 'cover' }}
-                        onError={(e) => {
-                          console.log('Error cargando imagen para:', product.name);
-                          e.target.src = `https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=${encodeURIComponent(product.name)}`;
-                        }}
-                      />
-                      <div className="card-body d-flex flex-column">
-                        <h6 className="card-title">{product.name}</h6>
-                        <p className="card-text small text-muted flex-grow-1">
-                          {product.descripcion}
-                        </p>
-                        <div className="mt-auto">
-                          <div className="d-flex justify-content-between align-items-center mb-2">
-                            <span className="h6 text-primary mb-0">
-                              ${product.price?.toLocaleString('es-CL') || '0'}
-                            </span>
-                            {product.oferta && (
-                              <span className="badge bg-danger">Oferta</span>
-                            )}
+                {productosFiltrados.map(product => {
+                  const precio = product.price || product.precio || 0;
+                  const nombre = product.name || product.nombre || 'Producto';
+                  const descripcion = product.descripcion || product.descripcion || '';
+                  
+                  return (
+                    <div key={product.id} className="col-xl-3 col-lg-4 col-md-6 mb-4">
+                      <div className="card h-100 product-card">
+                        <img 
+                          src={obtenerImagenProducto(product)}
+                          className="card-img-top" 
+                          alt={nombre}
+                          style={{ height: '250px', objectFit: 'cover' }}
+                          onError={(e) => {
+                            console.log('❌ Error cargando imagen para:', nombre);
+                            console.log('Datos del producto:', {
+                              imagen: product.imagen,
+                              imagen_url: product.imagen_url,
+                              url_imagen: product.url_imagen
+                            });
+                            e.target.src = `https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=${encodeURIComponent(nombre)}`;
+                          }}
+                        />
+                        <div className="card-body d-flex flex-column">
+                          <h6 className="card-title">{nombre}</h6>
+                          <p className="card-text small text-muted flex-grow-1">
+                            {descripcion}
+                          </p>
+                          <div className="mt-auto">
+                            <div className="d-flex justify-content-between align-items-center mb-2">
+                              <span className="h6 text-primary mb-0">
+                                ${precio.toLocaleString('es-CL')}
+                              </span>
+                              {(product.oferta || product.es_oferta) && (
+                                <span className="badge bg-danger">Oferta</span>
+                              )}
+                            </div>
+                            <Link 
+                              to={`/producto/${product.id}`}
+                              className="btn btn-outline-primary w-100 mt-2"
+                            >
+                              Ver Detalles
+                            </Link>
                           </div>
-                          {product.oferta && product.originalPrice && (
-                            <small className="text-muted text-decoration-line-through">
-                              ${product.originalPrice.toLocaleString('es-CL')}
-                            </small>
-                          )}
-                          <Link 
-                            to={`/producto/${product.id}`}
-                            className="btn btn-outline-primary w-100 mt-2"
-                          >
-                            Ver Detalles
-                          </Link>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}
