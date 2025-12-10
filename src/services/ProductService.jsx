@@ -144,56 +144,90 @@ class ProductService {
     }
 
     mapSingleProduct(product) {
-    console.log('🔍 Producto crudo de la BD:', product);
-    
-    let categoria = 'sin-categoria';
-    if (product.categoria) {
-        categoria = product.categoria;
-    } else if (product.categoría) { // con tilde
-        categoria = product.categoría;
-    } else if (product.category) {
-        categoria = product.category;
-    } else if (product.categorias) {
-        if (product.categorias && typeof product.categorias === 'object') {
-            categoria = product.categorias.nombre || 'sin-categoria';
+        console.log('🔍 Producto crudo de la BD:', product);
+        
+        let categoria = 'sin-categoria';
+        if (product.categoria) {
+            categoria = product.categoria;
+        } else if (product.categoría) { // con tilde
+            categoria = product.categoría;
+        } else if (product.category) {
+            categoria = product.category;
+        } else if (product.categorias) {
+            if (product.categorias && typeof product.categorias === 'object') {
+                categoria = product.categorias.nombre || 'sin-categoria';
+            }
+        } else if (product.categoriaNombre) {
+            categoria = product.categoriaNombre;
         }
-    } else if (product.categoriaNombre) {
-        categoria = product.categoriaNombre;
+        
+        // ============================================================
+        // MEJORA EN EL MANEJO DE IMÁGENES
+        // ============================================================
+        
+        // Preservar TODOS los campos de imagen posibles de la base de datos
+        const imagen_url = product.imagen_url || null; // Prioridad absoluta a imagen_url
+        const imagenUrl = product.imagenUrl || null;
+        const url_imagen = product.url_imagen || null;
+        const imagen = product.imagen || null;
+        const image = product.image || null;
+        const photo_url = product.photo_url || product.foto || null;
+        const img_url = product.img_url || null;
+
+        // Log especial si encontramos imagen_url con URL de Cloudinary
+        if (imagen_url) {
+            if (imagen_url.includes('cloudinary.com')) {
+                console.log(`☁️ ✅ URL DE CLOUDINARY ENCONTRADA en imagen_url para producto "${product.nombre || product.name}":`, imagen_url);
+            } else if (imagen_url.startsWith('http://') || imagen_url.startsWith('https://')) {
+                console.log(`🌐 ✅ URL EXTERNA encontrada en imagen_url para producto "${product.nombre || product.name}":`, imagen_url);
+            } else {
+                console.log(`📁 URL local encontrada en imagen_url para producto "${product.nombre || product.name}":`, imagen_url);
+            }
+        }
+
+        // Determinar la imagen principal (prioridad: imagen_url > imagenUrl > url_imagen > imagen > image > otros)
+        const imagenPrincipal = imagen_url || imagenUrl || url_imagen || imagen || image || photo_url || img_url || null;
+        
+        // ============================================================
+
+        const mappedProduct = {
+            id: product.id || product._id || product.productoId,
+            name: product.nombre || product.name || 'Sin nombre',
+            descripcion: product.descripcion || product.description || '',
+            price: Number(product.precio || product.price || 0),
+            originalPrice: product.originalPrice || product.precioOriginal ? 
+                          Number(product.originalPrice || product.precioOriginal) : null,
+            categoria: categoria,
+            tipo: product.tipo || 
+                  product.type || 
+                  product.categoriaTipo ||
+                  'general',
+            
+            // IMAGEN - USANDO LA NUEVA LÓGICA MEJORADA
+            image: imagenPrincipal || "/img/placeholder.jpg", // Fallback al placeholder
+            
+            // Campos de imagen preservados para referencia
+            imagen: imagen,
+            imagen_url: imagen_url,  // Campo principal para Cloudinary
+            imagenUrl: imagenUrl,
+            url_imagen: url_imagen,
+            photo_url: photo_url,
+            img_url: img_url,
+            
+            // Stock y oferta
+            stock: Number(product.stock || product.cantidad || 0),
+            oferta: Boolean(product.oferta || product.onSale || false),
+            
+            // Tallas
+            talla: product.talla || product.size || 'S,M,L,XL',
+            
+            createdAt: product.createdAt || product.fechaCreacion,
+            updatedAt: product.updatedAt || product.fechaActualizacion
+        };
+        
+        console.log('🎯 Producto mapeado:', mappedProduct);
+        return mappedProduct;
     }
-    
-    const mappedProduct = {
-        id: product.id || product._id || product.productoId,
-        name: product.nombre || product.name || 'Sin nombre',
-        descripcion: product.descripcion || product.description || '',
-        price: Number(product.precio || product.price || 0),
-        originalPrice: product.originalPrice || product.precioOriginal ? 
-                      Number(product.originalPrice || product.precioOriginal) : null,
-        categoria: categoria,
-        tipo: product.tipo || 
-              product.type || 
-              product.categoriaTipo ||
-              'general',
-        
-        // Imagen
-        image: product.image || 
-               product.imagen || 
-               product.imageUrl ||
-               "/img/placeholder.jpg",
-        
-        // Stock y oferta
-        stock: Number(product.stock || product.cantidad || 0),
-        oferta: Boolean(product.oferta || product.onSale || false),
-        
-        // Tallas
-        talla: product.talla || product.size || 'S,M,L,XL',
-        
-        createdAt: product.createdAt || product.fechaCreacion,
-        updatedAt: product.updatedAt || product.fechaActualizacion
-    };
-    
-    console.log('🎯 Producto mapeado:', mappedProduct);
-    return mappedProduct;
-}
 
     async getProductsByCategory(category) {
         try {
@@ -232,6 +266,7 @@ class ProductService {
             };
         }
     }
+
     async getProductsByCategoryAndType(category, type) {
         try {
             console.log(`🔍 Filtrando productos: ${category} / ${type}`);
