@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Table, Badge, Button, Modal, Form, Spinner, Alert } from 'react-bootstrap';
 import ProductService from '../../services/ProductService';
 import homeData from './HomeData';
+// Importar las utilidades de imágenes
+import { obtenerImagenProducto, handleImageError } from '../../utils/imageUtils';
 
 const ProductModal = ({ show, handleClose, handleSubmit, loading }) => {
   const [formData, setFormData] = useState({
@@ -404,11 +406,11 @@ const HomeAdmin = () => {
                             <tr key={product.id}>
                               <td>
                                 <img 
-                                  src={product.imagenUrl || product.image || 'https://via.placeholder.com/50x50?text=S/I'} 
-                                  alt={product.nombre}
+                                  src={obtenerImagenProducto(product)} 
+                                  alt={product.nombre || product.name}
                                   style={{ width: '50px', height: '50px', objectFit: 'cover' }}
                                   className="rounded"
-                                  onError={(e) => { e.target.src = 'https://via.placeholder.com/50x50?text=S/I'; }}
+                                  onError={(e) => handleImageError(e, product.nombre || product.name)}
                                 />
                               </td>
                               <td>
