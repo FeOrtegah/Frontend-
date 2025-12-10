@@ -1,6 +1,5 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Logo3D from "../Logo3D/Logo3D"; 
 
 const Navbar = ({ carrito }) => {
   const navigate = useNavigate();
@@ -44,11 +43,231 @@ const Navbar = ({ carrito }) => {
     closeOffcanvas();
   };
 
+  // Componente Logo3D con tu imagen
+  const Logo3D = () => (
+    <div 
+      className="logo-3d-container"
+      onClick={handleLogoClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '15px',
+        cursor: 'pointer',
+        padding: '5px',
+        perspective: '1000px'
+      }}
+    >
+      {/* Cubo 3D con tu imagen */}
+      <div 
+        className="logo-cube-3d"
+        style={{
+          width: '60px',
+          height: '60px',
+          position: 'relative',
+          transformStyle: 'preserve-3d',
+          animation: 'rotateCube 15s infinite linear',
+          transition: 'transform 0.3s'
+        }}
+      >
+        {/* Cara frontal - Tu logo */}
+        <div 
+          className="cube-face front"
+          style={{
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            backgroundImage: 'url("/img/logo.webp")',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center',
+            backgroundColor: 'white',
+            border: '2px solid #667eea',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
+            transform: 'translateZ(30px)'
+          }}
+        />
+        
+        {/* Cara trasera */}
+        <div 
+          className="cube-face back"
+          style={{
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#764ba2',
+            border: '2px solid #764ba2',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '12px',
+            transform: 'rotateY(180deg) translateZ(30px)'
+          }}
+        >
+          EFA
+        </div>
+        
+        {/* Cara derecha */}
+        <div 
+          className="cube-face right"
+          style={{
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#f093fb',
+            border: '2px solid #f093fb',
+            borderRadius: '8px',
+            transform: 'rotateY(90deg) translateZ(30px)'
+          }}
+        />
+        
+        {/* Cara izquierda */}
+        <div 
+          className="cube-face left"
+          style={{
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#4facfe',
+            border: '2px solid #4facfe',
+            borderRadius: '8px',
+            transform: 'rotateY(-90deg) translateZ(30px)'
+          }}
+        />
+        
+        {/* Cara superior */}
+        <div 
+          className="cube-face top"
+          style={{
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#43e97b',
+            border: '2px solid #43e97b',
+            borderRadius: '8px',
+            transform: 'rotateX(90deg) translateZ(30px)'
+          }}
+        />
+        
+        {/* Cara inferior */}
+        <div 
+          className="cube-face bottom"
+          style={{
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#fa709a',
+            border: '2px solid #fa709a',
+            borderRadius: '8px',
+            transform: 'rotateX(-90deg) translateZ(30px)'
+          }}
+        />
+      </div>
+      
+      {/* Texto del logo */}
+      <div className="logo-text" style={{ display: 'flex', flexDirection: 'column' }}>
+        <span 
+          className="main-text"
+          style={{
+            fontSize: '1.3rem',
+            fontWeight: '800',
+            background: 'linear-gradient(45deg, #667eea, #764ba2)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            lineHeight: '1.1'
+          }}
+        >
+          EFA STORE
+        </span>
+        <span 
+          className="sub-text"
+          style={{
+            fontSize: '0.7rem',
+            color: '#666',
+            fontWeight: '500',
+            letterSpacing: '0.5px',
+            lineHeight: '1'
+          }}
+        >
+          Performance & Style
+        </span>
+      </div>
+
+      {/* Estilos CSS para las animaciones */}
+      <style>
+        {`
+          @keyframes rotateCube {
+            0% {
+              transform: rotateX(-10deg) rotateY(0deg);
+            }
+            25% {
+              transform: rotateX(10deg) rotateY(90deg);
+            }
+            50% {
+              transform: rotateX(20deg) rotateY(180deg);
+            }
+            75% {
+              transform: rotateX(10deg) rotateY(270deg);
+            }
+            100% {
+              transform: rotateX(-10deg) rotateY(360deg);
+            }
+          }
+          
+          .logo-3d-container:hover .logo-cube-3d {
+            animation-play-state: paused;
+            transform: rotateX(20deg) rotateY(20deg) scale(1.1);
+          }
+          
+          @media (max-width: 768px) {
+            .logo-cube-3d {
+              width: 50px;
+              height: 50px;
+            }
+            .cube-face {
+              transform: translateZ(25px) !important;
+            }
+            .main-text {
+              font-size: 1.1rem !important;
+            }
+            .sub-text {
+              font-size: 0.6rem !important;
+            }
+          }
+          
+          @media (max-width: 480px) {
+            .logo-3d-container {
+              gap: 10px !important;
+            }
+            .logo-cube-3d {
+              width: 45px;
+              height: 45px;
+            }
+            .cube-face {
+              transform: translateZ(22px) !important;
+            }
+            .main-text {
+              font-size: 1rem !important;
+            }
+            .sub-text {
+              font-size: 0.55rem !important;
+            }
+          }
+        `}
+      </style>
+    </div>
+  );
+
   return (
     <>
       <nav className="navbar bg-white border-bottom py-2">
         <div className="d-flex align-items-center justify-content-between px-3 w-100">
-          {/* Botón menú hamburguesa (MANTENIDO) */}
+          {/* Botón menú hamburguesa */}
           <button
             className="btn p-1"
             type="button"
@@ -59,16 +278,12 @@ const Navbar = ({ carrito }) => {
             <span className="navbar-toggler-icon"></span>
           </button>
 
-          {/* LOGO 3D - REEMPLAZA LA IMAGEN DEL LOGO */}
-          <div 
-            className="navbar-brand p-0 d-flex align-items-center cursor-pointer"
-            onClick={handleLogoClick}
-            style={{ cursor: 'pointer' }}
-          >
+          {/* LOGO 3D con tu imagen */}
+          <div className="navbar-brand p-0">
             <Logo3D />
           </div>
 
-          {/* Iconos derecha (MANTENIDOS) */}
+          {/* Iconos derecha */}
           <div className="iconos-derecha d-flex align-items-center">
             <button 
               onClick={handleUserClick}
@@ -89,7 +304,7 @@ const Navbar = ({ carrito }) => {
         </div>
       </nav>
 
-      {/* Offcanvas Menu (MANTENIDO COMPLETO) */}
+      {/* Offcanvas Menu - TODO MANTENIDO IGUAL */}
       <div
         className="offcanvas offcanvas-start"
         tabIndex="-1"
@@ -166,7 +381,6 @@ const Navbar = ({ carrito }) => {
               <span className="material-icons text-muted" style={{ fontSize: '1.2rem' }}>person</span>
             </button>
           </div>
-          
         </div>
       </div>
     </>
