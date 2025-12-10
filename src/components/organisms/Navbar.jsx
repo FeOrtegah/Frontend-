@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Logo3D from "../components/Logo3D/Logo3D"; // Ajusta la ruta según tu estructura
+import Logo3D from "../Logo3D/Logo3D"; 
 
 const Navbar = ({ carrito }) => {
   const navigate = useNavigate();
