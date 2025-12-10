@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Logo3D from "../components/Logo3D/Logo3D"; // Ajusta la ruta según tu estructura
 
 const Navbar = ({ carrito }) => {
   const navigate = useNavigate();
@@ -38,10 +39,16 @@ const Navbar = ({ carrito }) => {
     }
   };
 
+  const handleLogoClick = () => {
+    navigate("/");
+    closeOffcanvas();
+  };
+
   return (
     <>
       <nav className="navbar bg-white border-bottom py-2">
         <div className="d-flex align-items-center justify-content-between px-3 w-100">
+          {/* Botón menú hamburguesa (MANTENIDO) */}
           <button
             className="btn p-1"
             type="button"
@@ -52,14 +59,16 @@ const Navbar = ({ carrito }) => {
             <span className="navbar-toggler-icon"></span>
           </button>
 
-          <Link to="/" className="navbar-brand p-0">
-            <img 
-              src="/img/logo.webp" 
-              alt="EFA" 
-              style={{ height: '35px', width: 'auto' }}
-            />
-          </Link>
+          {/* LOGO 3D - REEMPLAZA LA IMAGEN DEL LOGO */}
+          <div 
+            className="navbar-brand p-0 d-flex align-items-center cursor-pointer"
+            onClick={handleLogoClick}
+            style={{ cursor: 'pointer' }}
+          >
+            <Logo3D />
+          </div>
 
+          {/* Iconos derecha (MANTENIDOS) */}
           <div className="iconos-derecha d-flex align-items-center">
             <button 
               onClick={handleUserClick}
@@ -79,6 +88,8 @@ const Navbar = ({ carrito }) => {
           </div>
         </div>
       </nav>
+
+      {/* Offcanvas Menu (MANTENIDO COMPLETO) */}
       <div
         className="offcanvas offcanvas-start"
         tabIndex="-1"
@@ -96,6 +107,7 @@ const Navbar = ({ carrito }) => {
             aria-label="Cerrar"
           ></button>
         </div>      
+        
         <div className="offcanvas-body p-0">
           <div className="p-3">
             <div className="menu-category fw-semibold text-muted small mb-2">CATEGORÍAS</div>
