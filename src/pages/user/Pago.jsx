@@ -16,45 +16,19 @@ const Pago = ({ carrito, setCarrito, user }) => {
     const [fieldErrors, setFieldErrors] = useState({});
     const navigate = useNavigate();
 
-    // Validaciones para campos numéricos
-    const soloNumeros = (valor) => /^\d*$/.test(valor);
-
-    // Formatear número de tarjeta con espacios cada 4 dígitos
+    // Función simple para formatear número de tarjeta
     const formatearNumeroTarjeta = (valor) => {
         const soloNumeros = valor.replace(/\D/g, '');
-        return soloNumeros.replace(/(\d{4})(?=\d)/g, '$1 ').substring(0, 19);
+        const grupos = soloNumeros.match(/.{1,4}/g);
+        return grupos ? grupos.join(' ').substring(0, 19) : '';
     };
 
-    // Validar fecha de expiración (MM/AA)
-    const validarFechaExpiracion = (valor) => {
-        if (!/^\d{0,2}\/?\d{0,2}$/.test(valor)) return false;
-        
-        if (valor.length >= 2) {
-            const mes = parseInt(valor.substring(0, 2));
-            if (mes < 1 || mes > 12) return false;
-        }
-        
-        return true;
-    };
-
-    // Formatear fecha de expiración
+    // Función simple para formatear fecha de expiración
     const formatearFechaExpiracion = (valor) => {
         const soloNumeros = valor.replace(/\D/g, '');
         if (soloNumeros.length <= 2) return soloNumeros;
         return soloNumeros.substring(0, 2) + '/' + soloNumeros.substring(2, 4);
     };
-
-    // Validar CVV (solo 3-4 dígitos)
-    const validarCVV = (valor) => /^\d{0,4}$/.test(valor);
-
-    // Validar que solo letras y espacios para nombre
-    const soloLetrasYEspacios = (valor) => /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(valor);
-
-    // Validar email
-    const validarEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-    // Validar teléfono (solo números y +)
-    const validarTelefono = (telefono) => /^[\d+\-\s()]*$/.test(telefono);
 
     const isValidUserId = (userId) => {
         if (!userId) return false;
@@ -106,61 +80,30 @@ const Pago = ({ carrito, setCarrito, user }) => {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         let valorProcesado = value;
-        let error = '';
 
-        // Aplicar validaciones específicas por campo
+        // Aplicar formateo específico por campo
         switch (name) {
             case 'numeroTarjeta':
                 valorProcesado = formatearNumeroTarjeta(value);
-                if (valorProcesado.replace(/\s/g, '').length !== 16 && valorProcesado) {
-                    error = 'El número de tarjeta debe tener 16 dígitos';
-                }
                 break;
 
             case 'fechaExpiracion':
-                if (!validarFechaExpiracion(value)) return;
                 valorProcesado = formatearFechaExpiracion(value);
-                
-                // Validar que no esté expirada
-                if (valorProcesado.length === 5) {
-                    const [mes, año] = valorProcesado.split('/');
-                    const fechaExpiracion = new Date(2000 + parseInt(año), parseInt(mes) - 1);
-                    const hoy = new Date();
-                    if (fechaExpiracion < hoy) {
-                        error = 'La tarjeta está expirada';
-                    }
-                }
                 break;
 
             case 'cvv':
-                if (!validarCVV(value)) return;
-                valorProcesado = value.substring(0, 4);
-                if (valorProcesado.length < 3 && valorProcesado) {
-                    error = 'El CVV debe tener 3 o 4 dígitos';
-                }
-                break;
-
-            case 'nombreTarjeta':
-                if (!soloLetrasYEspacios(value)) return;
-                break;
-
-            case 'telefono':
-                if (!validarTelefono(value)) return;
-                break;
-
-            case 'email':
-                if (value && !validarEmail(value)) {
-                    error = 'Ingresa un email válido';
-                }
-                break;
-
-            case 'nombre':
-                if (!soloLetrasYEspacios(value)) return;
+                // Solo números, máximo 4 dígitos
+                valorProcesado = value.replace(/\D/g, '').substring(0, 4);
                 break;
 
             case 'codigoPostal':
-                if (!soloNumeros(value)) return;
-                valorProcesado = value.substring(0, 10);
+                // Solo números, máximo 10 dígitos
+                valorProcesado = value.replace(/\D/g, '').substring(0, 10);
+                break;
+
+            case 'telefono':
+                // Permitir números, +, -, espacios y paréntesis
+                valorProcesado = value.replace(/[^\d+\-\s()]/g, '');
                 break;
 
             default:
@@ -169,11 +112,10 @@ const Pago = ({ carrito, setCarrito, user }) => {
 
         setFormData(prev => ({ ...prev, [name]: valorProcesado }));
         
-        // Actualizar errores del campo
-        setFieldErrors(prev => ({
-            ...prev,
-            [name]: error
-        }));
+        // Limpiar error del campo cuando el usuario empieza a escribir
+        if (fieldErrors[name]) {
+            setFieldErrors(prev => ({ ...prev, [name]: '' }));
+        }
     };
 
     const validarPaso1 = () => {
@@ -181,7 +123,7 @@ const Pago = ({ carrito, setCarrito, user }) => {
         
         if (!formData.nombre.trim()) errors.nombre = 'El nombre es requerido';
         if (!formData.email.trim()) errors.email = 'El email es requerido';
-        else if (!validarEmail(formData.email)) errors.email = 'Email inválido';
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'Email inválido';
         if (!formData.telefono.trim()) errors.telefono = 'El teléfono es requerido';
         
         setFieldErrors(prev => ({ ...prev, ...errors }));
@@ -212,6 +154,22 @@ const Pago = ({ carrito, setCarrito, user }) => {
         
         if (!formData.fechaExpiracion) errors.fechaExpiracion = 'La fecha de expiración es requerida';
         else if (formData.fechaExpiracion.length !== 5) errors.fechaExpiracion = 'Formato MM/AA requerido';
+        else {
+            // Validar que la fecha no esté expirada
+            const [mes, año] = formData.fechaExpiracion.split('/');
+            const mesNum = parseInt(mes, 10);
+            const añoNum = parseInt(año, 10);
+            
+            if (mesNum < 1 || mesNum > 12) {
+                errors.fechaExpiracion = 'Mes inválido (01-12)';
+            } else {
+                const fechaExpiracion = new Date(2000 + añoNum, mesNum - 1);
+                const hoy = new Date();
+                if (fechaExpiracion < hoy) {
+                    errors.fechaExpiracion = 'La tarjeta está expirada';
+                }
+            }
+        }
         
         if (!formData.cvv) errors.cvv = 'El CVV es requerido';
         else if (formData.cvv.length < 3) errors.cvv = 'El CVV debe tener 3 o 4 dígitos';
@@ -349,22 +307,6 @@ const Pago = ({ carrito, setCarrito, user }) => {
         );
     }
 
-    // Función para renderizar campo con validación
-    const CampoConValidacion = ({ name, placeholder, type = 'text', maxLength, className = '' }) => (
-        <div className={className}>
-            <input 
-                type={type}
-                className={`form-control ${fieldErrors[name] ? 'is-invalid' : ''}`}
-                name={name}
-                value={formData[name]}
-                onChange={handleInputChange}
-                placeholder={placeholder}
-                maxLength={maxLength}
-            />
-            {fieldErrors[name] && <div className="invalid-feedback">{fieldErrors[name]}</div>}
-        </div>
-    );
-
     return (
         <div className="container py-5">
             <div className="row">
@@ -402,23 +344,39 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                 <div>
                                     <h5 className="mb-4">Información Personal</h5>
                                     <div className="row g-3">
-                                        <CampoConValidacion 
-                                            name="nombre"
-                                            placeholder="Nombre completo *"
-                                            className="col-md-6"
-                                        />
-                                        <CampoConValidacion 
-                                            name="email"
-                                            placeholder="Email *"
-                                            type="email"
-                                            className="col-md-6"
-                                        />
-                                        <CampoConValidacion 
-                                            name="telefono"
-                                            placeholder="Teléfono *"
-                                            type="tel"
-                                            className="col-md-6"
-                                        />
+                                        <div className="col-md-6">
+                                            <input 
+                                                type="text"
+                                                className={`form-control ${fieldErrors.nombre ? 'is-invalid' : ''}`}
+                                                name="nombre"
+                                                value={formData.nombre}
+                                                onChange={handleInputChange}
+                                                placeholder="Nombre completo *"
+                                            />
+                                            {fieldErrors.nombre && <div className="invalid-feedback">{fieldErrors.nombre}</div>}
+                                        </div>
+                                        <div className="col-md-6">
+                                            <input 
+                                                type="email"
+                                                className={`form-control ${fieldErrors.email ? 'is-invalid' : ''}`}
+                                                name="email"
+                                                value={formData.email}
+                                                onChange={handleInputChange}
+                                                placeholder="Email *"
+                                            />
+                                            {fieldErrors.email && <div className="invalid-feedback">{fieldErrors.email}</div>}
+                                        </div>
+                                        <div className="col-md-6">
+                                            <input 
+                                                type="tel"
+                                                className={`form-control ${fieldErrors.telefono ? 'is-invalid' : ''}`}
+                                                name="telefono"
+                                                value={formData.telefono}
+                                                onChange={handleInputChange}
+                                                placeholder="Teléfono *"
+                                            />
+                                            {fieldErrors.telefono && <div className="invalid-feedback">{fieldErrors.telefono}</div>}
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -427,27 +385,50 @@ const Pago = ({ carrito, setCarrito, user }) => {
                                 <div>
                                     <h5 className="mb-4">Dirección de Envío</h5>
                                     <div className="row g-3">
-                                        <CampoConValidacion 
-                                            name="direccion"
-                                            placeholder="Dirección *"
-                                            className="col-12"
-                                        />
-                                        <CampoConValidacion 
-                                            name="ciudad"
-                                            placeholder="Ciudad *"
-                                            className="col-md-4"
-                                        />
-                                        <CampoConValidacion 
-                                            name="comuna"
-                                            placeholder="Comuna *"
-                                            className="col-md-4"
-                                        />
-                                        <CampoConValidacion 
-                                            name="codigoPostal"
-                                            placeholder="Código Postal"
-                                            className="col-md-4"
-                                            maxLength="10"
-                                        />
+                                        <div className="col-12">
+                                            <input 
+                                                type="text"
+                                                className={`form-control ${fieldErrors.direccion ? 'is-invalid' : ''}`}
+                                                name="direccion"
+                                                value={formData.direccion}
+                                                onChange={handleInputChange}
+                                                placeholder="Dirección *"
+                                            />
+                                            {fieldErrors.direccion && <div className="invalid-feedback">{fieldErrors.direccion}</div>}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <input 
+                                                type="text"
+                                                className={`form-control ${fieldErrors.ciudad ? 'is-invalid' : ''}`}
+                                                name="ciudad"
+                                                value={formData.ciudad}
+                                                onChange={handleInputChange}
+                                                placeholder="Ciudad *"
+                                            />
+                                            {fieldErrors.ciudad && <div className="invalid-feedback">{fieldErrors.ciudad}</div>}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <input 
+                                                type="text"
+                                                className={`form-control ${fieldErrors.comuna ? 'is-invalid' : ''}`}
+                                                name="comuna"
+                                                value={formData.comuna}
+                                                onChange={handleInputChange}
+                                                placeholder="Comuna *"
+                                            />
+                                            {fieldErrors.comuna && <div className="invalid-feedback">{fieldErrors.comuna}</div>}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <input 
+                                                type="text"
+                                                className="form-control"
+                                                name="codigoPostal"
+                                                value={formData.codigoPostal}
+                                                onChange={handleInputChange}
+                                                placeholder="Código Postal"
+                                                maxLength="10"
+                                            />
+                                        </div>
                                         <div className="col-12">
                                             <textarea 
                                                 className="form-control"
@@ -496,29 +477,53 @@ const Pago = ({ carrito, setCarrito, user }) => {
 
                                     {formData.metodoPago === 'tarjeta' && (
                                         <div className="row g-3">
-                                            <CampoConValidacion 
-                                                name="numeroTarjeta"
-                                                placeholder="Número de tarjeta *"
-                                                className="col-12"
-                                                maxLength="19"
-                                            />
-                                            <CampoConValidacion 
-                                                name="nombreTarjeta"
-                                                placeholder="Nombre en tarjeta *"
-                                                className="col-md-6"
-                                            />
-                                            <CampoConValidacion 
-                                                name="fechaExpiracion"
-                                                placeholder="MM/AA *"
-                                                className="col-md-3"
-                                                maxLength="5"
-                                            />
-                                            <CampoConValidacion 
-                                                name="cvv"
-                                                placeholder="CVV *"
-                                                className="col-md-3"
-                                                maxLength="4"
-                                            />
+                                            <div className="col-12">
+                                                <input 
+                                                    type="text"
+                                                    className={`form-control ${fieldErrors.numeroTarjeta ? 'is-invalid' : ''}`}
+                                                    name="numeroTarjeta"
+                                                    value={formData.numeroTarjeta}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Número de tarjeta *"
+                                                    maxLength="19"
+                                                />
+                                                {fieldErrors.numeroTarjeta && <div className="invalid-feedback">{fieldErrors.numeroTarjeta}</div>}
+                                            </div>
+                                            <div className="col-md-6">
+                                                <input 
+                                                    type="text"
+                                                    className={`form-control ${fieldErrors.nombreTarjeta ? 'is-invalid' : ''}`}
+                                                    name="nombreTarjeta"
+                                                    value={formData.nombreTarjeta}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Nombre en tarjeta *"
+                                                />
+                                                {fieldErrors.nombreTarjeta && <div className="invalid-feedback">{fieldErrors.nombreTarjeta}</div>}
+                                            </div>
+                                            <div className="col-md-3">
+                                                <input 
+                                                    type="text"
+                                                    className={`form-control ${fieldErrors.fechaExpiracion ? 'is-invalid' : ''}`}
+                                                    name="fechaExpiracion"
+                                                    value={formData.fechaExpiracion}
+                                                    onChange={handleInputChange}
+                                                    placeholder="MM/AA *"
+                                                    maxLength="5"
+                                                />
+                                                {fieldErrors.fechaExpiracion && <div className="invalid-feedback">{fieldErrors.fechaExpiracion}</div>}
+                                            </div>
+                                            <div className="col-md-3">
+                                                <input 
+                                                    type="text"
+                                                    className={`form-control ${fieldErrors.cvv ? 'is-invalid' : ''}`}
+                                                    name="cvv"
+                                                    value={formData.cvv}
+                                                    onChange={handleInputChange}
+                                                    placeholder="CVV *"
+                                                    maxLength="4"
+                                                />
+                                                {fieldErrors.cvv && <div className="invalid-feedback">{fieldErrors.cvv}</div>}
+                                            </div>
                                         </div>
                                     )}
 
