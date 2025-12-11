@@ -11,6 +11,22 @@ const Home = () => {
   const [shortsAnd1, setShortsAnd1] = useState([]);
   const [tiempoRestante, setTiempoRestante] = useState("");
 
+  // Función para formatear precios de forma segura
+  const formatPrice = (price) => {
+    if (price === null || price === undefined || price === '') return '0';
+    const priceNumber = Number(price);
+    if (isNaN(priceNumber)) return '0';
+    return priceNumber.toLocaleString('es-CL');
+  };
+
+  // Función para calcular diferencia de precios
+  const calcularAhorro = (precioOriginal, precioOferta) => {
+    const original = Number(precioOriginal) || 0;
+    const oferta = Number(precioOferta) || 0;
+    if (original <= 0 || oferta <= 0 || original <= oferta) return '0';
+    return formatPrice(original - oferta);
+  };
+
   // Calcular tiempo restante para la oferta (3 días desde ahora)
   useEffect(() => {
     const calcularTiempoRestante = () => {
@@ -56,47 +72,67 @@ const Home = () => {
       try {
         setLoading(true);
         const response = await ProductService.getAllProducts();
-        const allProducts = response.data;
+        const allProducts = response.data || [];
         setProducts(allProducts);
 
-        // Ofertas aleatorias normales
-        const ofertas = allProducts.filter(product => product.oferta);
-        const randomOffers = selectRandomOffers(ofertas, 3);
-        setProductosOfertaAleatorios(randomOffers);
-
-        // Filtrar shorts AND1 específicos (asumiendo que tienen "AND1" en el nombre)
-        const shortsAnd1Products = allProducts.filter(product => 
-          (product.nombre && product.nombre.toLowerCase().includes('and1')) || 
-          (product.name && product.name.toLowerCase().includes('and1'))
+        // Ofertas aleatorias normales - solo productos válidos
+        const ofertasValidas = allProducts.filter(product => 
+          product && 
+          product.oferta && 
+          (product.precio || product.price) && 
+          product.id
         );
         
-        // Si no hay productos AND1, usar estos como ejemplo
+        const randomOffers = selectRandomOffers(ofertasValidas, 3);
+        setProductosOfertaAleatorios(randomOffers);
+
+        // Filtrar shorts AND1 específicos
+        const shortsAnd1Products = allProducts.filter(product => 
+          product && 
+          product.id &&
+          (
+            (product.nombre && product.nombre.toLowerCase().includes('and1')) || 
+            (product.name && product.name.toLowerCase().includes('and1'))
+          )
+        );
+        
+        // Si no hay productos AND1, usar shorts como ejemplo
         if (shortsAnd1Products.length === 0) {
           const shortsEjemplo = allProducts.filter(product => 
-            (product.tipo && product.tipo.toLowerCase() === 'shorts') ||
-            (product.categoria && product.categoria.toLowerCase() === 'hombre')
+            product &&
+            product.id &&
+            (
+              (product.tipo && product.tipo.toLowerCase() === 'shorts') ||
+              (product.categoria && product.categoria.toLowerCase() === 'hombre')
+            )
           ).slice(0, 2);
           
           // Agregar información de oferta especial a estos productos
-          const shortsConOferta = shortsEjemplo.map(short => ({
-            ...short,
-            ofertaEspecial: true,
-            precioOriginal: short.precio ? short.precio * 1.3 : 0, // 30% más caro originalmente
-            precioOferta: short.precio, // Precio actual es la oferta
-            descuento: 30, // 30% de descuento
-            limiteTiempo: true
-          }));
+          const shortsConOferta = shortsEjemplo.map(short => {
+            const precioBase = Number(short.precio || short.price || 0);
+            return {
+              ...short,
+              ofertaEspecial: true,
+              precioOriginal: precioBase > 0 ? Math.round(precioBase * 1.3) : 0,
+              precioOferta: precioBase,
+              descuento: 30,
+              limiteTiempo: true
+            };
+          });
           
           setShortsAnd1(shortsConOferta);
         } else {
-          setShortsAnd1(shortsAnd1Products.map(short => ({
-            ...short,
-            ofertaEspecial: true,
-            precioOriginal: short.precio ? Math.round(short.precio * 1.3) : 0,
-            precioOferta: short.precio,
-            descuento: 30,
-            limiteTiempo: true
-          })));
+          setShortsAnd1(shortsAnd1Products.map(short => {
+            const precioBase = Number(short.precio || short.price || 0);
+            return {
+              ...short,
+              ofertaEspecial: true,
+              precioOriginal: precioBase > 0 ? Math.round(precioBase * 1.3) : 0,
+              precioOferta: precioBase,
+              descuento: 30,
+              limiteTiempo: true
+            };
+          }));
         }
 
       } catch (err) {
@@ -145,6 +181,9 @@ const Home = () => {
             className="card-img-top" 
             alt="Novedades" 
             style={{ height: "400px", objectFit: "cover" }}
+            onError={(e) => {
+              e.target.src = '/images/placeholder.jpg';
+            }}
           />
         </div>
       </section>
@@ -180,79 +219,97 @@ const Home = () => {
             </div>
             
             <Row xs={1} md={shortsAnd1.length} className="g-4 justify-content-center">
-              {shortsAnd1.map((short, index) => (
-                <Col key={short.id || index} className="d-flex">
-                  <Card className="h-100 text-center position-relative border-0 shadow-lg flex-grow-1"
-                    style={{ 
-                      transform: 'translateY(0)',
-                      transition: 'transform 0.3s',
-                      overflow: 'hidden'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                  >
-                    <div className="position-relative">
-                      {/* Badges de oferta */}
-                      <Badge bg="danger" className="position-absolute top-0 start-0 m-2 fs-6 px-3">
-                        -{short.descuento || 30}%
-                      </Badge>
-                      <Badge bg="warning" className="position-absolute top-0 end-0 m-2 fs-6 px-3">
-                        <i className="bi bi-clock me-1"></i> 72H
-                      </Badge>
+              {shortsAnd1.map((short, index) => {
+                if (!short) return null;
+                
+                const nombre = short.nombre || short.name || 'Producto sin nombre';
+                const descripcion = short.descripcion || short.description || 'Shorts deportivos AND1 de alta calidad';
+                const precioOferta = short.precioOferta || short.precio || short.price || 0;
+                const precioOriginal = short.precioOriginal;
+                const descuento = short.descuento || 30;
+                const ahorro = calcularAhorro(precioOriginal, precioOferta);
+                
+                return (
+                  <Col key={short.id || index} className="d-flex">
+                    <Card className="h-100 text-center position-relative border-0 shadow-lg flex-grow-1"
+                      style={{ 
+                        transform: 'translateY(0)',
+                        transition: 'transform 0.3s',
+                        overflow: 'hidden'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+                      onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                    >
+                      <div className="position-relative">
+                        {/* Badges de oferta */}
+                        <Badge bg="danger" className="position-absolute top-0 start-0 m-2 fs-6 px-3">
+                          -{descuento}%
+                        </Badge>
+                        <Badge bg="warning" className="position-absolute top-0 end-0 m-2 fs-6 px-3">
+                          <i className="bi bi-clock me-1"></i> 72H
+                        </Badge>
+                        
+                        <Card.Img
+                          variant="top"
+                          src={short.imagenUrl || short.image || '/images/placeholder.jpg'}
+                          style={{ 
+                            height: "300px", 
+                            objectFit: "cover",
+                            borderBottom: '3px solid #667eea'
+                          }}
+                          onError={(e) => {
+                            e.target.src = '/images/placeholder.jpg';
+                          }}
+                        />
+                      </div>
                       
-                      <Card.Img
-                        variant="top"
-                        src={short.imagenUrl || short.image || '/images/placeholder.jpg'}
-                        style={{ 
-                          height: "300px", 
-                          objectFit: "cover",
-                          borderBottom: '3px solid #667eea'
-                        }}
-                        onError={(e) => {
-                          e.target.src = '/images/placeholder.jpg';
-                        }}
-                      />
-                    </div>
-                    
-                    <Card.Body className="d-flex flex-column">
-                      <Card.Title className="fw-bold">{short.nombre || short.name}</Card.Title>
-                      <Card.Text className="text-muted small flex-grow-1">
-                        {short.descripcion || short.description || 'Shorts deportivos AND1 de alta calidad'}
-                      </Card.Text>
-                      
-                      <div className="mb-3">
-                        <div className="d-flex justify-content-center align-items-center gap-2">
-                          <Card.Text className="text-success fw-bold fs-4 mb-0">
-                            ${short.precioOferta ? short.precioOferta.toLocaleString() : short.precio.toLocaleString()}
-                          </Card.Text>
-                          {short.precioOriginal && (
-                            <Card.Text className="text-decoration-line-through text-muted mb-0">
-                              ${short.precioOriginal.toLocaleString()}
+                      <Card.Body className="d-flex flex-column">
+                        <Card.Title className="fw-bold">{nombre}</Card.Title>
+                        <Card.Text className="text-muted small flex-grow-1">
+                          {descripcion}
+                        </Card.Text>
+                        
+                        <div className="mb-3">
+                          <div className="d-flex justify-content-center align-items-center gap-2">
+                            <Card.Text className="text-success fw-bold fs-4 mb-0">
+                              ${formatPrice(precioOferta)}
                             </Card.Text>
-                          )}
+                            {precioOriginal && precioOriginal > precioOferta && (
+                              <Card.Text className="text-decoration-line-through text-muted mb-0">
+                                ${formatPrice(precioOriginal)}
+                              </Card.Text>
+                            )}
+                          </div>
+                          <small className="text-success">
+                            <i className="bi bi-arrow-down-circle-fill me-1"></i>
+                            Ahorras ${ahorro}
+                          </small>
                         </div>
-                        <small className="text-success">
-                          <i className="bi bi-arrow-down-circle-fill me-1"></i>
-                          Ahorras ${short.precioOriginal ? (short.precioOriginal - (short.precioOferta || short.precio)).toLocaleString() : '0'}
-                        </small>
-                      </div>
-                      
-                      <div className="mt-auto">
-                        <Link to={`/producto/${short.id}`}>
-                          <button className="btn btn-warning btn-lg w-100 fw-bold">
-                            <i className="bi bi-bolt-fill me-2"></i>
-                            COMPRAR AHORA
-                          </button>
-                        </Link>
-                        <small className="text-muted d-block mt-2">
-                          <i className="bi bi-truck me-1"></i>
-                          Envío gratis • Stock limitado
-                        </small>
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
+                        
+                        <div className="mt-auto">
+                          {short.id ? (
+                            <Link to={`/producto/${short.id}`}>
+                              <button className="btn btn-warning btn-lg w-100 fw-bold">
+                                <i className="bi bi-bolt-fill me-2"></i>
+                                COMPRAR AHORA
+                              </button>
+                            </Link>
+                          ) : (
+                            <button className="btn btn-warning btn-lg w-100 fw-bold" disabled>
+                              <i className="bi bi-bolt-fill me-2"></i>
+                              NO DISPONIBLE
+                            </button>
+                          )}
+                          <small className="text-muted d-block mt-2">
+                            <i className="bi bi-truck me-1"></i>
+                            Envío gratis • Stock limitado
+                          </small>
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                );
+              })}
             </Row>
             
             <div className="text-center mt-4 text-white">
@@ -281,39 +338,50 @@ const Home = () => {
             </div>
           ) : (
             <Row xs={1} md={3} className="g-4">
-              {productosOfertaAleatorios.map((product) => (
-                <Col key={product.id}> 
-                  <Card className="h-100 text-center position-relative">
-                    <Badge bg="danger" className="position-absolute top-0 start-0 m-2">
-                      OFERTA
-                    </Badge>
-                    
-                    <Card.Img
-                      variant="top"
-                      src={product.imagenUrl || '/images/placeholder.jpg'}
-                      style={{ maxHeight: "300px", objectFit: "contain" }}
-                      onError={(e) => {
-                        e.target.src = '/images/placeholder.jpg';
-                      }}
-                    />
-                    <Card.Body>
-                      <Card.Title>{product.nombre}</Card.Title>
+              {productosOfertaAleatorios.map((product) => {
+                if (!product) return null;
+                
+                const nombre = product.nombre || product.name || 'Producto sin nombre';
+                const precio = product.precio || product.price || 0;
+                
+                return (
+                  <Col key={product.id || Math.random()}> 
+                    <Card className="h-100 text-center position-relative">
+                      <Badge bg="danger" className="position-absolute top-0 start-0 m-2">
+                        OFERTA
+                      </Badge>
                       
-                      <div className="d-flex justify-content-center align-items-center gap-2">
-                        <Card.Text className="text-danger fw-bold fs-5 mb-0">
-                          ${product.precio ? product.precio.toLocaleString() : 'N/A'}
-                        </Card.Text>
-                      </div>
+                      <Card.Img
+                        variant="top"
+                        src={product.imagenUrl || product.image || '/images/placeholder.jpg'}
+                        style={{ maxHeight: "300px", objectFit: "contain" }}
+                        onError={(e) => {
+                          e.target.src = '/images/placeholder.jpg';
+                        }}
+                      />
+                      <Card.Body>
+                        <Card.Title>{nombre}</Card.Title>
+                        
+                        <div className="d-flex justify-content-center align-items-center gap-2">
+                          <Card.Text className="text-danger fw-bold fs-5 mb-0">
+                            ${formatPrice(precio)}
+                          </Card.Text>
+                        </div>
 
-                      <div className="mt-3">
-                        <Link to={`/producto/${product.id}`}>
-                          <button className="btn btn-dark btn-sm">Ver detalle</button>
-                        </Link>
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
+                        <div className="mt-3">
+                          {product.id ? (
+                            <Link to={`/producto/${product.id}`}>
+                              <button className="btn btn-dark btn-sm">Ver detalle</button>
+                            </Link>
+                          ) : (
+                            <button className="btn btn-dark btn-sm" disabled>No disponible</button>
+                          )}
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                );
+              })}
             </Row>
           )}
         </Container>
@@ -333,6 +401,9 @@ const Home = () => {
                   src="/img/WhatsApp Image 2025-09-04 at 21.57.27 (2).webp" 
                   className="card-img-top" 
                   alt="Modelo 1" 
+                  onError={(e) => {
+                    e.target.src = '/images/placeholder.jpg';
+                  }}
                 />
               </div>
             </Col>
@@ -342,6 +413,9 @@ const Home = () => {
                   src="/img/16.webp" 
                   className="card-img-top" 
                   alt="Modelo 2" 
+                  onError={(e) => {
+                    e.target.src = '/images/placeholder.jpg';
+                  }}
                 />
               </div>
             </Col>
@@ -351,6 +425,9 @@ const Home = () => {
                   src="/img/WhatsApp Image 2025-09-04 at 21.57.27.webp" 
                   className="card-img-top" 
                   alt="Modelo 3" 
+                  onError={(e) => {
+                    e.target.src = '/images/placeholder.jpg';
+                  }}
                 />
               </div>
             </Col>
