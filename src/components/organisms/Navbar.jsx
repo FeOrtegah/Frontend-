@@ -43,7 +43,7 @@ const Navbar = ({ carrito }) => {
     closeOffcanvas();
   };
 
-  // Componente Logo3D con tu imagen
+  // Componente Logo 3D con tu imagen
   const Logo3D = () => (
     <div 
       className="logo-3d-container"
@@ -51,120 +51,79 @@ const Navbar = ({ carrito }) => {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '15px',
-        cursor: 'pointer',
-        padding: '5px',
-        perspective: '1000px'
+        gap: '10px',
+        cursor: 'pointer'
       }}
     >
-      {/* Cubo 3D con tu imagen */}
+      {/* Contenedor del logo 3D */}
       <div 
-        className="logo-cube-3d"
+        className="logo-3d-wrapper"
         style={{
-          width: '60px',
-          height: '60px',
+          width: '50px',
+          height: '50px',
           position: 'relative',
-          transformStyle: 'preserve-3d',
-          animation: 'rotateCube 15s infinite linear',
-          transition: 'transform 0.3s'
+          perspective: '500px'
         }}
       >
-        {/* Cara frontal - Tu logo */}
+        {/* Logo con efecto 3D giratorio */}
         <div 
-          className="cube-face front"
+          className="logo-3d-rotating"
           style={{
-            position: 'absolute',
             width: '100%',
             height: '100%',
-            backgroundImage: 'url("/img/logo.webp")',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-            backgroundColor: 'white',
-            border: '2px solid #667eea',
-            borderRadius: '8px',
-            boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
-            transform: 'translateZ(30px)'
-          }}
-        />
-        
-        {/* Cara trasera */}
-        <div 
-          className="cube-face back"
-          style={{
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            backgroundColor: '#764ba2',
-            border: '2px solid #764ba2',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontWeight: 'bold',
-            fontSize: '12px',
-            transform: 'rotateY(180deg) translateZ(30px)'
+            position: 'relative',
+            transformStyle: 'preserve-3d',
+            animation: 'rotateLogo3D 15s infinite linear',
+            transition: 'transform 0.3s ease'
           }}
         >
-          EFA
+          {/* Capa frontal del logo */}
+          <div 
+            className="logo-layer front"
+            style={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              backgroundImage: 'url("/img/logo.webp")',
+              backgroundSize: 'contain',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center',
+              filter: 'drop-shadow(0 0 8px rgba(0, 0, 0, 0.5))',
+              transform: 'translateZ(10px)'
+            }}
+          />
+          
+          {/* Capa trasera del logo (para profundidad) */}
+          <div 
+            className="logo-layer back"
+            style={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              backgroundImage: 'url("/img/logo.webp")',
+              backgroundSize: 'contain',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center',
+              filter: 'brightness(0.5) blur(1px)',
+              opacity: '0.7',
+              transform: 'translateZ(-10px) rotateY(180deg)'
+            }}
+          />
+          
+          {/* Efecto de brillo 3D */}
+          <div 
+            className="logo-glow"
+            style={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              background: 'radial-gradient(circle at center, rgba(255,255,255,0.3) 0%, transparent 70%)',
+              borderRadius: '50%',
+              opacity: '0.5',
+              transform: 'translateZ(5px)'
+            }}
+          />
         </div>
-        
-        {/* Cara derecha */}
-        <div 
-          className="cube-face right"
-          style={{
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            backgroundColor: '#f093fb',
-            border: '2px solid #f093fb',
-            borderRadius: '8px',
-            transform: 'rotateY(90deg) translateZ(30px)'
-          }}
-        />
-        
-        {/* Cara izquierda */}
-        <div 
-          className="cube-face left"
-          style={{
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            backgroundColor: '#4facfe',
-            border: '2px solid #4facfe',
-            borderRadius: '8px',
-            transform: 'rotateY(-90deg) translateZ(30px)'
-          }}
-        />
-        
-        {/* Cara superior */}
-        <div 
-          className="cube-face top"
-          style={{
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            backgroundColor: '#43e97b',
-            border: '2px solid #43e97b',
-            borderRadius: '8px',
-            transform: 'rotateX(90deg) translateZ(30px)'
-          }}
-        />
-        
-        {/* Cara inferior */}
-        <div 
-          className="cube-face bottom"
-          style={{
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            backgroundColor: '#fa709a',
-            border: '2px solid #fa709a',
-            borderRadius: '8px',
-            transform: 'rotateX(-90deg) translateZ(30px)'
-          }}
-        />
       </div>
       
       {/* Texto del logo */}
@@ -174,12 +133,11 @@ const Navbar = ({ carrito }) => {
           style={{
             fontSize: '1.3rem',
             fontWeight: '800',
-            background: 'linear-gradient(45deg, #667eea, #764ba2)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
+            color: '#000000',
             textTransform: 'uppercase',
             letterSpacing: '1px',
-            lineHeight: '1.1'
+            lineHeight: '1.1',
+            textShadow: '1px 1px 2px rgba(0,0,0,0.1)'
           }}
         >
           EFA STORE
@@ -187,7 +145,7 @@ const Navbar = ({ carrito }) => {
         <span 
           className="sub-text"
           style={{
-            fontSize: '0.7rem',
+            fontSize: '0.65rem',
             color: '#666',
             fontWeight: '500',
             letterSpacing: '0.5px',
@@ -201,61 +159,59 @@ const Navbar = ({ carrito }) => {
       {/* Estilos CSS para las animaciones */}
       <style>
         {`
-          @keyframes rotateCube {
+          @keyframes rotateLogo3D {
             0% {
-              transform: rotateX(-10deg) rotateY(0deg);
+              transform: rotateY(0deg) rotateX(0deg);
             }
             25% {
-              transform: rotateX(10deg) rotateY(90deg);
+              transform: rotateY(90deg) rotateX(5deg);
             }
             50% {
-              transform: rotateX(20deg) rotateY(180deg);
+              transform: rotateY(180deg) rotateX(0deg);
             }
             75% {
-              transform: rotateX(10deg) rotateY(270deg);
+              transform: rotateY(270deg) rotateX(-5deg);
             }
             100% {
-              transform: rotateX(-10deg) rotateY(360deg);
+              transform: rotateY(360deg) rotateX(0deg);
             }
           }
           
-          .logo-3d-container:hover .logo-cube-3d {
+          .logo-3d-container:hover .logo-3d-rotating {
             animation-play-state: paused;
-            transform: rotateX(20deg) rotateY(20deg) scale(1.1);
+            transform: rotateY(20deg) rotateX(10deg) scale(1.1);
+          }
+          
+          .logo-3d-container:hover .logo-layer.front {
+            filter: drop-shadow(0 0 12px rgba(0, 0, 0, 0.8));
           }
           
           @media (max-width: 768px) {
-            .logo-cube-3d {
-              width: 50px;
-              height: 50px;
-            }
-            .cube-face {
-              transform: translateZ(25px) !important;
+            .logo-3d-wrapper {
+              width: 40px;
+              height: 40px;
             }
             .main-text {
               font-size: 1.1rem !important;
             }
             .sub-text {
-              font-size: 0.6rem !important;
+              font-size: 0.55rem !important;
             }
           }
           
           @media (max-width: 480px) {
             .logo-3d-container {
-              gap: 10px !important;
+              gap: 8px !important;
             }
-            .logo-cube-3d {
-              width: 45px;
-              height: 45px;
-            }
-            .cube-face {
-              transform: translateZ(22px) !important;
+            .logo-3d-wrapper {
+              width: 35px;
+              height: 35px;
             }
             .main-text {
               font-size: 1rem !important;
             }
             .sub-text {
-              font-size: 0.55rem !important;
+              font-size: 0.5rem !important;
             }
           }
         `}
