@@ -191,18 +191,18 @@ const Home = () => {
       {/* OFERTAS EXCLUSIVAS AND1 - NUEVA SECCIÓN */}
       {shortsAnd1.length > 0 && (
         <section className="mb-5 py-4 bg-gradient" style={{ 
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
+          background: 'linear-gradient(135deg, #1a1a1a 0%, #333333 100%)' // Cambiado a negro
         }}>
           <Container>
             <div className="text-center mb-4 text-white">
-              <Badge bg="warning" className="mb-2 fs-6 px-3 py-2">
+              <Badge bg="dark" className="mb-2 fs-6 px-3 py-2 border border-light"> {/* Cambiado a negro */}
                 ⚡ OFERTA EXCLUSIVA ⚡
               </Badge>
               <h2 className="fw-bold">Shorts AND1 - Edición Limitada</h2>
               <p className="lead">¡Oferta disponible por tiempo limitado!</p>
               
               <div className="d-flex justify-content-center align-items-center gap-3 mb-3">
-                <div className="bg-dark text-white rounded p-2">
+                <div className="bg-dark text-white rounded p-2 border border-light">
                   <div className="fs-1 fw-bold">{tiempoRestante}</div>
                   <small>Termina la oferta</small>
                 </div>
@@ -235,7 +235,8 @@ const Home = () => {
                       style={{ 
                         transform: 'translateY(0)',
                         transition: 'transform 0.3s',
-                        overflow: 'hidden'
+                        overflow: 'hidden',
+                        backgroundColor: '#f8f9fa'
                       }}
                       onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
                       onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
@@ -245,7 +246,7 @@ const Home = () => {
                         <Badge bg="danger" className="position-absolute top-0 start-0 m-2 fs-6 px-3">
                           -{descuento}%
                         </Badge>
-                        <Badge bg="warning" className="position-absolute top-0 end-0 m-2 fs-6 px-3">
+                        <Badge bg="dark" className="position-absolute top-0 end-0 m-2 fs-6 px-3 border border-light"> {/* Cambiado a negro */}
                           <i className="bi bi-clock me-1"></i> 72H
                         </Badge>
                         
@@ -255,7 +256,7 @@ const Home = () => {
                           style={{ 
                             height: "300px", 
                             objectFit: "cover",
-                            borderBottom: '3px solid #667eea'
+                            borderBottom: '3px solid #1a1a1a' // Cambiado a negro
                           }}
                           onError={(e) => {
                             e.target.src = '/images/placeholder.jpg';
@@ -289,13 +290,19 @@ const Home = () => {
                         <div className="mt-auto">
                           {short.id ? (
                             <Link to={`/producto/${short.id}`}>
-                              <button className="btn btn-warning btn-lg w-100 fw-bold">
+                              <button className="btn btn-dark btn-lg w-100 fw-bold border-0" style={{ 
+                                backgroundColor: '#000000',
+                                color: 'white'
+                              }}>
                                 <i className="bi bi-bolt-fill me-2"></i>
                                 COMPRAR AHORA
                               </button>
                             </Link>
                           ) : (
-                            <button className="btn btn-warning btn-lg w-100 fw-bold" disabled>
+                            <button className="btn btn-dark btn-lg w-100 fw-bold border-0" disabled style={{ 
+                              backgroundColor: '#333333',
+                              color: 'white'
+                            }}>
                               <i className="bi bi-bolt-fill me-2"></i>
                               NO DISPONIBLE
                             </button>
@@ -313,8 +320,8 @@ const Home = () => {
             </Row>
             
             <div className="text-center mt-4 text-white">
-              <div className="alert alert-light d-inline-flex align-items-center" role="alert">
-                <i className="bi bi-exclamation-triangle-fill text-warning me-2 fs-4"></i>
+              <div className="alert alert-dark d-inline-flex align-items-center border border-light" role="alert" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
+                <i className="bi bi-exclamation-triangle-fill text-light me-2 fs-4"></i> {/* Cambiado a blanco */}
                 <div>
                   <strong>¡Última oportunidad!</strong> Esta oferta exclusiva finaliza en <strong>{tiempoRestante}</strong>
                 </div>
@@ -371,10 +378,20 @@ const Home = () => {
                         <div className="mt-3">
                           {product.id ? (
                             <Link to={`/producto/${product.id}`}>
-                              <button className="btn btn-dark btn-sm">Ver detalle</button>
+                              <button className="btn btn-dark btn-sm border-0" style={{ 
+                                backgroundColor: '#000000',
+                                color: 'white'
+                              }}>
+                                Ver detalle
+                              </button>
                             </Link>
                           ) : (
-                            <button className="btn btn-dark btn-sm" disabled>No disponible</button>
+                            <button className="btn btn-dark btn-sm border-0" disabled style={{ 
+                              backgroundColor: '#333333',
+                              color: 'white'
+                            }}>
+                              No disponible
+                            </button>
                           )}
                         </div>
                       </Card.Body>
@@ -438,7 +455,10 @@ const Home = () => {
       {/* Contador regresivo flotante */}
       {shortsAnd1.length > 0 && (
         <div className="position-fixed bottom-0 end-0 m-3" style={{ zIndex: 1000 }}>
-          <div className="card border-0 shadow-lg" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+          <div className="card border-0 shadow-lg" style={{ 
+            background: 'linear-gradient(135deg, #1a1a1a 0%, #333333 100%)',
+            border: '1px solid rgba(255,255,255,0.1)'
+          }}>
             <div className="card-body p-3 text-white text-center">
               <div className="small mb-1">
                 <i className="bi bi-stopwatch me-1"></i>
