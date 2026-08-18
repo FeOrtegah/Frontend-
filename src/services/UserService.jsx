@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://backend-fullstackv1.onrender.com/api/v1/usuarios';
+const BASE_URL = 'https://backend-fullstack-v3.onrender.com/api/v1/usuarios';
 
 class UserService {
     async login(usuario) {

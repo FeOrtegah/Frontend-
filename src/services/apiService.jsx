@@ -1,6 +1,6 @@
 // Configuración centralizada de la API
 const API_CONFIG = {
-    BASE_URL: 'https://backend-fullstackv1.onrender.com/api/v1',
+    BASE_URL: 'https://backend-fullstack-v3.onrender.com/api/v1',
     TIMEOUT: 15000,
     ENDPOINTS: {
         PRODUCTS: '/productos',

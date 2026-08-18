@@ -1,5 +1,5 @@
 // src/services/VentaService.jsx
-const BASE_URL = 'https://backend-fullstackv1.onrender.com/api/v1';
+const BASE_URL = 'https://backend-fullstack-v3.onrender.com/api/v1';
 
 class VentaService {
     async crearVenta(ventaData) {

@@ -36,7 +36,7 @@ const RopaMujer = () => {
     }
     
     if (product.imagen && product.imagen.startsWith('/img/')) {
-      return `http://localhost:8080${product.imagen}`;
+      return `https://backend-fullstack-v3.onrender.com${product.imagen}`;
     }
     
     if (product.imagen_url && product.imagen_url.startsWith('http')) {
