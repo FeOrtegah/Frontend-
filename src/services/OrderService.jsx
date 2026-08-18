@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://backend-fullstackv1.onrender.com/api';
+const BASE_URL = 'https://backend-fullstack-v3.onrender.com/api';
 
 class OrderService {
 
