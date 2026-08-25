@@ -15,9 +15,7 @@ env:
   NODE_VERSION: '22'
 
 jobs:
-  # ---------------------------------------------------------------------
   # 1) LINT
-  # ---------------------------------------------------------------------
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -37,9 +35,8 @@ jobs:
       - name: Ejecutar ESLint
         run: npm run lint
 
-  # ---------------------------------------------------------------------
   # 2) TEST (Karma + Jasmine + Chrome Headless)
-  # ---------------------------------------------------------------------
+
   test:
     name: Tests
     runs-on: ubuntu-latest
@@ -73,9 +70,8 @@ jobs:
           path: coverage/
           retention-days: 7
 
-  # ---------------------------------------------------------------------
   # 3) BUILD
-  # ---------------------------------------------------------------------
+  
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -103,9 +99,8 @@ jobs:
           path: dist/
           retention-days: 7
 
-  # ---------------------------------------------------------------------
-  # 4) DEPLOY (Vercel) - solo en push a master, no en PRs
-  # ---------------------------------------------------------------------
+  # 4) DEPLOY
+  
   deploy:
     name: Deploy a Vercel
     runs-on: ubuntu-latest
