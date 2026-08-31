@@ -1,16 +1,91 @@
-# React + Vite
+# Proyecto EFA — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend de una tienda de ropa online (Proyecto EFA), construido con **React 19** y **Vite**. Incluye panel de usuario (catálogo, carrito, pago, cuenta) y panel de administración (gestión de productos/facciones), consumiendo una API REST propia mediante Axios.
 
-Currently, two official plugins are available:
+## Tecnologías
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React 19** + **React Router DOM 7** (rutas con *lazy loading*)
+- **Vite 7** como bundler y servidor de desarrollo
+- **Bootstrap 5** y **React Bootstrap** para estilos y componentes
+- **Axios** para el consumo de la API
+- **Karma + Jasmine + Testing Library** para pruebas unitarias
+- **ESLint** para linting
 
-## React Compiler
+## Estructura del proyecto
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+El código sigue una organización tipo *atomic design*:
 
-## Expanding the ESLint configuration
+```
+src/
+├── components/
+│   ├── atoms/         # Button, Input, Image, Text, etc.
+│   ├── molecules/      # CardBody, DynamicForm, DynamicTable, NewsCard...
+│   ├── organisms/       # Navbar, Footer, Modal, ProductCard, NewsList...
+│   └── templates/        # Forms, Section
+├── context/             # AuthContext, ProductContext
+├── data/                 # Datos estáticos (links de navbar, productos, tablas)
+├── pages/
+│   ├── admin/            # HomeAdmin, Facciones
+│   ├── auth/              # Login, Registro de usuario
+│   └── user/               # Home, Productos, Carrito, Pago, Mi Cuenta, Blogs, etc.
+├── routes/                # Configuración centralizada de rutas (config.jsx)
+├── services/               # ApiService, ProductService, UserService, OrderService, VentaService
+├── utils/                   # Utilidades (GenerarMensaje)
+└── test/                     # Specs de componentes (Karma/Jasmine)
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Funcionalidades principales
+
+- **Catálogo público**: home, listado de productos por categoría (hombre, mujer, infantil) con subcategorías, detalle de producto, blogs/noticias.
+- **Autenticación**: login y creación de usuario, con contexto de sesión (`AuthContext`).
+- **Carrito y pago**: flujo de carrito, confirmación y pago (`Carrito`, `Pago`, `Confirmacion`).
+- **Cuenta de usuario**: sección "Mi Cuenta" y ayuda/contacto.
+- **Panel administrador**: dashboard y gestión de "facciones" (categorías) de productos.
+- **Ruta 404** personalizada para rutas no encontradas.
+
+## Puesta en marcha
+
+### Requisitos
+- Node.js (versión compatible con Vite 7)
+- npm
+
+### Instalación
+
+```bash
+npm install
+```
+
+### Desarrollo
+
+```bash
+npm run dev
+```
+
+### Build de producción
+
+```bash
+npm run build
+npm run preview   # sirve el build localmente
+```
+
+### Tests
+
+```bash
+npm run test        # ejecuta los tests una vez
+npm run test:watch  # modo watch
+```
+
+### Lint
+
+```bash
+npm run lint
+```
+
+## Despliegue
+
+El proyecto incluye configuración (`vercel.json`) para despliegue en **Vercel**.
+
+## Notas
+
+- Los servicios (`src/services/`) centralizan la comunicación con el backend (Proyecto EFA API) vía Axios.
+- Existen archivos con marcas de conflicto de merge sin resolver (por ejemplo `src/routes/config.jsx`), conviene revisarlos antes de tomar este código como base estable.
