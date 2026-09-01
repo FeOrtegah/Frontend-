@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: [master]
 
-# Evita que corran builds viejos en paralelo si llegan varios pushes seguidos
 concurrency:
   group: frontend-${{ github.ref }}
   cancel-in-progress: true
