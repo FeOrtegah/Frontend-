@@ -16,15 +16,6 @@ class OrderService {
     getOrderById(orderId) {
         return axios.get(`${BASE_URL}/orders/${orderId}`);
     }
-    createOrder(orderData) {
-        return axios.post(`${BASE_URL}/orders`, orderData);
-    }
-    checkStock(items) {
-        return axios.post(`${BASE_URL}/orders/check-stock`, { items });
-    }
-    getOrderById(orderId) {
-        return axios.get(`${BASE_URL}/orders/${orderId}`);
-    }
 }
 
 export default new OrderService();
