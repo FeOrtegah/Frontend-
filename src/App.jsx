@@ -13,7 +13,6 @@ import Pago from "./pages/user/Pago";
 import Confirmacion from "./pages/user/Confirmacion"; // ← IMPORTAR CONFIRMACIÓN
 import Registro from "./pages/user/Registro";
 import Login from "./pages/user/Login";
-import Registro from "./pages/user/Registro";
 import MiCuenta from "./pages/user/MiCuenta";
 import Blogs from "./pages/user/Blogs";
 import Ayuda from './pages/user/Ayuda.jsx';
@@ -54,11 +53,6 @@ function App() {
   
   const isAdmin = () => {
     return user && (user.rol === 'admin' || user.rol?.nombreRol === 'admin');
-  const isAuthenticated = () => {
-    return user !== null;
-  };
-  const isAdmin = () => {
-    return user && user.rol === 'admin';
   };
 
   return (
@@ -81,41 +75,14 @@ function App() {
           
           <Route 
             path="/producto/:id" 
-            element={<ProductDetail carrito={carrito} setCarrito={setCarrito} />} 
-
-          {/* Rutas públicas */}
-          <Route path="/" element={<Home />} />
-          <Route path="/hombre" element={<RopaHombre />} />
-          <Route path="/mujer" element={<RopaMujer />} />
-          <Route path="/infantil" element={<RopaInfantil />} />
-          <Route 
-            path="/producto/:id" 
             element={
               <ProductDetail carrito={carrito} setCarrito={setCarrito} />
             } 
-
           />
           <Route path="/blog" element={<Blogs />} />
           <Route path="/ayuda" element={<Ayuda />} />
           <Route path="/noticias" element={<Noticias />} />
-
-          <Route path="/registro" element={<Registro setUser={setUser} />} />
           <Route path="/login" element={<Login setUser={setUser} />} />
-          
-          {/* Rutas de compra */}
-          <Route 
-            path="/carrito" 
-            element={<Carrito carrito={carrito} setCarrito={setCarrito} />} 
-          />
-          
-          <Route 
-            path="/pago" 
-            element={
-              carrito.length > 0 ? 
-                <Pago carrito={carrito} setCarrito={setCarrito} /> : 
-                <Navigate to="/carrito" replace /> 
-            } 
-          />
 
           {/* NUEVA RUTA: Confirmación de compra */}
           <Route path="/confirmacion" element={<Confirmacion />} />
