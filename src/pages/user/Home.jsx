@@ -84,7 +84,7 @@ const Home = () => {
             src="/img/coño.webp"
             className="card-img-top"
             alt="Novedades"
-            style={{ height: "400px", objectFit: "cover" }}
+            style={{ width: "100%", height: "auto", objectFit: "contain" }}
           />
         </div>
       </section>
