@@ -27,17 +27,6 @@ const Navbar = ({ carrito }) => {
           >
             <span className="navbar-toggler-icon"></span>
           </button>
-            <Link to="/" className="navbar-brand">
-              <img 
-                src="/img/logo.webp" 
-                alt="EFA" 
-                style={{ 
-                  height: '40px', 
-                  width: 'auto',
-                  maxWidth: '120px'
-                }}
-              />
-            </Link>
           <Link to="/" className="navbar-brand mx-auto">
             <img 
               src="/img/logo.webp" 
