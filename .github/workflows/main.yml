@@ -172,10 +172,9 @@ jobs:
     needs: [build]
 
     steps:
-      - name: Instalar Trivy
-        uses: aquasecurity/trivy-action@0.29.0
+      - name: Escanear la imagen con Trivy
+        uses: aquasecurity/trivy-action@v0.29.0
         with:
-          version: v0.58.1
           scan-type: image
           image-ref: efa-frontend:${{ github.sha }}
           format: table
