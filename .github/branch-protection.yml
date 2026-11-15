@@ -1,0 +1,52 @@
+# Política de protección de la rama principal — Frontend EFA
+
+**Estado:** aceptada
+**Repositorio:** FeOrtegah/Frontend-
+**Política asociada:** P-SEC-006
+
+Este archivo es la declaración legible y versionada de la configuración de
+protección de rama. El script
+`scripts/compliance/audit-frontend.sh` la verifica junto con el resto de
+las políticas del frontend.
+
+## Reglas obligatorias
+
+| Regla | Valor | Motivo |
+|---|---|---|
+| Revisiones requeridas | 1, con revisión de los *code owners* | Ningún cambio entra sin que alguien responsable del área lo revise. |
+| Revisiones obsoletas | Descartadas al hacer push | Una revisión deja de ser válida si el código cambia después. |
+| Aprobar el último push | Requerido | Evita aprobar código que luego se modificó. |
+| Verificaciones obligatorias | `Validar (Lint + Tests)` y `Seguridad de la imagen` | Ambas deben estar en verde; con `strict: true`, además hay que tener la rama al día. |
+| Push directo | Bloqueado | Todo cambio entra por Pull Request. |
+| Force-push | Bloqueado | No se puede reescribir el historial de la rama principal. |
+| Borrado de la rama | Bloqueado | Salvaguarda contra la eliminación accidental. |
+| Historial lineal | Requerido, sin merges de commits | Historial auditable. |
+| Bypass del gate | Ninguno | El gate siempre se ejecuta. |
+
+## Cadena de controles
+
+El workflow `CI/CD Frontend` (`/.github/workflows/main.yml`) tiene cuatro
+etapas, y cada una depende de la anterior:
+
+```
+validate  ──▶  build  ──▶  security  ──▶  deploy
+ (lint +       (bundle +    (Trivy:        (Vercel,
+  pruebas +     imagen        HIGH y        solo desde
+  cobertura)    Docker)       CRITICAL)     push a main)
+```
+
+| Etapa | Control | Efecto si falla |
+|---|---|---|
+| `validate` | ESLint, Karma/Jasmine y gate de cobertura (≥ 60 %). | El pipeline se detiene; no se construye la imagen. |
+| `build` | Build de Vite y construcción de la imagen Docker. | El pipeline se detiene. |
+| `security` | Trivy sobre la imagen: sin vulnerabilidades `HIGH` ni `CRITICAL`. | El pipeline se detiene; **no hay despliegue**. |
+| `deploy` | Despliegue a Vercel. | Solo se ejecuta con las etapas anteriores en verde y desde un `push` a `main`. |
+
+La etapa `security` es la que materializa el indicador IE6 en el frontend:
+una vulnerabilidad alta o crítica en la imagen de producción impide el
+despliegue.
+
+## CODEOWNERS
+
+Ver `/.github/CODEOWNERS`: los cambios en el pipeline, la configuración de
+nginx y el Dockerfile tienen responsable específico.

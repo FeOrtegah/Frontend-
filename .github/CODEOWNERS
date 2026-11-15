@@ -1,0 +1,20 @@
+# CODEOWNERS — Frontend EFA
+
+# Los cambios en el pipeline y en la configuración del servidor de
+# producción son los que determinan si el frontend sigue siendo observable
+# y si sus controles siguen siendo efectivos.
+.github/workflows/        @FeOrtegah @ealejandro23
+scripts/compliance/       @FeOrtegah @ealejandro23
+nginx.conf                @FeOrtegah @ealejandro23
+Dockerfile                @FeOrtegah @ealejandro23
+docker-compose.yml        @FeOrtegah @ealejandro23
+
+# La instrumentacion de la correlacion de peticiones.
+src/services/observability.js  @FeOrtegah @ealejandro23
+
+# El resto del codigo de la aplicacion.
+src/components/     @FeOrtegah
+src/pages/          @FeOrtegah
+src/context/        @FeOrtegah
+src/services/       @FeOrtegah
+src/test/           @FeOrtegah

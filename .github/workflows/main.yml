@@ -2,23 +2,56 @@ name: CI/CD Frontend
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: frontend-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 env:
   NODE_VERSION: '22'
+  APP_VERSION: ${{ github.sha }}
+  ENVIRONMENT: ci
 
 jobs:
 
-  # 1) VALIDATE (Lint + Tests)
+  # ===========================================================================
+  # 0) AUDITORIA DE CUMPLIMIENTO
+  #
+  # Verifica las politicas de seguridad, calidad y observabilidad del
+  # frontend antes de compilar nada. Si alguna politica bloqueante se
+  # incumple, el pipeline se detiene: no se construye la imagen y no hay
+  # despliegue.
+  # ===========================================================================
+  compliance:
+    name: Compliance — Auditoría de cumplimiento
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Auditoría de cumplimiento
+        run: |
+          chmod +x scripts/compliance/*.sh
+          bash scripts/compliance/audit-frontend.sh .
+
+  # ===========================================================================
+  # 1) VALIDAR (lint + pruebas + cobertura)
+  # ===========================================================================
   validate:
     name: Validar (Lint + Tests)
     runs-on: ubuntu-latest
+    needs: [compliance]
+    outputs:
+      coverage: ${{ steps.coverage.outputs.ratio }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,7 +63,7 @@ jobs:
           cache: 'npm'
 
       - name: Instalar dependencias
-        run: npm ci
+        run: npm ci --no-audit --no-fund
 
       - name: Ejecutar ESLint
         run: npm run lint
@@ -44,6 +77,40 @@ jobs:
           CHROME_BIN: ${{ steps.setup-chrome.outputs.chrome-path }}
         run: npm test
 
+      - name: Extraer la cobertura de pruebas
+        id: coverage
+        run: |
+          set -euo pipefail
+          # karma-coverage coloca el resumen JSON en una subcarpeta con el
+          # nombre del navegador, por lo que se localiza de forma recursiva.
+          SUMMARY="$(find coverage -name 'coverage-summary.json' -type f | head -n 1)"
+          if [ -z "${SUMMARY}" ]; then
+            echo "::error::No se encontro el reporte de cobertura (coverage-summary.json)"
+            exit 1
+          fi
+          echo "Reporte de cobertura: ${SUMMARY}"
+          RATIO=$(node -e "
+            const s = require('./${SUMMARY}');
+            console.log((s.total.lines.pct / 100).toFixed(4));
+          ")
+          echo "Cobertura de lineas: ${RATIO}"
+          echo "ratio=${RATIO}" >> "$GITHUB_OUTPUT"
+
+      - name: Gate de cobertura (P-QA-002)
+        run: |
+          RATIO="${{ steps.coverage.outputs.coverage }}"
+          THRESHOLD=0.60
+          echo "Cobertura: ${RATIO} (umbral: ${THRESHOLD})"
+          node -e "
+            const ratio = parseFloat('${RATIO}');
+            const threshold = parseFloat('${THRESHOLD}');
+            if (ratio < threshold) {
+              console.error('::error::La cobertura (' + ratio + ') es inferior al umbral (' + threshold + '). El pipeline se detiene.');
+              process.exit(1);
+            }
+            console.log('::notice::Gate de cobertura aprobado.');
+          "
+
       - name: Subir reporte de cobertura
         if: always()
         uses: actions/upload-artifact@v4
@@ -52,11 +119,14 @@ jobs:
           path: coverage/
           retention-days: 7
 
+  # ===========================================================================
   # 2) BUILD
+  # ===========================================================================
   build:
     name: Build
     runs-on: ubuntu-latest
     needs: [validate]
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -68,10 +138,23 @@ jobs:
           cache: 'npm'
 
       - name: Instalar dependencias
-        run: npm ci
+        run: npm ci --no-audit --no-fund
 
       - name: Build de producción (Vite)
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'http://localhost:8080/api/v1' }}
         run: npm run build
+
+      - name: Verificar que los artefactos existen
+        run: |
+          test -f dist/index.html || { echo "::error::No se genero dist/index.html"; exit 1; }
+          ls -la dist/
+
+      - name: Construir la imagen Docker (nginx)
+        run: docker build -t efa-frontend:${{ github.sha }} .
+
+      - name: Verificar la imagen Docker
+        run: docker image inspect efa-frontend:${{ github.sha }}
 
       - name: Subir artefacto dist/
         uses: actions/upload-artifact@v4
@@ -80,17 +163,49 @@ jobs:
           path: dist/
           retention-days: 7
 
-  # 3) DEPLOY
+  # ===========================================================================
+  # 3) SEGURIDAD DE LA IMAGEN
+  # ===========================================================================
+  security:
+    name: Seguridad de la imagen
+    runs-on: ubuntu-latest
+    needs: [build]
+
+    steps:
+      - name: Instalar Trivy
+        uses: aquasecurity/trivy-action@0.29.0
+        with:
+          version: v0.58.1
+          scan-type: image
+          image-ref: efa-frontend:${{ github.sha }}
+          format: table
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          ignore-unfixed: true
+
+  # ===========================================================================
+  # 4) DEPLOY
+  # ===========================================================================
   deploy:
     name: Deploy a Vercel
     runs-on: ubuntu-latest
-    needs: [build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: [validate, build, security]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy a Vercel (producción)
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci --no-audit --no-fund
+
+      - name: Deploy a Vercel (produccion)
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
