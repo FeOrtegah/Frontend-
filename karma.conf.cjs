@@ -1,4 +1,10 @@
 // karma.conf.js
+// La instrumentacion de cobertura (babel-plugin-istanbul) solo se aplica cuando
+// se ejecuta la suite de pruebas: se fuerza el entorno 'test' para que
+// babel.config.cjs active el plugin istanbul.
+process.env.BABEL_ENV = process.env.BABEL_ENV || 'test';
+process.env.NODE_ENV = process.env.NODE_ENV || 'test';
+
 module.exports = function (config) {
   config.set({
     frameworks: ['jasmine'],
