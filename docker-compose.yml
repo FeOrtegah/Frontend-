@@ -1,54 +1,53 @@
-version: "3.9"
-
+# =============================================================================
+# Docker Compose - Frontend del Proyecto EFA
+#
+# El frontend se sirve con nginx, que emite el access log en JSON. Ese log
+# es recolectado por Grafana Alloy y enviado a Loki, de modo que los errores
+# del frontend se pueden consultar con los mismos filtros estructurados que
+# los del backend.
+#
+# Uso:
+#   docker compose up -d
+#   docker compose logs -f frontend
+#
+# Variables de entorno:
+#   VITE_API_BASE_URL   URL de la API del backend
+#   FRONTEND_PORT       Puerto local del frontend (por defecto 8081)
+# =============================================================================
 services:
-  db:
-    image: postgres:16-alpine
-    container_name: efa-db
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: efa
-      POSTGRES_USER: efa_user
-      POSTGRES_PASSWORD: efa_pass
-    volumes:
-      - efa_pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U efa_user -d efa"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-  backend:
-    build:
-      context: ./proyectoooo
-      dockerfile: Dockerfile
-    container_name: efa-backend
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/efa
-      SPRING_DATASOURCE_USERNAME: efa_user
-      SPRING_DATASOURCE_PASSWORD: efa_pass
-      PORT: 8080
-    ports:
-      - "8080:8080"
-
   frontend:
     build:
-      context: ./Frontend-
+      context: .
       dockerfile: Dockerfile
       args:
-        VITE_API_BASE_URL: http://localhost:8080/api/v1
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080/api/v1}
+    image: efa-frontend:local
     container_name: efa-frontend
     restart: unless-stopped
-    depends_on:
-      - backend
-    ports:
-      - "8081:8081"
 
-volumes:
-  efa_pgdata:
-##
+    environment:
+      NGINX_PORT: "80"
+
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8081}:8080"
+
+    labels:
+      service_name: efa-frontend
+      project: efa
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8080/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+    mem_limit: 256m
+
+    networks:
+      - efa-net
+
+networks:
+  efa-net:
+    name: efa-net
+    driver: bridge
