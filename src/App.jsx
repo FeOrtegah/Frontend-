@@ -19,7 +19,6 @@ import Ayuda from './pages/user/Ayuda.jsx';
 import Noticias from "./pages/user/Noticias";
 import HomeAdmin from "./pages/admin/HomeAdmin.jsx";
 
-import { useProducts } from './context/ProductContext';
 
 
 function App() {
@@ -27,8 +26,9 @@ function App() {
   const [user, setUser] = React.useState(null);
   const location = useLocation();
 
-
-  const { products, loading, error } = useProducts();
+  // El catalogo se consume a traves de useProducts() en las paginas que lo
+  // necesitan. Aqui no se hacia uso de los valores, por lo que se evita
+  // pedirlos aqui.
 
   React.useEffect(() => {
     const savedCarrito = JSON.parse(localStorage.getItem("carrito")) || [];

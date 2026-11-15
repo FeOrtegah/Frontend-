@@ -3,7 +3,7 @@ import { Container, Row, Col, Card, Button, Alert, Spinner, Badge } from "react-
 import { Link } from "react-router-dom";
 import ProductService from "/src/services/ProductService";
 
-const Products = ({ categoria, tipo, carrito, setCarrito }) => {
+const Products = ({ categoria, tipo }) => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);

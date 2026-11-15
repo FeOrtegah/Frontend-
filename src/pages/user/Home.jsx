@@ -6,7 +6,6 @@ import ProductService from "/src/services/ProductService";
 const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [products, setProducts] = useState([]); // ✅ AGREGADO
   const [productosOfertaAleatorios, setProductosOfertaAleatorios] = useState([]);
 
   // Función para seleccionar 'n' elementos aleatorios de un array
@@ -29,7 +28,6 @@ const Home = () => {
         setLoading(true);
         const response = await ProductService.getAllProducts();
         const allProducts = response.data;
-        setProducts(allProducts); // ✅ AHORA FUNCIONA
 
         // 1. Filtrar solo los productos que están en oferta
         const ofertas = allProducts.filter(product => product.oferta);

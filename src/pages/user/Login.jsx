@@ -30,7 +30,7 @@ const Login = ({ setUser }) => {
             } else {
                 setError(result.error || 'Credenciales incorrectas');
             }
-        } catch (err) {
+        } catch {
             setError('Error al iniciar sesión');
         } finally {
             setLoading(false);

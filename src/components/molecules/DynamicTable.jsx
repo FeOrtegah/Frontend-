@@ -15,7 +15,19 @@ function DynamicTable({ columns = [], data = [], className = '', striped = true,
 
     const isImageUrl = (str) => {
         if (!str || typeof str !== 'string') return false;
-        return str.startsWith('http') || str.startsWith('/') || str.includes('.png') || str.includes('.jpg') || str.includes('.jpeg') || str.includes('.svg' || str.includes('.gif') || str.includes('.webp'));
+        // El paréntesis de cierre estaba mal colocado: la expresión
+        // ".svg' || str.includes('.gif') || ..." se evaluaba como una cadena
+        // de truthy y las comprobaciones de .gif y .webp nunca se ejecutaban.
+        return (
+            str.startsWith('http') ||
+            str.startsWith('/') ||
+            str.includes('.png') ||
+            str.includes('.jpg') ||
+            str.includes('.jpeg') ||
+            str.includes('.svg') ||
+            str.includes('.gif') ||
+            str.includes('.webp')
+        );
     };
 
     return (

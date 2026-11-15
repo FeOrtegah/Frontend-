@@ -3,7 +3,11 @@ module.exports = function (config) {
   config.set({
     frameworks: ['jasmine'],
     files: [
-      'src/test/setupTests.js',
+      // El archivo de preparacion registra los matchers de jasmine-dom.
+      // Su nombre real es setupTest.js (en singular): antes se referenciaba
+      // "setupTests.js", que no existe, de modo que el archivo nunca se
+      // cargaba y los matchers adicionales no estaban disponibles.
+      'src/test/setupTest.js',
       'src/**/*.spec.jsx',
       // Servir las imágenes como archivos estáticos
       { pattern: 'public/img/**/*', watched: false, included: false, served: true },
@@ -12,7 +16,7 @@ module.exports = function (config) {
       '/img/': '/base/public/img/', // proxy para que /img/... apunte a la carpeta real
     },
     preprocessors: {
-      'src/test/setupTests.js': ['webpack'],
+      'src/test/setupTest.js': ['webpack'],
       'src/test/**/*.spec.jsx': ['webpack'],
     },
     webpack: {
@@ -44,9 +48,18 @@ module.exports = function (config) {
       },
     },
     reporters: ['progress', 'kjhtml', 'coverage'],
+
+    // Se generan tres formatos de reporte:
+    //   - html        : reporte legible para la revision.
+    //   - json-summary: formato que consume el gate de cobertura del pipeline.
+    //   - text-summary: resumen por consola, util en los logs del runner.
     coverageReporter: {
-      type: 'html',
       dir: 'coverage/',
+      reporters: [
+        { type: 'html', subdir: 'html' },
+        { type: 'json-summary' },
+        { type: 'text-summary' },
+      ],
     },
     browsers: ['ChromeHeadless'],
     singleRun: true,

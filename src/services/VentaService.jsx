@@ -33,7 +33,7 @@ class VentaService {
         try {
             const response = await axios.get(`${BASE_URL}/${id}`);
             return { success: true, data: response.data };
-        } catch (error) {
+        } catch {
             return { success: false, error: 'Error al obtener la venta' };
         }
     }

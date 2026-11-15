@@ -29,7 +29,7 @@ function Home() {
                     setLoading(true);
                     const data = await FaccionesService.getAllFacciones();
                     tableItem.data = data;
-                } catch (error) {
+                } catch {
                     generarMensaje('No se pudieron cargar las facciones', 'warning');
                     tableItem.data = [{ id: "Error", nombre: "No se pudieron cargar", descripcion: "Revisa tu conexión" }];
                 } finally {

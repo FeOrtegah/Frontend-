@@ -2,15 +2,25 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Alert, Spinner } from 'react-bootstrap';
 
+// Valores por defecto de las props.
+//
+// Se declaran a nivel de modulo y no como valores por defecto en la
+// desestructuracion porque los valores por defecto se reevaluan en CADA
+// render: eso generaba un array y un objeto nuevos en cada render, las
+// dependencias del useEffect cambiaban de identidad continuamente y el
+// efecto se ejecutaba en bucle ("Maximum update depth exceeded").
+const DEFAULT_INPUTS_CONFIG = [];
+const DEFAULT_INITIAL_DATA = {};
+
 const ModalComponent = ({
   isOpen,
   onClose,
   onSubmit,
-  inputsConfig,
+  inputsConfig = DEFAULT_INPUTS_CONFIG,
   title = "Crear Nuevo Elemento",
   submitText = "Crear",
   loading = false,
-  initialData = {}
+  initialData = DEFAULT_INITIAL_DATA
 }) => {
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});

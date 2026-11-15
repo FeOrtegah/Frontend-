@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Reporte de cobertura de las pruebas unitarias.
+# Es un artefacto generado por el pipeline (npm test), no codigo fuente:
+# se regenera en cada ejecucion y se publica como artifact del workflow.
+coverage/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
