@@ -61,7 +61,24 @@ module.exports = function (config) {
         { type: 'text-summary' },
       ],
     },
-    browsers: ['ChromeHeadless'],
+    // ChromeHeadlessCI: el runner de GitHub Actions ejecuta Chrome como root
+    // dentro de un contenedor, por lo que el sandbox de Chrome no puede
+    // arrancar ("ChromeHeadless failed 2 times (cannot start)").
+    // --no-sandbox lo resuelve. --disable-dev-shm-usage evita errores
+    // cuando /dev/shm es pequeno.
+    customLaunchers: {
+      ChromeHeadlessCI: {
+        base: 'ChromeHeadless',
+        flags: [
+          '--no-sandbox',
+          '--disable-gpu',
+          '--disable-dev-shm-usage',
+          '--disable-setuid-sandbox',
+        ],
+      },
+    },
+    // En CI se usa el launcher sin sandbox; en local, el estandar.
+    browsers: [process.env.CI === 'true' ? 'ChromeHeadlessCI' : 'ChromeHeadless'],
     singleRun: true,
     restartOnFileChange: true,
     plugins: [
